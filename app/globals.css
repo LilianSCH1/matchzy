@@ -1,0 +1,208 @@
+@import "tailwindcss";
+
+/* ------------------------------------------------------------------ Charte graphique
+   Blanc cassé chaud, encre quasi noire, un seul accent (citron) réservé à ce qui compte :
+   qualifiés, validation, vainqueur. Le rouge corail signale le direct. */
+
+:root {
+  --canvas: #f5f5f1;
+  --surface: #ffffff;
+  --surface-2: #eeeee9;
+  --line: #e3e3dc;
+  --line-strong: #cfcfc6;
+  --ink: #111112;
+  --ink-2: #57574f;
+  --ink-3: #979789;
+  --accent: #d3f54a;
+  --accent-soft: #eef9c4;
+  --on-accent: #111112;
+  --live: #f04a23;
+  --live-soft: #fdebe5;
+  --warn: #945600;
+  --warn-soft: #fcf1dc;
+  --danger: #d8311f;
+  --danger-soft: #fce9e6;
+  color-scheme: light;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root {
+    --canvas: #0c0c0d;
+    --surface: #161618;
+    --surface-2: #1f1f22;
+    --line: #29292d;
+    --line-strong: #3a3a3f;
+    --ink: #f3f3ee;
+    --ink-2: #a8a89f;
+    --ink-3: #6e6e67;
+    --accent: #d3f54a;
+    --accent-soft: #2a3310;
+    --live: #ff5b37;
+    --live-soft: #3a1710;
+    --warn: #f0a93a;
+    --warn-soft: #33250c;
+    --danger: #ff6b5a;
+    --danger-soft: #3a1512;
+    color-scheme: dark;
+  }
+}
+
+/* Écran géant : toujours sombre, quel que soit le réglage du système */
+.theme-dark {
+  --canvas: #0a0a0b;
+  --surface: #151517;
+  --surface-2: #1e1e21;
+  --line: #28282c;
+  --line-strong: #3a3a3f;
+  --ink: #f5f5f0;
+  --ink-2: #a8a89f;
+  --ink-3: #6e6e67;
+  --accent-soft: #2a3310;
+  --live: #ff5b37;
+  --live-soft: #3a1710;
+  --warn: #f0a93a;
+  --warn-soft: #33250c;
+  color-scheme: dark;
+  background: var(--canvas);
+  color: var(--ink);
+}
+
+@theme inline {
+  --color-canvas: var(--canvas);
+  --color-surface: var(--surface);
+  --color-surface-2: var(--surface-2);
+  --color-line: var(--line);
+  --color-line-strong: var(--line-strong);
+  --color-ink: var(--ink);
+  --color-ink-2: var(--ink-2);
+  --color-ink-3: var(--ink-3);
+  --color-accent: var(--accent);
+  --color-accent-soft: var(--accent-soft);
+  --color-on-accent: var(--on-accent);
+  --color-live: var(--live);
+  --color-live-soft: var(--live-soft);
+  --color-warn: var(--warn);
+  --color-warn-soft: var(--warn-soft);
+  --color-danger: var(--danger);
+  --color-danger-soft: var(--danger-soft);
+  --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
+  --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
+}
+
+html {
+  background: var(--canvas);
+}
+
+body {
+  background: var(--canvas);
+  color: var(--ink);
+  font-feature-settings: "ss01", "cv11";
+  -webkit-tap-highlight-color: transparent;
+}
+
+::selection {
+  background: var(--accent);
+  color: var(--on-accent);
+}
+
+@layer base {
+  :focus-visible {
+    outline: 2px solid var(--ink);
+    outline-offset: 2px;
+  }
+}
+
+/* ------------------------------------------------------------------ Briques */
+
+@utility card {
+  @apply rounded-2xl border border-line bg-surface;
+}
+@utility btn {
+  @apply inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-medium whitespace-nowrap transition-[background-color,opacity,transform] duration-150 select-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40;
+}
+@utility btn-primary {
+  @apply btn bg-ink text-canvas hover:opacity-85;
+}
+@utility btn-accent {
+  @apply btn bg-accent text-on-accent hover:brightness-95;
+}
+@utility btn-ghost {
+  @apply btn bg-surface-2 text-ink hover:bg-line;
+}
+@utility btn-outline {
+  @apply btn border border-line bg-surface text-ink hover:bg-surface-2;
+}
+@utility btn-quiet {
+  @apply btn text-ink-2 hover:bg-surface-2 hover:text-ink;
+}
+@utility btn-danger {
+  @apply btn bg-danger text-white hover:opacity-90;
+}
+@utility btn-icon {
+  @apply inline-flex size-9 shrink-0 items-center justify-center rounded-full text-ink-2 transition hover:bg-surface-2 hover:text-ink active:scale-95 disabled:pointer-events-none disabled:opacity-30;
+}
+@utility input {
+  @apply h-11 w-full rounded-xl border border-line bg-surface px-3.5 text-base text-ink transition outline-none placeholder:text-ink-3 focus:border-ink focus:ring-4 focus:ring-ink/5;
+}
+@utility label {
+  @apply mb-1.5 block text-[13px] font-medium text-ink-2;
+}
+@utility chip {
+  @apply inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap;
+}
+@utility eyebrow {
+  @apply text-[11px] font-medium tracking-[0.08em] text-ink-3 uppercase;
+}
+@utility seg {
+  @apply inline-flex gap-1 rounded-full bg-surface-2 p-1;
+}
+@utility seg-item {
+  @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-medium whitespace-nowrap text-ink-2 transition hover:text-ink;
+}
+@utility seg-on {
+  @apply bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.08),0_0_0_1px_var(--line)];
+}
+@utility no-scrollbar {
+  scrollbar-width: none;
+  &::-webkit-scrollbar {
+    display: none;
+  }
+}
+
+/* ------------------------------------------------------------------ Animations */
+
+@keyframes pulse-dot {
+  0%,
+  100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.35;
+    transform: scale(0.8);
+  }
+}
+.live-dot {
+  animation: pulse-dot 1.4s ease-in-out infinite;
+}
+
+@keyframes rise {
+  from {
+    opacity: 0;
+    transform: translateY(6px);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.rise {
+  animation: rise 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .live-dot,
+  .rise {
+    animation: none;
+  }
+}
