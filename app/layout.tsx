@@ -1,5 +1,6 @@
 import type { Metadata, Viewport } from "next";
 import { Geist, Geist_Mono } from "next/font/google";
+import { Toaster } from "@/components/feedback";
 import "./globals.css";
 
 const sans = Geist({ subsets: ["latin"], variable: "--font-geist", display: "swap" });
@@ -22,7 +23,10 @@ export const viewport: Viewport = {
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
     <html lang="fr" className={`${sans.variable} ${mono.variable}`}>
-      <body className="min-h-dvh font-sans antialiased">{children}</body>
+      <body className="min-h-dvh font-sans antialiased">
+        {children}
+        <Toaster />
+      </body>
     </html>
   );
 }

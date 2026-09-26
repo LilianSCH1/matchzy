@@ -91,18 +91,36 @@ export async function createTournamentAction(input: TournamentInput): Promise<{ 
   }
 }
 
-export async function createDemoAction() {
-  await requireOrganizer();
-  await createDemo();
-  refresh();
-  redirect("/");
+export async function createDemoAction(): Promise<{ slug?: string; count?: number; error?: string }> {
+  try {
+    await requireOrganizer();
+    const built = await createDemo();
+    refresh();
+    return { slug: built[0]?.tournament.slug, count: built.length };
+  } catch (e) {
+    return { error: e instanceof Error ? e.message : "Impossible de créer la démo." };
+  }
 }
 
-export async function deleteTournamentAction(id: string) {
-  await requireOrganizer();
-  await db()`delete from tournaments where id = ${id}`;
-  refresh();
-  redirect("/");
+export async function deleteTournamentAction(id: string): Promise<ActionResult> {
+  return wrap(async () => {
+    await requireOrganizer();
+    const rows = await db()`delete from tournaments where id = ${id} returning id`;
+    if (!rows.length) return fail("Ce tournoi n'existe plus (déjà supprimé ?).");
+    refresh();
+  });
+}
+
+/** Supprime tous les tournois (et, par cascade, équipes, matchs et résultats). Les sports sont conservés. */
+export async function deleteAllTournamentsAction(): Promise<ActionResult & { count?: number }> {
+  try {
+    await requireOrganizer();
+    const rows = await db()`delete from tournaments returning id`;
+    refresh();
+    return { ok: true, count: rows.length };
+  } catch (e) {
+    return fail(e instanceof Error ? e.message : "Erreur inattendue.");
+  }
 }
 
 // ---------------------------------------------------------------- Scores

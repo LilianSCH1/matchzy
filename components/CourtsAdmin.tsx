@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { renameCourtAction } from "@/app/actions";
+import { toast } from "./feedback";
 
 export function CourtsAdmin({ courts, refereeUrl }: { courts: { id: string; name: string; code: string }[]; refereeUrl: string }) {
   const router = useRouter();
@@ -18,14 +19,21 @@ export function CourtsAdmin({ courts, refereeUrl }: { courts: { id: string; name
               value={names[c.id]}
               aria-label="Nom"
               onChange={(e) => setNames({ ...names, [c.id]: e.target.value })}
-              onBlur={() =>
-                names[c.id] !== c.name &&
+              onKeyDown={(e) => e.key === "Enter" && e.currentTarget.blur()}
+              onBlur={() => {
+                const v = names[c.id].trim();
+                if (v === c.name) return;
+                // Nom vide : on revient à l'ancien plutôt que d'afficher une erreur.
+                if (!v) return setNames({ ...names, [c.id]: c.name });
                 start(async () => {
-                  const r = await renameCourtAction(c.id, names[c.id]);
-                  if (!r.ok) alert(r.error);
+                  const r = await renameCourtAction(c.id, v);
+                  if (!r.ok) {
+                    toast(r.error, "error");
+                    setNames({ ...names, [c.id]: c.name });
+                  } else toast(`Renommé en « ${v} ».`);
                   router.refresh();
-                })
-              }
+                });
+              }}
             />
             <div className="rounded-xl bg-surface-2 px-3 py-1.5 text-right">
               <div className="text-[10px] font-medium tracking-wide text-ink-3 uppercase">Code</div>

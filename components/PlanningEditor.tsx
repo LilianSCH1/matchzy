@@ -5,6 +5,7 @@ import { useMemo, useState, useTransition } from "react";
 import { moveMatchAction, swapMatchesAction } from "@/app/actions";
 import { IconAlert, IconPencil, IconSwap } from "./Icons";
 import { Notice } from "./TopBar";
+import { toast } from "./feedback";
 import { Choice, ErrorText } from "./ui";
 
 export interface PlanItem {
@@ -45,10 +46,11 @@ export function PlanningEditor({ items, courts, timezone, matchDuration, courtLa
   const courtName = (id: string | null) => courts.find((c) => c.id === id)?.name ?? "–";
   const sorted = [...items].sort((a, b) => (a.scheduledAt ?? "").localeCompare(b.scheduledAt ?? ""));
 
-  const act = (fn: () => Promise<{ ok: boolean; error?: string }>) =>
+  const act = (fn: () => Promise<{ ok: boolean; error?: string }>, success?: string) =>
     start(async () => {
       const r = await fn();
       setError(r.ok ? null : (r.error ?? "Erreur"));
+      if (r.ok && success) toast(success);
       setEditing(null);
       setSwapFrom(null);
       router.refresh();
@@ -57,7 +59,7 @@ export function PlanningEditor({ items, courts, timezone, matchDuration, courtLa
   const onPick = (it: PlanItem) => {
     if (!swapFrom) return;
     if (swapFrom === it.id) return setSwapFrom(null);
-    act(() => swapMatchesAction(swapFrom, it.id));
+    act(() => swapMatchesAction(swapFrom, it.id), "Matchs échangés.");
   };
 
   const groups =
@@ -163,7 +165,7 @@ export function PlanningEditor({ items, courts, timezone, matchDuration, courtLa
                         onSave={(time, courtId, cascade) => {
                           const delta = toMin(time) - toMin(hhmm(it.scheduledAt!, timezone));
                           const iso = new Date(new Date(it.scheduledAt!).getTime() + delta * 60000).toISOString();
-                          act(() => moveMatchAction(it.id, iso, courtId, cascade));
+                          act(() => moveMatchAction(it.id, iso, courtId, cascade), cascade ? "Horaire modifié, matchs suivants décalés." : "Horaire modifié.");
                         }}
                       />
                     )}

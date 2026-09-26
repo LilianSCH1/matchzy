@@ -1,6 +1,8 @@
 import Link from "next/link";
-import { createDemoAction, logoutAction } from "@/app/actions";
-import { IconArrowRight, IconLogout, IconPlus, IconSettings, IconSparkle, IconWhistle } from "@/components/Icons";
+import { logoutAction } from "@/app/actions";
+import { SubmitButton } from "@/components/feedback";
+import { IconArrowRight, IconLogout, IconPlus, IconSettings, IconWhistle } from "@/components/Icons";
+import { DeleteAllButton, DeleteTournamentButton, DemoButton } from "@/components/TournamentActions";
 import { Empty, Page, Section, TopBar } from "@/components/TopBar";
 import { isOrganizer } from "@/lib/server/auth";
 import { listTournaments } from "@/lib/server/data";
@@ -24,10 +26,10 @@ export default async function Home() {
         right={
           org ? (
             <form action={logoutAction}>
-              <button className="btn-quiet h-9 gap-1.5 px-3 text-sm" title="Se déconnecter">
+              <SubmitButton className="btn-quiet h-9 gap-1.5 px-3 text-sm" title="Se déconnecter" pendingLabel="Déconnexion…">
                 <IconLogout className="size-4" />
                 <span className="hidden sm:inline">Déconnexion</span>
-              </button>
+              </SubmitButton>
             </form>
           ) : (
             <Link href="/login" className="btn-outline h-9 px-4 text-sm">
@@ -54,11 +56,7 @@ export default async function Home() {
               <Link href="/sports" className="btn-outline">
                 <IconSettings className="size-4" /> Sports &amp; règles
               </Link>
-              <form action={createDemoAction}>
-                <button className="btn-quiet">
-                  <IconSparkle className="size-4" /> Démo
-                </button>
-              </form>
+              <DemoButton />
             </div>
           )}
         </div>
@@ -66,6 +64,7 @@ export default async function Home() {
         {tournaments.length === 0 ? (
           <Empty>
             Aucun tournoi pour l&apos;instant.
+            {org && " Créez le vôtre, ou lancez la démo pour découvrir l'application avec des matchs en cours."}
             {!org && (
               <>
                 {" "}
@@ -87,6 +86,11 @@ export default async function Home() {
               <Section title="Terminés">
                 <Grid list={past} org={org} muted />
               </Section>
+            )}
+            {org && (
+              <div className="flex justify-end border-t border-line pt-4">
+                <DeleteAllButton count={tournaments.length} />
+              </div>
             )}
           </>
         )}
@@ -127,7 +131,10 @@ function Grid({ list, org, muted }: { list: Tournament[]; org: boolean; muted?: 
                   <IconSettings className="size-4" /> Organiser
                 </Link>
               )}
-              <IconArrowRight className="ml-auto size-4 text-ink-3 transition group-hover:translate-x-0.5 group-hover:text-ink" />
+              <span className="ml-auto flex items-center gap-1">
+                {org && <DeleteTournamentButton id={t.id} name={t.name} variant="icon" />}
+                <IconArrowRight className="size-4 text-ink-3 transition group-hover:translate-x-0.5 group-hover:text-ink" />
+              </span>
             </div>
           </article>
         );

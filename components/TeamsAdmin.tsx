@@ -4,6 +4,7 @@ import { useRouter } from "next/navigation";
 import { useState, useTransition } from "react";
 import { updateTeamAction, withdrawTeamAction } from "@/app/actions";
 import { IconCheck, IconMinus, IconPencil, IconPlus, IconX } from "./Icons";
+import { toast, useConfirm } from "./feedback";
 import { ErrorText } from "./ui";
 
 interface TeamItem {
@@ -20,11 +21,13 @@ export function TeamsAdmin({ teams }: { teams: TeamItem[] }) {
   const [error, setError] = useState<string | null>(null);
   const [renaming, setRenaming] = useState<string | null>(null);
   const [name, setName] = useState("");
+  const [dialog, ask] = useConfirm();
 
-  const act = (fn: () => Promise<{ ok: boolean; error?: string }>) =>
+  const act = (fn: () => Promise<{ ok: boolean; error?: string }>, success?: string) =>
     start(async () => {
       const r = await fn();
       setError(r.ok ? null : (r.error ?? "Erreur"));
+      if (r.ok && success) toast(success);
       setRenaming(null);
       router.refresh();
     });
@@ -33,6 +36,7 @@ export function TeamsAdmin({ teams }: { teams: TeamItem[] }) {
   return (
     <div className="space-y-8">
       <ErrorText>{error}</ErrorText>
+      {dialog}
       <div className="grid gap-8 md:grid-cols-2">
         {pools.map((p) => (
           <section key={p} className="space-y-3">
@@ -48,10 +52,10 @@ export function TeamsAdmin({ teams }: { teams: TeamItem[] }) {
                           className="flex flex-1 items-center gap-1"
                           onSubmit={(e) => {
                             e.preventDefault();
-                            act(() => updateTeamAction(t.id, { name }));
+                            act(() => updateTeamAction(t.id, { name }), "Nom enregistré.");
                           }}
                         >
-                          <input className="input h-9 flex-1 px-3" value={name} onChange={(e) => setName(e.target.value)} autoFocus />
+                          <input className="input h-9 flex-1 px-3" value={name} onChange={(e) => setName(e.target.value)} onKeyDown={(e) => e.key === "Escape" && setRenaming(null)} autoFocus aria-label="Nouveau nom" />
                           <button className="btn-icon bg-ink text-canvas hover:bg-ink hover:text-canvas" disabled={pending} aria-label="Valider">
                             <IconCheck className="size-4" />
                           </button>
@@ -95,15 +99,20 @@ export function TeamsAdmin({ teams }: { teams: TeamItem[] }) {
                       </div>
                       <span className="flex-1" />
                       {t.withdrawn ? (
-                        <button className="btn-ghost h-8 px-3 text-[13px]" disabled={pending} onClick={() => act(() => withdrawTeamAction(t.id, false))}>
+                        <button className="btn-ghost h-8 px-3 text-[13px]" disabled={pending} onClick={() => act(() => withdrawTeamAction(t.id, false), `${t.name} est réintégrée.`)}>
                           Réintégrer
                         </button>
                       ) : (
                         <button
                           className="btn-quiet h-8 px-3 text-[13px] text-ink-3 hover:bg-danger-soft hover:text-danger"
                           disabled={pending}
-                          onClick={() =>
-                            confirm(`Déclarer l'abandon de ${t.name} ? Tous ses matchs non joués seront perdus par forfait.`) && act(() => withdrawTeamAction(t.id, true))
+                          onClick={async () =>
+                            (await ask({
+                              title: `Abandon de ${t.name} ?`,
+                              body: "Tous ses matchs non joués seront perdus par forfait et l'équipe sera classée dernière de sa poule. Vous pourrez la réintégrer ensuite.",
+                              confirmLabel: "Déclarer l'abandon",
+                              tone: "danger",
+                            })) && act(() => withdrawTeamAction(t.id, true), `Abandon de ${t.name} enregistré.`)
                           }
                         >
                           Abandon…

@@ -28,7 +28,8 @@ export async function updateMatch(id: string, patch: Partial<Match>): Promise<vo
 /** Recalcule forfaits, classements et tableau, puis écrit les différences en base. */
 export async function applyResolution(bundle: TournamentBundle): Promise<number> {
   const { patches } = resolveTournament(bundle);
-  for (const [id, patch] of patches) await updateMatch(id, patch);
+  // Lignes indépendantes : écritures en parallèle (le client limite lui-même le nombre de connexions).
+  await Promise.all([...patches].map(([id, patch]) => updateMatch(id, patch)));
   return patches.size;
 }
 

@@ -14,6 +14,7 @@ import {
 import { outcome, scoreText, setsWon, setTarget, setWinner, validateResult } from "@/lib/scoring";
 import type { Match, SetScore, Side, SportRules } from "@/lib/types";
 import { IconCheck, IconFlag, IconPencil, IconPlay, IconPlus } from "./Icons";
+import { toast, useConfirm } from "./feedback";
 import { LiveBadge } from "./MatchRow";
 import { ErrorText } from "./ui";
 
@@ -30,6 +31,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
   const router = useRouter();
   const [pending, start] = useTransition();
   const [error, setError] = useState<string | null>(null);
+  const [dialog, ask] = useConfirm();
   const [editing, setEditing] = useState(m.status === "live");
   const [home, setHome] = useState(m.home_score ?? 0);
   const [away, setAway] = useState(m.away_score ?? 0);
@@ -48,16 +50,30 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
     shootout: m.phase === "knockout" && home === away && !isSets ? shootout : null,
   });
 
-  const run = (fn: () => Promise<ActionResult>, after?: () => void) =>
+  const run = (fn: () => Promise<ActionResult>, after?: () => void, success?: string) =>
     start(async () => {
       const r = await fn();
       if (!r.ok) setError(r.error);
       else {
         setError(null);
+        if (success) toast(success);
         after?.();
         router.refresh();
       }
     });
+
+  const forfeit = async (side: Side | "both") => {
+    const who = side === "home" ? homeName : side === "away" ? awayName : null;
+    const ok = await ask({
+      title: who ? `Forfait de ${who} ?` : "Double forfait ?",
+      body: who
+        ? `${who} perd le match sur le score par défaut du sport. Le match est terminé et les classements sont recalculés.`
+        : "Les deux équipes perdent le match. Le match est terminé et les classements sont recalculés.",
+      confirmLabel: "Déclarer le forfait",
+      tone: "danger",
+    });
+    if (ok) run(() => forfeitAction(m.id, side), () => setShowForfeit(false), "Forfait enregistré.");
+  };
 
   // Synchronisation du score en direct (match en cours uniquement)
   const live = m.status === "live" && editing;
@@ -84,6 +100,10 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
   const invalid = validateResult(draft, rules);
   const tie = !isSets && home === away && m.phase === "knockout";
   const showShootout = tie && rules.knockoutTiebreak !== "extra_time" && rules.knockoutTiebreak !== "none";
+  const scoreLine = () =>
+    isSets
+      ? `${won.home}-${won.away} (${sets.map((x) => `${x.home}-${x.away}`).join(", ")})`
+      : `${home}-${away}${showShootout ? ` (${rules.labels.tiebreak} ${shootout.home}-${shootout.away})` : ""}`;
 
   // ------------------------------------------------------------------ Match programmé
   if (m.status === "scheduled") {
@@ -94,8 +114,9 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
         <button className="btn-accent h-16 w-full rounded-2xl text-lg font-semibold" disabled={!teamsKnown || pending} onClick={() => run(() => startMatchAction(m.id), () => setEditing(true))}>
           <IconPlay className="size-5" /> Démarrer le match
         </button>
-        {teamsKnown && <ForfeitPanel open={showForfeit} setOpen={setShowForfeit} homeName={homeName} awayName={awayName} onForfeit={(s) => run(() => forfeitAction(m.id, s))} pending={pending} />}
+        {teamsKnown && <ForfeitPanel open={showForfeit} setOpen={setShowForfeit} homeName={homeName} awayName={awayName} onForfeit={forfeit} pending={pending} />}
         <ErrorText>{error}</ErrorText>
+        {dialog}
       </main>
     );
   }
@@ -122,17 +143,25 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
         <button className="btn-outline h-12 w-full" onClick={() => setEditing(true)}>
           <IconPencil className="size-4" /> Corriger le score
         </button>
-        {!m.forfeit && <ForfeitPanel open={showForfeit} setOpen={setShowForfeit} homeName={homeName} awayName={awayName} onForfeit={(s) => run(() => forfeitAction(m.id, s))} pending={pending} />}
+        {!m.forfeit && <ForfeitPanel open={showForfeit} setOpen={setShowForfeit} homeName={homeName} awayName={awayName} onForfeit={forfeit} pending={pending} />}
         {isOrganizer && (
           <button
             className="btn-quiet w-full text-sm text-danger hover:text-danger"
             disabled={pending}
-            onClick={() => confirm("Effacer le résultat et remettre le match à « Programmé » ?") && run(() => resetMatchAction(m.id))}
+            onClick={async () =>
+              (await ask({
+                title: "Remettre le match à « Programmé » ?",
+                body: "Le score est effacé et la suite du tableau qui en dépend est recalculée.",
+                confirmLabel: "Effacer le résultat",
+                tone: "danger",
+              })) && run(() => resetMatchAction(m.id), undefined, "Résultat effacé.")
+            }
           >
             Remettre à « Programmé »
           </button>
         )}
         <ErrorText>{error}</ErrorText>
+        {dialog}
         <p className="text-center text-xs text-ink-3">Toute correction recalcule le classement et le tableau.</p>
       </main>
     );
@@ -289,9 +318,12 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
         <button
           className={`${m.status === "finished" ? "btn-primary" : "btn-accent"} h-16 w-full rounded-2xl text-lg font-semibold`}
           disabled={pending || !!invalid}
-          onClick={() =>
-            confirm(m.status === "finished" ? "Enregistrer la correction ?" : "Valider le score final et terminer le match ?") &&
-            run(() => finishMatchAction(m.id, payload()), () => setEditing(false))
+          onClick={async () =>
+            (await ask(
+              m.status === "finished"
+                ? { title: "Enregistrer la correction ?", body: `Nouveau score : ${homeName} ${scoreLine()} ${awayName}. Les classements seront recalculés.`, confirmLabel: "Enregistrer" }
+                : { title: "Terminer le match ?", body: `Score final : ${homeName} ${scoreLine()} ${awayName}.`, confirmLabel: "Terminer le match" },
+            )) && run(() => finishMatchAction(m.id, payload()), () => setEditing(false), m.status === "finished" ? "Correction enregistrée." : "Match terminé, résultat enregistré.")
           }
         >
           {m.status === "finished" ? (
@@ -310,9 +342,10 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
         )}
       </div>
       {m.status === "live" && (
-        <ForfeitPanel open={showForfeit} setOpen={setShowForfeit} homeName={homeName} awayName={awayName} onForfeit={(s) => run(() => forfeitAction(m.id, s))} pending={pending} />
+        <ForfeitPanel open={showForfeit} setOpen={setShowForfeit} homeName={homeName} awayName={awayName} onForfeit={forfeit} pending={pending} />
       )}
       <ErrorText>{error}</ErrorText>
+        {dialog}
     </main>
   );
 }
@@ -357,20 +390,19 @@ function ForfeitPanel({
         Déclarer un forfait…
       </button>
     );
-  const ask = (s: Side | "both", label: string) => confirm(`Confirmer : ${label} ?`) && onForfeit(s);
   const btn = "btn h-12 w-full rounded-xl bg-danger-soft text-danger hover:opacity-80";
   return (
     <div className="card rise space-y-2 p-4">
       <div className="pb-1 text-center text-sm font-medium">Quelle équipe déclare forfait ?</div>
       <div className="grid grid-cols-2 gap-2">
-        <button className={btn} disabled={pending} onClick={() => ask("home", `forfait de ${homeName}`)}>
+        <button className={btn} disabled={pending} onClick={() => onForfeit("home")}>
           <span className="truncate">{homeName}</span>
         </button>
-        <button className={btn} disabled={pending} onClick={() => ask("away", `forfait de ${awayName}`)}>
+        <button className={btn} disabled={pending} onClick={() => onForfeit("away")}>
           <span className="truncate">{awayName}</span>
         </button>
       </div>
-      <button className="btn-ghost w-full text-sm" disabled={pending} onClick={() => ask("both", "double forfait")}>
+      <button className="btn-ghost w-full text-sm" disabled={pending} onClick={() => onForfeit("both")}>
         Double forfait
       </button>
       <button className="btn-quiet w-full text-sm" onClick={() => setOpen(false)}>

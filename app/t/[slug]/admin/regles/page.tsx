@@ -1,7 +1,6 @@
-import { deleteTournamentAction, updateTournamentRulesAction } from "@/app/actions";
-import { ConfirmSubmit } from "@/components/ConfirmSubmit";
+import { updateTournamentRulesAction } from "@/app/actions";
 import { CourtsAdmin } from "@/components/CourtsAdmin";
-import { IconTrash } from "@/components/Icons";
+import { DeleteTournamentButton } from "@/components/TournamentActions";
 import { RulesEditor } from "@/components/RulesEditor";
 import { Page, Section } from "@/components/TopBar";
 import { courtCodes } from "@/lib/server/data";
@@ -14,7 +13,6 @@ export default async function RulesPage({ params }: { params: Promise<{ slug: st
   const b = await bundleOr404((await params).slug);
   const t = b.tournament;
   const codes = await courtCodes(t.id);
-  const del = deleteTournamentAction.bind(null, t.id);
   return (
     <Page>
       <Section title={`${t.rules.labels.courtPlural[0].toUpperCase()}${t.rules.labels.courtPlural.slice(1)} et codes arbitres`}>
@@ -44,12 +42,10 @@ export default async function RulesPage({ params }: { params: Promise<{ slug: st
       </Section>
 
       <Section title="Zone dangereuse">
-        <form action={del} className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-danger/30 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-danger/30 p-5">
           <p className="text-sm text-ink-2">Supprime définitivement le tournoi, ses équipes, matchs et résultats.</p>
-          <ConfirmSubmit className="btn-danger" message="Supprimer définitivement ce tournoi ?">
-            <IconTrash className="size-4" /> Supprimer le tournoi
-          </ConfirmSubmit>
-        </form>
+          <DeleteTournamentButton id={t.id} name={t.name} redirectTo="/" />
+        </div>
       </Section>
     </Page>
   );

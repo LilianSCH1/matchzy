@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useTransition } from "react";
 import { moveMatchAction } from "@/app/actions";
+import { toast } from "./feedback";
 import { IconClock } from "./Icons";
 
 /** Décale un match (et les suivants du même terrain) de N minutes. */
@@ -18,7 +19,8 @@ export function ShiftButton({ matchId, courtId, scheduledAt, minutes, label }: {
         start(async () => {
           const t = new Date(new Date(scheduledAt).getTime() + minutes * 60000).toISOString();
           const r = await moveMatchAction(matchId, t, courtId, true);
-          if (!r.ok) alert(r.error);
+          if (!r.ok) toast(r.error, "error");
+          else toast(`Match et suivants repoussés de ${minutes} min.`);
           router.refresh();
         })
       }
