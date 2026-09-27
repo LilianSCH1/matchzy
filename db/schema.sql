@@ -58,6 +58,13 @@ create table if not exists public.court_codes (
   unique (tournament_id, code)
 );
 
+-- Tentatives de connexion (organisateur, codes arbitres) : limite les essais par fenêtre de temps
+create table if not exists public.login_attempts (
+  key text primary key,
+  count int not null default 0,
+  window_start timestamptz not null default now()
+);
+
 create table if not exists public.teams (
   id uuid primary key default gen_random_uuid(),
   tournament_id uuid not null references public.tournaments(id) on delete cascade,

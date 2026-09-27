@@ -32,3 +32,17 @@ export function db(): postgres.Sql {
   }
   return globalForDb.__sql;
 }
+
+/** Client utilisable hors transaction ou dans une transaction. */
+export type Q = postgres.ISql;
+
+/**
+ * Exécute `fn` dans une transaction qui détient le verrou du tournoi : les écritures
+ * et recalculs d'un même tournoi sont sérialisés (deux terrains qui valident en même temps).
+ */
+export function withTournamentLock<T>(tournamentId: string, fn: (sql: postgres.TransactionSql) => Promise<T>): Promise<T> {
+  return db().begin(async (sql) => {
+    await sql`select pg_advisory_xact_lock(hashtext(${tournamentId}))`;
+    return fn(sql);
+  }) as Promise<T>;
+}

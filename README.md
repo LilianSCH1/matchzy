@@ -54,7 +54,7 @@ npm run lint  # vérification TypeScript
 | Rôle | Accès | Ce qu'il peut faire |
 | --- | --- | --- |
 | **Organisateur** | `/login` avec `ORGANIZER_PASSWORD` | Créer des tournois, configurer les sports, tableau de bord, planning, équipes, corrections, saisie sur tous les terrains |
-| **Arbitre / table de marque** | `/t/<tournoi>/arbitre` avec le **code à 4 chiffres de son terrain** | Voir les matchs de son terrain, saisir et corriger les scores, déclarer un forfait |
+| **Arbitre / table de marque** | `/t/<tournoi>/arbitre` avec le **code à 6 chiffres de son terrain** | Voir les matchs de son terrain, saisir et corriger les scores, déclarer un forfait |
 | **Public / écran géant** | `/t/<tournoi>` et `/t/<tournoi>/ecran`, sans connexion | Lecture seule, mise à jour en direct |
 
 Les sessions sont des cookies `httpOnly` signés en HMAC. Les codes arbitres sont dans la table `court_codes` et ne sont affichés que dans l'espace organisateur.

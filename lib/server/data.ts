@@ -1,5 +1,5 @@
 import type { Court, Match, Pool, Sport, Team, Tournament, TournamentBundle } from "../types";
-import { db } from "./db";
+import { db, type Q } from "./db";
 
 /** Prépare une ligne pour l'écriture (le pilote sérialise lui-même les colonnes jsonb). */
 export function toRow<T extends object>(obj: T): Record<string, any> {
@@ -14,16 +14,14 @@ export async function listSports(): Promise<Sport[]> {
   return db()<Sport[]>`select * from sports order by is_preset desc, name`;
 }
 
-export async function getTournament(by: { slug?: string; id?: string }): Promise<Tournament | null> {
-  const sql = db();
+export async function getTournament(by: { slug?: string; id?: string }, sql: Q = db()): Promise<Tournament | null> {
   const rows = by.id
     ? await sql<Tournament[]>`select * from tournaments where id = ${by.id}`
     : await sql<Tournament[]>`select * from tournaments where slug = ${by.slug ?? ""}`;
   return rows[0] ?? null;
 }
 
-export async function loadBundle(tournament: Tournament): Promise<TournamentBundle> {
-  const sql = db();
+export async function loadBundle(tournament: Tournament, sql: Q = db()): Promise<TournamentBundle> {
   const id = tournament.id;
   const [pools, courts, teams, matches] = await Promise.all([
     sql<Pool[]>`select * from pools where tournament_id = ${id} order by position`,

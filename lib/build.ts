@@ -107,7 +107,8 @@ export function buildTournament(input: TournamentInput, opts: { id?: string; slu
   const codes = new Set<string>();
   const courtCodes = courts.map((c) => {
     let code: string;
-    do code = String(Math.floor(1000 + Math.random() * 9000));
+    // 6 chiffres tirés au hasard cryptographique : impossibles à deviner avec la limite d'essais
+    do code = String(100000 + (crypto.getRandomValues(new Uint32Array(1))[0] % 900000));
     while (codes.has(code));
     codes.add(code);
     return { court_id: c.id, tournament_id: tid, code };

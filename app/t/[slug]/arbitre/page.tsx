@@ -33,7 +33,7 @@ export default async function RefereePage({ params, searchParams }: { params: Pr
                 <IconWhistle className="size-5" />
               </span>
               <h1 className="text-2xl font-semibold tracking-tight">Espace arbitre</h1>
-              <p className="text-sm text-ink-2">Entrez le code à 4 chiffres communiqué par l&apos;organisateur.</p>
+              <p className="text-sm text-ink-2">Entrez le code à 6 chiffres communiqué par l&apos;organisateur.</p>
             </div>
             <RefereeLoginForm slug={t.slug} courtLabel={L.court} />
           </div>

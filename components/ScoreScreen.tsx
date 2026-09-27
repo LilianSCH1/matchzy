@@ -39,7 +39,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
   const [active, setActive] = useState(Math.max(0, (m.sets?.length ?? 1) - 1));
   const [shootout, setShootout] = useState<SetScore>(m.shootout ?? { home: 0, away: 0 });
   const [showForfeit, setShowForfeit] = useState(false);
-  const timer = useRef<ReturnType<typeof setTimeout> | null>(null);
+  const [sync, setSync] = useState<"ok" | "saving" | "offline">("ok");
   const isSets = rules.scoreType === "sets";
   const teamsKnown = !!m.home_team_id && !!m.away_team_id;
 
@@ -52,7 +52,13 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
 
   const run = (fn: () => Promise<ActionResult>, after?: () => void, success?: string) =>
     start(async () => {
-      const r = await fn();
+      let r: ActionResult;
+      try {
+        r = await fn();
+      } catch {
+        // Réseau coupé : l'action n'a pas abouti, l'utilisateur peut réessayer sans rien perdre.
+        r = { ok: false, error: "Connexion impossible : vérifiez le réseau puis réessayez." };
+      }
       if (!r.ok) setError(r.error);
       else {
         setError(null);
@@ -85,15 +91,37 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
       return;
     }
     if (!live) return;
-    if (timer.current) clearTimeout(timer.current);
-    timer.current = setTimeout(async () => {
-      const r = await liveScoreAction(m.id, JSON.parse(payloadKey));
-      if (!r.ok) setError(r.error);
-    }, 500);
+    // Envoi différé de 500 ms ; en cas de coupure réseau, nouvel essai toutes les 3 s
+    // jusqu'à ce que le score parte ou soit remplacé par une saisie plus récente.
+    let cancelled = false;
+    let timer: ReturnType<typeof setTimeout>;
+    const send = async () => {
+      setSync("saving");
+      try {
+        const r = await liveScoreAction(m.id, JSON.parse(payloadKey));
+        if (cancelled) return;
+        setSync("ok");
+        setError(r.ok ? null : r.error);
+      } catch {
+        if (cancelled) return;
+        setSync("offline");
+        timer = setTimeout(send, 3000);
+      }
+    };
+    timer = setTimeout(send, 500);
     return () => {
-      if (timer.current) clearTimeout(timer.current);
+      cancelled = true;
+      clearTimeout(timer);
     };
   }, [payloadKey, live, m.id]);
+
+  // Prévient avant de quitter la page si le dernier score n'est pas encore enregistré.
+  useEffect(() => {
+    if (sync === "ok") return;
+    const warn = (e: BeforeUnloadEvent) => e.preventDefault();
+    window.addEventListener("beforeunload", warn);
+    return () => window.removeEventListener("beforeunload", warn);
+  }, [sync]);
 
   const won = setsWon(sets, rules);
   const draft = { ...payload(), home_score: isSets ? won.home : home, away_score: isSets ? won.away : away, forfeit: null, phase: m.phase };
@@ -187,7 +215,11 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
         {m.status === "live" ? (
           <>
             <LiveBadge />
-            <span className="text-xs text-ink-3">{pending ? "Enregistrement…" : "Enregistré en direct"}</span>
+            {sync === "offline" ? (
+              <span className="text-xs font-medium text-danger">Hors ligne · nouvel essai…</span>
+            ) : (
+              <span className="text-xs text-ink-3">{pending || sync === "saving" ? "Enregistrement…" : "Enregistré en direct"}</span>
+            )}
           </>
         ) : (
           <span className="chip bg-warn-soft text-warn">

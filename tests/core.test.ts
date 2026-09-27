@@ -1,12 +1,13 @@
 import { describe, expect, it } from "vitest";
 import { buildBracket, seedOrder } from "@/lib/bracket";
-import { buildTournament, type TournamentInput } from "@/lib/build";
+import { buildTournament } from "@/lib/build";
 import { distributeSeeded, poolSizes, suggestPoolCount, validPoolCounts } from "@/lib/pools";
 import { resolveTournament } from "@/lib/resolve";
 import { bergerPairings } from "@/lib/roundrobin";
 import { forfeitScore, outcome, tablePoints, validateResult } from "@/lib/scoring";
 import { presetBySlug } from "@/lib/sports";
 import type { Match, SlotSource } from "@/lib/types";
+import { input } from "./helpers";
 
 const foot = presetBySlug("football")!.rules;
 const volley = presetBySlug("volleyball")!.rules;
@@ -106,28 +107,6 @@ describe("scores", () => {
     expect(forfeitScore("away", volley).sets).toHaveLength(2);
   });
 });
-
-function input(n: number, format: TournamentInput["format"]): TournamentInput {
-  return {
-    name: "Test",
-    date: "2026-10-01",
-    sportId: null,
-    sportName: "Football",
-    rules: foot,
-    format,
-    timezone: "Europe/Paris",
-    startAt: "2026-10-01T08:00:00.000Z",
-    matchDuration: 15,
-    breakDuration: 5,
-    minRest: 10,
-    courts: 3,
-    teams: Array.from({ length: n }, (_, i) => ({ name: `Équipe ${i + 1}` })),
-    pools: n === 14 ? [[0, 1, 2, 3], [4, 5, 6, 7], [8, 9, 10], [11, 12, 13]] : [Array.from({ length: n }, (_, i) => i)],
-    qualifiersPerPool: 2,
-    bestExtra: 0,
-    thirdPlace: true,
-  };
-}
 
 describe("tournoi complet", () => {
   it("planning sans conflit et phase finale remplie", () => {

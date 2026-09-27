@@ -42,9 +42,9 @@ export function RefereeLoginForm({ slug, courtLabel }: { slug: string; courtLabe
           autoComplete="one-time-code"
           autoFocus
           required
-          placeholder="••••"
-          className="input h-20 rounded-2xl text-center font-mono text-4xl font-medium tracking-[0.6em] placeholder:tracking-[0.6em]"
-          maxLength={6}
+          placeholder="••••••"
+          className="input h-20 rounded-2xl text-center font-mono text-4xl font-medium tracking-[0.4em] placeholder:tracking-[0.4em]"
+          maxLength={8}
         />
       </div>
       <ErrorText>{state?.error}</ErrorText>

@@ -35,7 +35,7 @@ export function setsWon(sets: SetScore[] | null, rules: SportRules, lenient = tr
   return r;
 }
 
-export function outcome(m: ScoreFields, rules: SportRules): Outcome {
+export function outcome(m: ScoreFields, _rules: SportRules): Outcome {
   if (m.forfeit === "home") return "away";
   if (m.forfeit === "away") return "home";
   if (m.forfeit === "both") return "none";

@@ -1,6 +1,7 @@
 import { IconLock } from "@/components/Icons";
 import { LoginForm } from "@/components/LoginForm";
 import { Page, TopBar } from "@/components/TopBar";
+import { safeNext } from "@/lib/rules";
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
@@ -16,7 +17,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
             <h1 className="text-2xl font-semibold tracking-tight">Espace organisateur</h1>
             <p className="text-sm text-ink-2">Créez des tournois, gérez le planning et corrigez les résultats.</p>
           </div>
-          <LoginForm next={next ?? "/"} />
+          <LoginForm next={safeNext(next)} />
         </div>
       </Page>
     </>
