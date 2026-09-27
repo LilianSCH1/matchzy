@@ -43,8 +43,14 @@ La base n'est jamais exposée au navigateur : toutes les lectures et écritures 
 ### Tests
 
 ```bash
-npm test      # logique métier (Berger, poules, tableau, scores, classements, recalculs)
-npm run lint  # vérification TypeScript
+npm test           # logique métier (Berger, poules, tableau, scores, classements, recalculs, règles)
+npm run typecheck  # vérification TypeScript
+npm run lint       # ESLint (règles Next.js et React)
+```
+
+La CI GitHub (`.github/workflows/ci.yml`) lance ces trois commandes puis `next build` à chaque push et pull request.
+
+```bash
 ```
 
 ---
@@ -57,7 +63,9 @@ npm run lint  # vérification TypeScript
 | **Arbitre / table de marque** | `/t/<tournoi>/arbitre` avec le **code à 6 chiffres de son terrain** | Voir les matchs de son terrain, saisir et corriger les scores, déclarer un forfait |
 | **Public / écran géant** | `/t/<tournoi>` et `/t/<tournoi>/ecran`, sans connexion | Lecture seule, mise à jour en direct |
 
-Les sessions sont des cookies `httpOnly` signés en HMAC. Les codes arbitres sont dans la table `court_codes` et ne sont affichés que dans l'espace organisateur.
+Les sessions sont des cookies `httpOnly` signés en HMAC. Les codes arbitres (6 chiffres tirés au hasard cryptographique) sont dans la table `court_codes` et ne sont affichés que dans l'espace organisateur.
+
+Les connexions sont limitées (table `login_attempts`) : 8 essais de mot de passe organisateur par adresse IP et par quart d'heure ; pour les codes arbitres, 10 essais par adresse IP et par quart d'heure, et 200 par tournoi et par heure. Les règles envoyées par le navigateur sont validées côté serveur (`lib/rules.ts`).
 
 ---
 
@@ -116,6 +124,7 @@ Chaque sport stocke un objet `SportRules` en JSON (voir `lib/types.ts`). Il est 
   - quand toutes les poules sont terminées, les qualifiés (y compris les meilleurs Nᵉˢ) remplissent le tableau ;
   - les vainqueurs avancent et les perdants des demies vont en petite finale ;
   - les exemptés passent directement au tour suivant.
+- **Écritures concurrentes** : chaque score, forfait ou correction est enregistré et recalculé dans une seule transaction qui verrouille le tournoi (`withTournamentLock`, verrou consultatif PostgreSQL). Deux terrains qui valident en même temps ne peuvent pas produire un tableau incohérent.
 - **Corrections** : un score corrigé met à jour le classement et le tableau. Si le qualifié ou le vainqueur change, les matchs de phase finale qui en dépendent sont remis à « Programmé » avec les bonnes équipes.
 - **Abandon** d'une équipe (Organiser → Équipes) : ses matchs non joués sont perdus par forfait et elle est classée dernière de sa poule. Une réintégration reste possible.
 - **Retards** : le tableau de bord affiche le retard de chaque terrain et propose un bouton « Décaler +5 » qui repousse le prochain match et tous les suivants.
@@ -131,7 +140,9 @@ Chaque sport stocke un objet `SportRules` en JSON (voir `lib/types.ts`). Il est 
 | Organisateur | `/t/<tournoi>/admin` | Tableau de bord, Planning, Équipes, Règles & accès (codes arbitres, règles, suppression) |
 | Sports | `/sports` | Édition des préréglages et création de sports |
 
-Le **rafraîchissement en direct** recharge les données de la page toutes les 5 s (10 s dans l'espace organisateur), seulement quand l'onglet est visible, et immédiatement quand le téléphone se rallume. Seules les données sont rechargées : la page ne clignote pas et ne perd pas sa position.
+Le **rafraîchissement en direct** recharge les données de la page toutes les 5 s (10 s dans l'espace organisateur), seulement quand l'onglet est visible, et immédiatement quand le téléphone se rallume. Seules les données sont rechargées : la page ne clignote pas et ne perd pas sa position. Les données d'un tournoi sont **mises en cache** côté serveur et invalidées à chaque écriture (`lib/server/page.ts`) : le nombre de spectateurs ne multiplie pas les requêtes à la base.
+
+Sur l'écran de saisie, une coupure réseau n'efface rien : le score en direct est renvoyé automatiquement toutes les 3 s (« Hors ligne · nouvel essai… ») et le navigateur prévient avant de quitter la page tant qu'il n'est pas enregistré.
 
 ### Cas limites gérés
 
