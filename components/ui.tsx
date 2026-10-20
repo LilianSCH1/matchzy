@@ -20,8 +20,8 @@ export function Switch({ label, hint, checked, onChange, className = "" }: { lab
       </span>
       <span className="relative inline-flex shrink-0">
         <input type="checkbox" className="peer sr-only" checked={checked} onChange={(e) => onChange(e.target.checked)} />
-        <span className="h-7 w-12 rounded-full bg-line-strong transition peer-checked:bg-ink peer-focus-visible:ring-4 peer-focus-visible:ring-ink/10" />
-        <span className="absolute top-1 left-1 size-5 rounded-full bg-surface shadow-sm transition peer-checked:translate-x-5 peer-checked:bg-accent" />
+        <span className="h-7 w-12 rounded-full bg-line-strong transition peer-checked:bg-accent peer-focus-visible:ring-4 peer-focus-visible:ring-accent/20" />
+        <span className="absolute top-1 left-1 size-5 rounded-full bg-surface shadow-sm transition peer-checked:translate-x-5" />
       </span>
     </label>
   );

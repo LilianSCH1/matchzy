@@ -284,7 +284,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
         <div className="card space-y-3 p-4 text-center text-sm">
           {setDone ? (
             <div className="flex items-center justify-center gap-2 font-medium">
-              <span className="grid size-5 place-items-center rounded-full bg-accent text-on-accent">
+              <span className="grid size-5 place-items-center rounded-full bg-ok text-on-ok">
                 <IconCheck className="size-3" />
               </span>
               {rules.labels.set} {active + 1} gagné par {setDone === "home" ? homeName : awayName}
@@ -385,7 +385,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
 function TeamName({ name, win, dim }: { name: string; win: boolean; dim: boolean }) {
   return (
     <div className={`flex flex-col items-center gap-2 text-base leading-tight ${win ? "font-semibold" : ""} ${dim ? "text-ink-2" : ""}`}>
-      <span className={`size-2 rounded-full ${win ? "bg-accent ring-1 ring-ink/20" : "bg-transparent"}`} />
+      <span className={`size-2 rounded-full ${win ? "bg-ok" : "bg-transparent"}`} />
       {name}
     </div>
   );

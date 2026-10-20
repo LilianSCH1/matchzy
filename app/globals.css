@@ -1,68 +1,102 @@
 @import "tailwindcss";
 
 /* ------------------------------------------------------------------ Charte graphique
-   Blanc cassé chaud, encre quasi noire, un seul accent (citron) réservé à ce qui compte :
-   qualifiés, validation, vainqueur. Le rouge corail signale le direct. */
+   Gris froid lumineux, encre bleu-nuit, un bleu électrique pour l'action et la marque.
+   Le vert signale ce qui est acquis (qualifié, vainqueur, validé), le rouge le direct,
+   l'ambre ce qui demande l'attention de l'organisateur (retards, conflits). */
 
 :root {
-  --canvas: #f5f5f1;
+  --canvas: #f3f4f7;
   --surface: #ffffff;
-  --surface-2: #eeeee9;
-  --line: #e3e3dc;
-  --line-strong: #cfcfc6;
-  --ink: #111112;
-  --ink-2: #57574f;
-  --ink-3: #979789;
-  --accent: #d3f54a;
-  --accent-soft: #eef9c4;
-  --on-accent: #111112;
-  --live: #f04a23;
-  --live-soft: #fdebe5;
-  --warn: #945600;
-  --warn-soft: #fcf1dc;
-  --danger: #d8311f;
-  --danger-soft: #fce9e6;
+  --surface-2: #eff1f5;
+  --surface-3: #e5e8ee;
+  --line: #e2e5eb;
+  --line-strong: #cbd0d9;
+  --ink: #0b0e14;
+  --ink-2: #4a5263;
+  --ink-3: #6b7486;
+  --accent: #3355ff;
+  --accent-hover: #2445ec;
+  --accent-soft: #e8edff;
+  --accent-ink: #2443e0;
+  --on-accent: #ffffff;
+  --ok: #0c8f55;
+  --ok-soft: #ddf5e8;
+  --on-ok: #ffffff;
+  --live: #e5372a;
+  --live-soft: #fde9e7;
+  --warn: #935500;
+  --warn-soft: #fcf0d6;
+  --danger: #d32a1e;
+  --danger-soft: #fdeceb;
+  --shadow-sm: 0 1px 2px rgb(15 20 35 / 0.06);
+  --shadow-md: 0 1px 2px rgb(15 20 35 / 0.05), 0 6px 20px -6px rgb(15 20 35 / 0.12);
+  --shadow-lg: 0 24px 60px -12px rgb(15 20 35 / 0.32);
   color-scheme: light;
 }
 
+/* Thème sombre : suit le système, sauf choix explicite (data-theme sur <html>). */
 @media (prefers-color-scheme: dark) {
-  :root {
-    --canvas: #0c0c0d;
-    --surface: #161618;
-    --surface-2: #1f1f22;
-    --line: #29292d;
-    --line-strong: #3a3a3f;
-    --ink: #f3f3ee;
-    --ink-2: #a8a89f;
-    --ink-3: #6e6e67;
-    --accent: #d3f54a;
-    --accent-soft: #2a3310;
-    --live: #ff5b37;
-    --live-soft: #3a1710;
-    --warn: #f0a93a;
-    --warn-soft: #33250c;
-    --danger: #ff6b5a;
+  :root:not([data-theme="light"]) {
+    --canvas: #090b10;
+    --surface: #11141b;
+    --surface-2: #181c25;
+    --surface-3: #20252f;
+    --line: #232834;
+    --line-strong: #343b49;
+    --ink: #f2f4f8;
+    --ink-2: #a6aec0;
+    --ink-3: #7c8598;
+    --accent: #5b7bff;
+    --accent-hover: #7590ff;
+    --accent-soft: #19213f;
+    --accent-ink: #93a8ff;
+    --ok: #34d48a;
+    --ok-soft: #0f2a1d;
+    --on-ok: #04140c;
+    --live: #ff5a48;
+    --live-soft: #3a1512;
+    --warn: #f3b048;
+    --warn-soft: #33240b;
+    --danger: #ff6b5c;
     --danger-soft: #3a1512;
+    --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+    --shadow-md: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -8px rgb(0 0 0 / 0.6);
     color-scheme: dark;
   }
 }
 
-/* Écran géant : toujours sombre, quel que soit le réglage du système */
+/* Thème sombre forcé : choix de l'utilisateur, écran géant et bandeaux « tableau d'affichage ». */
+:root[data-theme="dark"],
 .theme-dark {
-  --canvas: #0a0a0b;
-  --surface: #151517;
-  --surface-2: #1e1e21;
-  --line: #28282c;
-  --line-strong: #3a3a3f;
-  --ink: #f5f5f0;
-  --ink-2: #a8a89f;
-  --ink-3: #6e6e67;
-  --accent-soft: #2a3310;
-  --live: #ff5b37;
-  --live-soft: #3a1710;
-  --warn: #f0a93a;
-  --warn-soft: #33250c;
+  --canvas: #090b10;
+  --surface: #11141b;
+  --surface-2: #181c25;
+  --surface-3: #20252f;
+  --line: #232834;
+  --line-strong: #343b49;
+  --ink: #f2f4f8;
+  --ink-2: #a6aec0;
+  --ink-3: #7c8598;
+  --accent: #5b7bff;
+  --accent-hover: #7590ff;
+  --accent-soft: #19213f;
+  --accent-ink: #93a8ff;
+  --ok: #34d48a;
+  --ok-soft: #0f2a1d;
+  --on-ok: #04140c;
+  --live: #ff5a48;
+  --live-soft: #3a1512;
+  --warn: #f3b048;
+  --warn-soft: #33240b;
+  --danger: #ff6b5c;
+  --danger-soft: #3a1512;
+  --shadow-sm: 0 1px 2px rgb(0 0 0 / 0.4);
+  --shadow-md: 0 1px 2px rgb(0 0 0 / 0.4), 0 8px 24px -8px rgb(0 0 0 / 0.6);
   color-scheme: dark;
+}
+
+.theme-dark {
   background: var(--canvas);
   color: var(--ink);
 }
@@ -71,20 +105,29 @@
   --color-canvas: var(--canvas);
   --color-surface: var(--surface);
   --color-surface-2: var(--surface-2);
+  --color-surface-3: var(--surface-3);
   --color-line: var(--line);
   --color-line-strong: var(--line-strong);
   --color-ink: var(--ink);
   --color-ink-2: var(--ink-2);
   --color-ink-3: var(--ink-3);
   --color-accent: var(--accent);
+  --color-accent-hover: var(--accent-hover);
   --color-accent-soft: var(--accent-soft);
+  --color-accent-ink: var(--accent-ink);
   --color-on-accent: var(--on-accent);
+  --color-ok: var(--ok);
+  --color-ok-soft: var(--ok-soft);
+  --color-on-ok: var(--on-ok);
   --color-live: var(--live);
   --color-live-soft: var(--live-soft);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
   --color-danger: var(--danger);
   --color-danger-soft: var(--danger-soft);
+  --shadow-card: var(--shadow-sm);
+  --shadow-float: var(--shadow-md);
+  --shadow-pop: var(--shadow-lg);
   --font-sans: var(--font-geist), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-mono: var(--font-geist-mono), ui-monospace, "SF Mono", Menlo, monospace;
 }
@@ -107,7 +150,7 @@ body {
 
 @layer base {
   :focus-visible {
-    outline: 2px solid var(--ink);
+    outline: 2px solid var(--accent);
     outline-offset: 2px;
   }
 }
@@ -115,22 +158,28 @@ body {
 /* ------------------------------------------------------------------ Briques */
 
 @utility card {
+  @apply rounded-2xl border border-line bg-surface shadow-card;
+}
+@utility card-quiet {
   @apply rounded-2xl border border-line bg-surface;
 }
 @utility btn {
-  @apply inline-flex h-11 items-center justify-center gap-2 rounded-full px-5 text-[15px] font-medium whitespace-nowrap transition-[background-color,opacity,transform] duration-150 select-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40;
+  @apply inline-flex h-11 items-center justify-center gap-2 rounded-xl px-4 text-[15px] font-medium whitespace-nowrap transition-[background-color,border-color,color,opacity,transform] duration-150 select-none active:scale-[0.97] disabled:pointer-events-none disabled:opacity-40;
 }
 @utility btn-primary {
   @apply btn bg-ink text-canvas hover:opacity-85;
 }
 @utility btn-accent {
-  @apply btn bg-accent text-on-accent hover:brightness-95;
+  @apply btn bg-accent text-on-accent shadow-[0_1px_0_rgb(255_255_255/0.15)_inset,0_1px_2px_rgb(0_0_0/0.1)] hover:bg-accent-hover;
+}
+@utility btn-ok {
+  @apply btn bg-ok text-on-ok hover:opacity-90;
 }
 @utility btn-ghost {
-  @apply btn bg-surface-2 text-ink hover:bg-line;
+  @apply btn bg-surface-2 text-ink hover:bg-surface-3;
 }
 @utility btn-outline {
-  @apply btn border border-line bg-surface text-ink hover:bg-surface-2;
+  @apply btn border border-line bg-surface text-ink shadow-card hover:border-line-strong hover:bg-surface-2;
 }
 @utility btn-quiet {
   @apply btn text-ink-2 hover:bg-surface-2 hover:text-ink;
@@ -139,10 +188,10 @@ body {
   @apply btn bg-danger text-white hover:opacity-90;
 }
 @utility btn-icon {
-  @apply inline-flex size-9 shrink-0 items-center justify-center rounded-full text-ink-2 transition hover:bg-surface-2 hover:text-ink active:scale-95 disabled:pointer-events-none disabled:opacity-30;
+  @apply inline-flex size-9 shrink-0 items-center justify-center rounded-xl text-ink-2 transition hover:bg-surface-2 hover:text-ink active:scale-95 disabled:pointer-events-none disabled:opacity-30;
 }
 @utility input {
-  @apply h-11 w-full rounded-xl border border-line bg-surface px-3.5 text-base text-ink transition outline-none placeholder:text-ink-3 focus:border-ink focus:ring-4 focus:ring-ink/5;
+  @apply h-11 w-full rounded-xl border border-line bg-surface px-3.5 text-base text-ink transition outline-none placeholder:text-ink-3 focus:border-accent focus:ring-4 focus:ring-accent/15;
 }
 @utility label {
   @apply mb-1.5 block text-[13px] font-medium text-ink-2;
@@ -151,13 +200,16 @@ body {
   @apply inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-xs font-medium whitespace-nowrap;
 }
 @utility eyebrow {
-  @apply text-[11px] font-medium tracking-[0.08em] text-ink-3 uppercase;
+  @apply text-[11px] font-semibold tracking-[0.08em] text-ink-3 uppercase;
+}
+@utility kbd {
+  @apply inline-flex h-5 min-w-5 items-center justify-center rounded-md border border-line bg-surface-2 px-1 font-mono text-[11px] font-medium text-ink-3;
 }
 @utility seg {
-  @apply inline-flex gap-1 rounded-full bg-surface-2 p-1;
+  @apply inline-flex gap-1 rounded-xl bg-surface-2 p-1;
 }
 @utility seg-item {
-  @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-full px-4 text-sm font-medium whitespace-nowrap text-ink-2 transition hover:text-ink;
+  @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-lg px-4 text-sm font-medium whitespace-nowrap text-ink-2 transition hover:text-ink;
 }
 @utility seg-on {
   @apply bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.08),0_0_0_1px_var(--line)];
@@ -167,6 +219,9 @@ body {
   &::-webkit-scrollbar {
     display: none;
   }
+}
+@utility pb-safe {
+  padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
 }
 
 /* ------------------------------------------------------------------ Animations */
@@ -186,6 +241,18 @@ body {
   animation: pulse-dot 1.4s ease-in-out infinite;
 }
 
+@keyframes live-ring {
+  0% {
+    box-shadow: 0 0 0 0 color-mix(in oklab, var(--live) 45%, transparent);
+  }
+  100% {
+    box-shadow: 0 0 0 10px transparent;
+  }
+}
+.live-ring {
+  animation: live-ring 1.8s ease-out infinite;
+}
+
 @keyframes rise {
   from {
     opacity: 0;
@@ -200,9 +267,50 @@ body {
   animation: rise 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
+@keyframes pop {
+  from {
+    opacity: 0;
+    transform: translateY(8px) scale(0.98);
+  }
+  to {
+    opacity: 1;
+    transform: none;
+  }
+}
+.pop {
+  animation: pop 0.18s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+}
+
+@keyframes ticker {
+  from {
+    transform: translateX(0);
+  }
+  to {
+    transform: translateX(-50%);
+  }
+}
+.ticker {
+  animation: ticker 60s linear infinite;
+}
+
+/* Grille discrète des bandeaux « tableau d'affichage » */
+.scoreboard-grid {
+  background-image:
+    radial-gradient(ellipse 80% 120% at 100% 0%, color-mix(in oklab, var(--accent) 28%, transparent), transparent 60%),
+    linear-gradient(color-mix(in oklab, var(--ink) 4%, transparent) 1px, transparent 1px),
+    linear-gradient(90deg, color-mix(in oklab, var(--ink) 4%, transparent) 1px, transparent 1px);
+  background-size:
+    100% 100%,
+    24px 24px,
+    24px 24px;
+}
+
 @media (prefers-reduced-motion: reduce) {
   .live-dot,
-  .rise {
+  .live-ring,
+  .rise,
+  .pop,
+  .ticker {
     animation: none;
   }
 }

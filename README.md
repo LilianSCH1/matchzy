@@ -43,7 +43,7 @@ La base n'est jamais exposée au navigateur : toutes les lectures et écritures 
 ### Tests
 
 ```bash
-npm test           # logique métier (Berger, poules, tableau, scores, classements, recalculs, règles)
+npm test           # logique métier (Berger, poules, tableau, scores, classements, recalculs, règles, assistant)
 npm run typecheck  # vérification TypeScript
 npm run lint       # ESLint (règles Next.js et React)
 ```
@@ -144,6 +144,15 @@ Le **rafraîchissement en direct** recharge les données de la page toutes les 5
 
 Sur l'écran de saisie, une coupure réseau n'efface rien : le score en direct est renvoyé automatiquement toutes les 3 s (« Hors ligne · nouvel essai… ») et le navigateur prévient avant de quitter la page tant qu'il n'est pas enregistré.
 
+### 6. Interface intelligente
+
+- **Assistant de l'organisateur** (`lib/insights.ts`, tableau de bord) : retard **projeté** de chaque terrain (un match en cours qui déborde retarde le suivant avant même son heure), proposition de décalage en un geste (« Décaler de 10 min »), match en cours depuis trop longtemps (« score à valider ? »), conflits d'équipe ou de terrain et repos trop court, terrain libre pendant qu'un autre accumule du retard, poules presque terminées, égalités tirées au sort, abandons, coup d'envoi imminent. Hors du jour du tournoi, aucun retard n'est calculé ; les matchs restés ouverts sont signalés.
+- **Terrains en direct** : une carte par terrain avec le match en cours, les suivants, le retard et « +5 min ». Indicateurs : progression, matchs en cours, retard maximal, **fin projetée** comparée au planning.
+- **Palette de commandes** (`Ctrl K`, `⌘K` ou `/`, partout) : recherche sans accents d'une page, d'une équipe ou d'un match (`lib/commands.ts`). Chaque page déclare ses commandes avec `<Commands groups={…} />`.
+- **Mon équipe** (vue publique) : le spectateur choisit son équipe, mémorisée sur son téléphone, et voit son prochain match (avec compte à rebours), son dernier résultat, sa position et sa forme (`lib/follow.ts`).
+- **Thème** clair, sombre ou système, mémorisé (`data-theme` sur `<html>`, sans flash au chargement).
+- **Navigation** : barre latérale et barre d'onglets en bas d'écran sur mobile dans l'espace organisateur ; onglets à portée de pouce sur la vue publique ; programme regroupé par créneau horaire ; écran géant avec tableaux d'affichage par terrain et bandeau de résultats défilant.
+
 ### Cas limites gérés
 
 | Cas | Traitement |
@@ -178,6 +187,9 @@ lib/
   scoring.ts              Validation, vainqueur, barème, forfaits
   standings.ts            Classements et départages
   resolve.ts              Recalcul : forfaits, qualifiés, avancement du tableau
+  insights.ts             Assistant : état des terrains, retards projetés, conflits, fin projetée
+  follow.ts               Résumé par équipe pour « Mon équipe »
+  commands.ts             Index et recherche de la palette de commandes
   build.ts                Construction complète d'un tournoi (pur, utilisé aussi pour l'aperçu)
   server/                 Connexion Postgres, sessions, persistance, démo
 db/schema.sql             Schéma SQL (idempotent)

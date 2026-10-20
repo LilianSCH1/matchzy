@@ -26,7 +26,7 @@ export function Standings({ v, big = false }: { v: View; big?: boolean }) {
               <li key={row.teamId} className="flex items-center gap-3 px-4 py-2">
                 <span
                   className={`inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold ${
-                    i < t.best_extra ? "bg-accent text-on-accent" : "text-ink-3"
+                    i < t.best_extra ? "bg-ok text-on-ok" : "text-ink-3"
                   }`}
                 >
                   {i + 1}

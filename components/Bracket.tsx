@@ -7,7 +7,7 @@ function Slot({ name, score, win, lose, pending, big }: { name: string; score: s
   return (
     <div className={`flex items-center justify-between gap-2 px-3 ${big ? "py-2" : "py-1.5"}`}>
       <span className={`flex min-w-0 items-center gap-2 truncate ${win ? "font-semibold" : ""} ${lose ? "text-ink-3" : ""} ${pending ? "text-ink-3" : ""}`}>
-        {win && <span className="size-1.5 shrink-0 rounded-full bg-accent ring-1 ring-ink/20" />}
+        {win && <span className="size-1.5 shrink-0 rounded-full bg-ok" />}
         <span className="truncate">{name}</span>
       </span>
       <span className={`tabular-nums ${win ? "font-semibold" : "text-ink-2"}`}>{score ?? ""}</span>
@@ -29,7 +29,7 @@ function BracketMatch({ m, v, big }: { m: Match; v: View; big?: boolean }) {
   const tb = m.shootout && m.home_score === m.away_score;
   const w = m.winner_team_id;
   return (
-    <div className={`overflow-hidden rounded-xl border bg-surface ${live ? "border-live/50" : "border-line"} ${size}`}>
+    <div className={`overflow-hidden rounded-xl border bg-surface shadow-card ${live ? "border-live/50" : "border-line"} ${size}`}>
       <div className="flex justify-between gap-2 border-b border-line px-3 py-1 text-[11px] text-ink-3">
         <span className="truncate">{m.label}</span>
         <span className="whitespace-nowrap">
@@ -74,13 +74,13 @@ export function Bracket({ v, big = false }: { v: View; big?: boolean }) {
   return (
     <div className="space-y-4">
       {champion && (
-        <div className="flex items-center gap-4 rounded-2xl bg-accent px-5 py-4 text-on-accent">
-          <span className="grid size-11 place-items-center rounded-full bg-on-accent/10">
+        <div className="theme-dark scoreboard-grid flex items-center gap-4 overflow-hidden rounded-2xl border border-line px-5 py-4">
+          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-warn-soft text-warn">
             <IconTrophy className="size-6" />
           </span>
-          <div>
-            <div className="text-xs font-medium tracking-wide uppercase opacity-60">Vainqueur</div>
-            <div className={`font-semibold tracking-tight ${big ? "text-3xl" : "text-xl"}`}>{v.teams.get(champion)}</div>
+          <div className="min-w-0">
+            <div className="eyebrow text-warn">Vainqueur du tournoi</div>
+            <div className={`truncate font-semibold tracking-tight ${big ? "text-3xl" : "text-2xl"}`}>{v.teams.get(champion)}</div>
           </div>
         </div>
       )}

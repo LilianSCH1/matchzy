@@ -41,3 +41,20 @@ export async function courtCodes(tournamentId: string): Promise<Map<string, stri
   const rows = await db()<{ court_id: string; code: string }[]>`select court_id, code from court_codes where tournament_id = ${tournamentId}`;
   return new Map(rows.map((r) => [r.court_id, r.code]));
 }
+
+export interface TournamentStats {
+  live: number;
+  done: number;
+  total: number;
+}
+
+/** Avancement de chaque tournoi (accueil) en une seule requête. */
+export async function tournamentStats(): Promise<Map<string, TournamentStats>> {
+  const rows = await db()<{ tournament_id: string; live: number; done: number; total: number }[]>`
+    select tournament_id,
+      count(*) filter (where status = 'live')::int as live,
+      count(*) filter (where status = 'finished')::int as done,
+      count(*)::int as total
+    from matches where not is_bye group by tournament_id`;
+  return new Map(rows.map((r) => [r.tournament_id, { live: r.live, done: r.done, total: r.total }]));
+}

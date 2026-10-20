@@ -1,12 +1,13 @@
 import Link from "next/link";
-import { IconArrowRight, IconCheck, IconEye, IconScreen, IconWhistle } from "@/components/Icons";
+import { CourtBoard } from "@/components/CourtBoard";
+import { IconBracket, IconClock, IconPulse, IconScreen, IconTarget, IconWhistle } from "@/components/Icons";
+import { InsightsPanel } from "@/components/InsightsPanel";
 import { MatchRow } from "@/components/MatchRow";
-import { ShiftButton } from "@/components/ShiftButton";
-import { Empty, Notice, Page, Section } from "@/components/TopBar";
-import { estimatedEnd } from "@/lib/build";
+import { Empty, Page, PageHeader, Ring, Section } from "@/components/TopBar";
+import { courtStatuses, forecast, tournamentInsights } from "@/lib/insights";
 import { resolveTournament } from "@/lib/resolve";
 import { bundleOr404 } from "@/lib/server/page";
-import { byTime, fmtTime, View } from "@/lib/view";
+import { fmtDate, fmtTime, View } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
 
@@ -15,130 +16,153 @@ export default async function Dashboard({ params }: { params: Promise<{ slug: st
   const v = new View(b);
   const t = b.tournament;
   const L = t.rules.labels;
-  const base = `/t/${t.slug}`;
-  const all = v.playable();
-  const done = all.filter((m) => m.status === "finished").length;
-  const live = v.live().sort(byTime);
-  const r = resolveTournament(b);
-  const poolTotal = all.filter((m) => m.phase === "pool").length;
-  const poolDone = all.filter((m) => m.phase === "pool" && m.status === "finished").length;
-  const end = estimatedEnd(b);
+  const pub = `/t/${t.slug}`;
   const now = Date.now();
-  const late = all.filter((m) => v.delay(m, now) > 0);
-  const withdrawn = b.teams.filter((x) => x.withdrawn);
-  const pct = all.length ? Math.round((100 * done) / all.length) : 0;
+  const r = resolveTournament(b, new Date(now));
+  const courts = courtStatuses(b, now);
+  const f = forecast(b, now, courts);
+  const insights = tournamentInsights(b, now, r);
+  const pct = f.total ? Math.round((100 * f.done) / f.total) : 0;
+  const lateCourts = courts.filter((c) => c.state === "late").length;
+  const slip = f.projectedEnd && f.plannedEnd ? Math.round((f.projectedEnd.getTime() - f.plannedEnd.getTime()) / 60000) : 0;
+  const recent = v
+    .playable()
+    .filter((m) => m.status === "finished")
+    .sort((a, c) => (c.finished_at ?? "").localeCompare(a.finished_at ?? ""))
+    .slice(0, 4);
 
-  // Retard projeté : fin prévue du dernier match + plus grand retard actuel
-  const maxDelay = Math.max(
-    0,
-    ...b.courts.map((c) => {
-      const next = all.filter((m) => m.court_id === c.id && m.status === "scheduled").sort(byTime)[0];
-      return next ? v.delay(next, now) : 0;
+  // Avancement par phase
+  const all = v.playable();
+  const phases = [
+    ...b.pools.map((p) => {
+      const list = all.filter((m) => m.pool_id === p.id);
+      return { key: p.id, label: `Poule ${p.name}`, done: list.filter((m) => m.status === "finished").length, total: list.length };
     }),
-  );
+    ...(t.format !== "pools"
+      ? [
+          (() => {
+            const list = all.filter((m) => m.phase === "knockout");
+            return { key: "ko", label: "Phase finale", done: list.filter((m) => m.status === "finished").length, total: list.length };
+          })(),
+        ]
+      : []),
+  ].filter((p) => p.total > 0);
 
   return (
-    <Page>
-      <div className="card overflow-hidden">
-        <div className="grid grid-cols-2 gap-px bg-line md:grid-cols-4">
-          <Stat label="Matchs joués" value={`${done}`} unit={`/ ${all.length}`} />
-          <Stat label="En cours" value={String(live.length)} tone={live.length ? "live" : undefined} />
-          <Stat label="En retard" value={String(late.length)} unit={late.length ? `max ${maxDelay} min` : undefined} tone={late.length ? "warn" : undefined} />
-          <Stat label="Fin estimée" value={end ? fmtTime(new Date(end.getTime() + maxDelay * 60000).toISOString(), t.timezone) : "–"} />
-        </div>
-        <div className="flex items-center gap-3 border-t border-line px-5 py-3">
-          <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2">
-            <div className="h-full rounded-full bg-ink transition-[width] duration-700" style={{ width: `${pct}%` }} />
-          </div>
-          <span className="text-xs font-medium text-ink-2 tabular-nums">{pct} %</span>
-        </div>
-      </div>
+    <Page wide>
+      <PageHeader
+        eyebrow="Tableau de bord"
+        title="Pilotage en direct"
+        description={
+          <span className="first-letter:uppercase">
+            {fmtDate(t.date)} · {t.sport_name} · {b.teams.length} équipes · {b.courts.length} {b.courts.length > 1 ? L.courtPlural : L.court}
+          </span>
+        }
+        actions={
+          <>
+            <Link href={`${pub}/ecran`} target="_blank" className="btn-outline h-10 text-sm">
+              <IconScreen className="size-4" /> Écran géant
+            </Link>
+            <Link href={`${pub}/arbitre`} className="btn-accent h-10 text-sm">
+              <IconWhistle className="size-4" /> Saisir les scores
+            </Link>
+          </>
+        }
+      />
 
-      {(t.format === "pools_knockout" || withdrawn.length > 0) && (
-        <div className="space-y-2">
-          {t.format === "pools_knockout" &&
-            (r.poolsComplete ? (
-              <Notice tone="ok">
-                <span className="flex items-center gap-2">
-                  <IconCheck className="size-4" /> Poules terminées : la phase finale a été remplie automatiquement.
-                </span>
-              </Notice>
-            ) : (
-              <Notice>
-                Poules : {poolDone}/{poolTotal} matchs joués. La phase finale se remplira automatiquement à la fin des poules.
-              </Notice>
-            ))}
-          {withdrawn.length > 0 && <Notice tone="warn">Abandon : {withdrawn.map((x) => x.name).join(", ")} (matchs restants perdus par forfait).</Notice>}
-        </div>
-      )}
-
-      <div className="grid gap-2 sm:grid-cols-3">
-        <Shortcut href={`${base}/arbitre`} icon={<IconWhistle />} title="Saisir les scores" sub={`Par ${L.court}`} />
-        <Shortcut href={base} icon={<IconEye />} title="Vue publique" sub="Ce que voient les joueurs" />
-        <Shortcut href={`${base}/ecran`} icon={<IconScreen />} title="Écran géant" sub="À projeter sur place" />
-      </div>
-
-      <Section title="En cours">
-        {live.length ? (
-          <div className="grid grid-cols-1 gap-2 md:grid-cols-2">
-            {live.map((m) => (
-              <MatchRow key={m.id} m={m} v={v} href={`${base}/match/${m.id}`} />
-            ))}
-          </div>
-        ) : (
-          <Empty>Aucun match en cours.</Empty>
-        )}
-      </Section>
-
-      <Section title={`Prochains matchs par ${L.court}`} hint={`« +5 min » repousse le prochain match et tous les suivants du ${L.court}.`}>
-        <div className="grid grid-cols-1 gap-6 md:grid-cols-2">
-          {v.nextByCourt(3).map(({ courtId, matches }) => {
-            const first = matches[0];
-            const delay = first ? v.delay(first, now) : 0;
-            return (
-              <div key={courtId} className="space-y-2">
-                <div className="flex h-9 items-center justify-between gap-2">
-                  <span className="flex items-center gap-2">
-                    <span className="eyebrow">{v.courts.get(courtId)}</span>
-                    {delay > 0 && <span className="chip bg-warn-soft text-warn">retard {delay} min</span>}
-                  </span>
-                  {first && <ShiftButton matchId={first.id} courtId={courtId} scheduledAt={first.scheduled_at!} minutes={5} />}
-                </div>
-                {matches.length ? (
-                  matches.map((m) => <MatchRow key={m.id} m={m} v={v} href={`${base}/match/${m.id}`} showCourt={false} />)
-                ) : (
-                  <Empty>Plus de match prévu.</Empty>
-                )}
+      {/* Indicateurs */}
+      <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
+        <Kpi label="Progression" icon={<IconTarget className="size-4" />}>
+          <div className="flex items-center gap-3">
+            <Ring value={pct} size={40} stroke={5} />
+            <div>
+              <div className="text-2xl font-semibold tracking-tight tabular-nums">{pct} %</div>
+              <div className="text-xs text-ink-3 tabular-nums">
+                {f.done} / {f.total} matchs
               </div>
-            );
-          })}
+            </div>
+          </div>
+        </Kpi>
+        <Kpi label="En cours" icon={<IconPulse className="size-4" />} tone={f.live ? "live" : undefined}>
+          <div className="text-3xl font-semibold tracking-tight tabular-nums">{f.live}</div>
+          <div className="text-xs text-ink-3">
+            sur {b.courts.length} {b.courts.length > 1 ? L.courtPlural : L.court}
+          </div>
+        </Kpi>
+        <Kpi label="Retard" icon={<IconClock className="size-4" />} tone={f.maxDelay >= 5 ? "warn" : undefined}>
+          <div className="text-3xl font-semibold tracking-tight tabular-nums">
+            {f.maxDelay}
+            <span className="ml-1 text-base font-medium text-ink-3">min</span>
+          </div>
+          <div className="text-xs text-ink-3">{lateCourts ? `${lateCourts} ${lateCourts > 1 ? `${L.courtPlural} en retard` : `${L.court} en retard`}` : "Planning tenu"}</div>
+        </Kpi>
+        <Kpi label="Fin projetée" icon={<IconBracket className="size-4" />}>
+          <div className="text-3xl font-semibold tracking-tight tabular-nums">{f.projectedEnd ? fmtTime(f.projectedEnd.toISOString(), t.timezone) : "–"}</div>
+          <div className={`text-xs ${slip > 0 ? "text-warn" : "text-ink-3"}`}>
+            {slip > 0 ? `+${slip} min sur le planning` : f.plannedEnd ? `Prévue à ${fmtTime(f.plannedEnd.toISOString(), t.timezone)}` : ""}
+          </div>
+        </Kpi>
+      </div>
+
+      <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
+        <div className="min-w-0 space-y-8">
+          <Section
+            title={`${L.courtPlural[0].toUpperCase()}${L.courtPlural.slice(1)} en direct`}
+            hint={`Touchez un match pour saisir le score. « +5 min » repousse le prochain match et tous les suivants du ${L.court}.`}
+          >
+            <CourtBoard courts={courts} v={v} base={pub} now={now} />
+          </Section>
+
+          {phases.length > 1 && (
+            <Section title="Avancement" hint={t.format === "pools_knockout" ? "La phase finale se remplit automatiquement à la fin des poules." : undefined}>
+              <div className="card divide-y divide-line">
+                {phases.map((p) => {
+                  const done = p.done === p.total;
+                  return (
+                    <div key={p.key} className="flex items-center gap-4 px-4 py-2.5 text-sm">
+                      <span className="w-28 shrink-0 truncate font-medium">{p.label}</span>
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2">
+                        <div className={`h-full rounded-full transition-[width] duration-700 ${done ? "bg-ok" : "bg-accent"}`} style={{ width: `${(100 * p.done) / p.total}%` }} />
+                      </div>
+                      <span className={`w-14 text-right text-xs tabular-nums ${done ? "font-medium text-ok" : "text-ink-3"}`}>
+                        {p.done}/{p.total}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </Section>
+          )}
+
+          <Section title="Derniers résultats" action={<Link href={`${pub}?v=programme`} className="text-sm font-medium text-accent-ink hover:underline">Programme complet</Link>}>
+            {recent.length ? (
+              <div className="grid gap-2 md:grid-cols-2">
+                {recent.map((m) => (
+                  <MatchRow key={m.id} m={m} v={v} href={`${pub}/match/${m.id}`} />
+                ))}
+              </div>
+            ) : (
+              <Empty>Les résultats apparaîtront ici dès le premier score validé.</Empty>
+            )}
+          </Section>
         </div>
-      </Section>
+
+        <aside className="xl:sticky xl:top-6">
+          <InsightsPanel insights={insights} />
+        </aside>
+      </div>
     </Page>
   );
 }
 
-function Stat({ label, value, unit, tone }: { label: string; value: string; unit?: string; tone?: "live" | "warn" }) {
+function Kpi({ label, icon, tone, children }: { label: string; icon: React.ReactNode; tone?: "live" | "warn"; children: React.ReactNode }) {
   return (
-    <div className="bg-surface px-5 py-4">
-      <div className="eyebrow">{label}</div>
-      <div className="mt-1 flex items-baseline gap-1.5">
-        <span className={`text-3xl font-semibold tracking-tight tabular-nums ${tone === "live" ? "text-live" : tone === "warn" ? "text-warn" : ""}`}>{value}</span>
-        {unit && <span className="text-sm text-ink-3">{unit}</span>}
+    <div className={`card space-y-2 p-4 ${tone === "live" ? "border-live/30" : tone === "warn" ? "border-warn/40 bg-warn-soft/40" : ""}`}>
+      <div className={`flex items-center gap-1.5 text-xs font-medium ${tone === "live" ? "text-live" : tone === "warn" ? "text-warn" : "text-ink-3"}`}>
+        {tone === "live" ? <span className="live-dot size-2 rounded-full bg-live" /> : icon}
+        {label}
       </div>
+      {children}
     </div>
-  );
-}
-
-function Shortcut({ href, icon, title, sub }: { href: string; icon: React.ReactNode; title: string; sub: string }) {
-  return (
-    <Link href={href} className="card group flex items-center gap-3 p-4 transition hover:border-line-strong">
-      <span className="grid size-10 shrink-0 place-items-center rounded-xl bg-surface-2">{icon}</span>
-      <span className="min-w-0 flex-1">
-        <span className="block text-sm font-medium">{title}</span>
-        <span className="block truncate text-xs text-ink-3">{sub}</span>
-      </span>
-      <IconArrowRight className="size-4 text-ink-3 transition group-hover:translate-x-0.5 group-hover:text-ink" />
-    </Link>
   );
 }

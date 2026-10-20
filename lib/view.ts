@@ -83,9 +83,19 @@ export class View {
     }));
   }
 
+  /**
+   * Vrai le jour du tournoi (de 12 h avant le coup d'envoi à 12 h après le dernier match prévu).
+   * En dehors, retards et chronos n'ont pas de sens (tournoi passé resté « en cours », démo ancienne).
+   */
+  isMatchday(now = Date.now()): boolean {
+    const start = new Date(this.b.tournament.start_at).getTime();
+    const last = Math.max(start, ...this.b.matches.filter((m) => m.scheduled_at).map((m) => new Date(m.scheduled_at!).getTime()));
+    return now >= start - 12 * 3600000 && now <= last + 12 * 3600000;
+  }
+
   /** Retard (minutes) d'un match programmé dont l'heure est dépassée. */
   delay(m: Match, now = Date.now()): number {
-    if (m.status !== "scheduled" || !m.scheduled_at) return 0;
+    if (m.status !== "scheduled" || !m.scheduled_at || !this.isMatchday(now)) return 0;
     return Math.max(0, Math.floor((now - new Date(m.scheduled_at).getTime()) / 60000));
   }
 }

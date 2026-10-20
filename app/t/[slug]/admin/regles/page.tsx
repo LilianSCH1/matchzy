@@ -2,7 +2,7 @@ import { updateTournamentRulesAction } from "@/app/actions";
 import { CourtsAdmin } from "@/components/CourtsAdmin";
 import { DeleteTournamentButton } from "@/components/TournamentActions";
 import { RulesEditor } from "@/components/RulesEditor";
-import { Page, Section } from "@/components/TopBar";
+import { Page, PageHeader, Section } from "@/components/TopBar";
 import { courtCodes } from "@/lib/server/data";
 import { bundleOr404 } from "@/lib/server/page";
 import { fmtTime, FORMAT_LABEL } from "@/lib/view";
@@ -14,7 +14,8 @@ export default async function RulesPage({ params }: { params: Promise<{ slug: st
   const t = b.tournament;
   const codes = await courtCodes(t.id);
   return (
-    <Page>
+    <Page wide>
+      <PageHeader eyebrow="Organisation" title="Règles & accès" description="Codes arbitres, configuration du tournoi et règles du sport appliquées à ce tournoi." />
       <Section title={`${t.rules.labels.courtPlural[0].toUpperCase()}${t.rules.labels.courtPlural.slice(1)} et codes arbitres`}>
         <CourtsAdmin courts={b.courts.map((c) => ({ id: c.id, name: c.name, code: codes.get(c.id) ?? "?" }))} refereeUrl={`/t/${t.slug}/arbitre`} />
       </Section>

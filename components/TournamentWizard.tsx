@@ -848,7 +848,7 @@ function PoolDrop({ index, size, single, children }: { index: number; size: numb
   const { setNodeRef, isOver } = useDroppable({ id: `pool-${index}` });
   const bad = !single && (size < POOL_MIN || size > POOL_MAX);
   return (
-    <div ref={setNodeRef} className={`min-h-24 rounded-xl p-2.5 transition ${isOver ? "bg-accent-soft ring-2 ring-ink" : "bg-surface-2"}`}>
+    <div ref={setNodeRef} className={`min-h-24 rounded-xl p-2.5 transition ${isOver ? "bg-accent-soft ring-2 ring-accent" : "bg-surface-2"}`}>
       <div className="mb-2 flex items-center justify-between px-1">
         <span className="text-sm font-semibold">Poule {poolName(index)}</span>
         <span className={`text-xs ${bad ? "font-medium text-warn" : "text-ink-3"}`}>{size} équipes</span>

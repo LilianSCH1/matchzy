@@ -1,5 +1,5 @@
 import { PlanningEditor, type PlanItem } from "@/components/PlanningEditor";
-import { Page } from "@/components/TopBar";
+import { Page, PageHeader } from "@/components/TopBar";
 import { bundleOr404 } from "@/lib/server/page";
 import { View } from "@/lib/view";
 
@@ -20,7 +20,12 @@ export default async function PlanningPage({ params }: { params: Promise<{ slug:
     status: m.status,
   }));
   return (
-    <Page>
+    <Page wide>
+      <PageHeader
+        eyebrow="Organisation"
+        title="Planning"
+        description={`Changez l'horaire ou le ${b.tournament.rules.labels.court} d'un match, décalez les suivants ou échangez deux matchs. Les conflits sont signalés en direct.`}
+      />
       <PlanningEditor
         items={items}
         courts={b.courts.map((c) => ({ id: c.id, name: c.name }))}

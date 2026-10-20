@@ -17,7 +17,7 @@ export function LoginForm({ next }: { next: string }) {
         <input id="password" name="password" type="password" autoFocus required className="input h-12" autoComplete="current-password" />
       </div>
       <ErrorText>{state?.error}</ErrorText>
-      <button className="btn-primary h-12 w-full" disabled={pending}>
+      <button className="btn-accent h-12 w-full" disabled={pending}>
         {pending ? "Connexion…" : "Se connecter"}
         {!pending && <IconArrowRight className="size-4" />}
       </button>
@@ -48,7 +48,7 @@ export function RefereeLoginForm({ slug, courtLabel }: { slug: string; courtLabe
         />
       </div>
       <ErrorText>{state?.error}</ErrorText>
-      <button className="btn-primary h-14 w-full text-base" disabled={pending}>
+      <button className="btn-accent h-14 w-full text-base" disabled={pending}>
         {pending ? "Vérification…" : "Accéder à mes matchs"}
         {!pending && <IconArrowRight className="size-4" />}
       </button>
