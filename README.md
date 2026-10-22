@@ -61,11 +61,13 @@ La CI GitHub (`.github/workflows/ci.yml`) lance ces trois commandes puis `next b
 | --- | --- | --- |
 | **Organisateur** | `/login` avec `ORGANIZER_PASSWORD` | Créer des tournois, configurer les sports, tableau de bord, planning, équipes, corrections, saisie sur tous les terrains |
 | **Arbitre / table de marque** | `/t/<tournoi>/arbitre` avec le **code à 6 chiffres de son terrain** | Voir les matchs de son terrain, saisir et corriger les scores, déclarer un forfait |
-| **Public / écran géant** | `/t/<tournoi>` et `/t/<tournoi>/ecran`, sans connexion | Lecture seule, mise à jour en direct |
+| **Participants et public** | Accueil → « Rejoindre un tournoi » avec le **nom du tournoi** (son identifiant, ex. `tournoi-volley-nancy`) et le **code participant** à 6 caractères | Même affichage pour tous, en lecture seule et en direct : `/t/<tournoi>` et l'écran géant `/t/<tournoi>/ecran`. Aucune saisie de score |
+
+Le nom du tournoi et le code participant sont donnés à l'organisateur à la création (tableau de bord et **Règles & accès**, avec un message prêt à copier). Le code est stocké à part (table `tournament_access`), comme les codes arbitres. Une fois le code saisi, l'appareil est mémorisé (cookie signé longue durée) et le tournoi rejoint s'ajoute à **« Mes tournois »**, une liste gardée dans le navigateur (`localStorage`) : elle reste tant que l'on garde le même appareil, et chaque tournoi peut en être retiré. Les visiteurs ne voient jamais la liste complète des tournois.
 
 Les sessions sont des cookies `httpOnly` signés en HMAC. Les codes arbitres (6 chiffres tirés au hasard cryptographique) sont dans la table `court_codes` et ne sont affichés que dans l'espace organisateur.
 
-Les connexions sont limitées (table `login_attempts`) : 8 essais de mot de passe organisateur par adresse IP et par quart d'heure ; pour les codes arbitres, 10 essais par adresse IP et par quart d'heure, et 200 par tournoi et par heure. Les règles envoyées par le navigateur sont validées côté serveur (`lib/rules.ts`).
+Les connexions sont limitées (table `login_attempts`) : 8 essais de mot de passe organisateur par adresse IP et par quart d'heure ; pour les codes arbitres, 10 essais par adresse IP et par quart d'heure, et 200 par tournoi et par heure ; pour les codes participants, 20 essais par adresse IP et par quart d'heure. Les règles envoyées par le navigateur sont validées côté serveur (`lib/rules.ts`).
 
 ---
 

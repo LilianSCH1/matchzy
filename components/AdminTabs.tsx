@@ -27,8 +27,8 @@ export function AdminNav({ base, badges = {} }: { base: string; badges?: Record<
             key={href}
             href={href}
             aria-current={on ? "page" : undefined}
-            className={`group flex h-9 items-center gap-2.5 rounded-xl px-2.5 text-sm font-medium transition ${
-              on ? "bg-surface text-ink shadow-[0_1px_2px_rgb(0_0_0/0.06),0_0_0_1px_var(--line)]" : "text-ink-2 hover:bg-surface-3/60 hover:text-ink"
+            className={`group flex h-9 items-center gap-2.5 rounded-md px-2.5 font-cond text-[15px] font-bold tracking-[0.04em] uppercase transition ${
+              on ? "bg-surface-3 text-ink shadow-[inset_3px_0_0_var(--accent)]" : "text-ink-2 hover:bg-surface-3/60 hover:text-ink"
             }`}
           >
             <Icon className={`size-[18px] ${on ? "text-accent-ink" : "text-ink-3 group-hover:text-ink-2"}`} />
@@ -54,7 +54,7 @@ export function AdminDock({ base, badges = {} }: { base: string; badges?: Record
               key={href}
               href={href}
               aria-current={on ? "page" : undefined}
-              className={`relative flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-medium transition ${on ? "text-accent-ink" : "text-ink-3"}`}
+              className={`relative flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 font-cond text-[11px] font-bold tracking-[0.06em] uppercase transition ${on ? "text-accent-ink" : "text-ink-3"}`}
             >
               <Icon className="size-5" />
               {short}
@@ -62,7 +62,7 @@ export function AdminDock({ base, badges = {} }: { base: string; badges?: Record
             </Link>
           );
         })}
-        <button type="button" onClick={openCommandPalette} className="flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-medium text-ink-3">
+        <button type="button" onClick={openCommandPalette} className="flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 font-cond text-[11px] font-bold tracking-[0.06em] text-ink-3 uppercase">
           <IconSearch className="size-5" />
           Chercher
         </button>

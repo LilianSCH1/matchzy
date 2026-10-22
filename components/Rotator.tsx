@@ -16,13 +16,13 @@ export function Rotator({ panels, seconds = 15 }: { panels: { title: string; nod
   return (
     <div className="flex h-full flex-col">
       <div className="mb-4 flex items-center gap-4">
-        <h2 className="text-2xl font-semibold tracking-tight">{current.title}</h2>
+        <h2 className="display text-[40px]">{current.title}</h2>
         <div className="ml-auto flex gap-1.5">
           {panels.map((p, n) => (
             <button
               key={p.title}
               onClick={() => setI(n)}
-              className={`h-1.5 rounded-full transition-all duration-500 ${n === k ? "w-8 bg-accent" : "w-1.5 bg-line-strong"}`}
+              className={`h-2 rounded-[2px] transition-all duration-500 ${n === k ? "w-8 bg-led shadow-[0_0_8px_rgb(255_176_0/0.7)]" : "w-2 bg-line-strong"}`}
               aria-label={p.title}
             />
           ))}

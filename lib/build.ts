@@ -1,4 +1,5 @@
 // Construction complète d'un tournoi (poules, matchs, tableau, planning) à partir de la configuration.
+import { newAccessCode } from "./access";
 import { buildBracket, type Seed } from "./bracket";
 import { poolName } from "./pools";
 import { bergerPairings } from "./roundrobin";
@@ -30,6 +31,8 @@ export interface TournamentInput {
 
 export interface BuiltTournament extends TournamentBundle {
   courtCodes: { court_id: string; tournament_id: string; code: string }[];
+  /** Code participant (lecture seule), communiqué par l'organisateur avec l'identifiant du tournoi. */
+  accessCode: string;
 }
 
 // crypto.randomUUID n'existe qu'en contexte sécurisé (https / localhost) : repli pour un téléphone en http sur le réseau local.
@@ -227,7 +230,7 @@ export function buildTournament(input: TournamentInput, opts: { id?: string; slu
     m.scheduled_at = slotToDate(input.startAt, s.slot, o).toISOString();
   }
 
-  return { tournament, pools, courts, teams, matches, courtCodes };
+  return { tournament, pools, courts, teams, matches, courtCodes, accessCode: newAccessCode() };
 }
 
 function capitalize(s: string) {

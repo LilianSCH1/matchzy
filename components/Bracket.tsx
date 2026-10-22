@@ -6,11 +6,11 @@ import { IconTrophy } from "./Icons";
 function Slot({ name, score, win, lose, pending, big }: { name: string; score: string | null; win: boolean; lose: boolean; pending: boolean; big?: boolean }) {
   return (
     <div className={`flex items-center justify-between gap-2 px-3 ${big ? "py-2" : "py-1.5"}`}>
-      <span className={`flex min-w-0 items-center gap-2 truncate ${win ? "font-semibold" : ""} ${lose ? "text-ink-3" : ""} ${pending ? "text-ink-3" : ""}`}>
-        {win && <span className="size-1.5 shrink-0 rounded-full bg-ok" />}
+      <span className={`flex min-w-0 items-center gap-2 truncate ${win ? "font-bold" : "font-medium"} ${lose ? "text-ink-3" : ""} ${pending ? "text-ink-3" : ""}`}>
+        {win && <span className="h-3.5 w-1 shrink-0 rounded-full bg-ok" />}
         <span className="truncate">{name}</span>
       </span>
-      <span className={`tabular-nums ${win ? "font-semibold" : "text-ink-2"}`}>{score ?? ""}</span>
+      <span className={`font-cond text-[1.15em] font-extrabold tabular-nums ${win ? "" : "text-ink-3"}`}>{score ?? ""}</span>
     </div>
   );
 }
@@ -19,9 +19,9 @@ function BracketMatch({ m, v, big }: { m: Match; v: View; big?: boolean }) {
   const size = big ? "text-base" : "text-[13px]";
   if (m.is_bye)
     return (
-      <div className={`rounded-xl border border-dashed border-line-strong ${size}`}>
+      <div className={`rounded-[10px] border border-dashed border-line-strong ${size}`}>
         <Slot name={v.home(m)} score={null} win={false} lose={false} pending={!m.home_team_id} big={big} />
-        <div className="px-3 pb-2 text-[11px] text-ink-3">Exempté · qualifié d&apos;office</div>
+        <div className="px-3 pb-2 font-cond text-[11px] font-bold tracking-[0.1em] text-ink-3 uppercase">Exempté · qualifié d&apos;office</div>
       </div>
     );
   const done = m.status !== "scheduled";
@@ -29,8 +29,8 @@ function BracketMatch({ m, v, big }: { m: Match; v: View; big?: boolean }) {
   const tb = m.shootout && m.home_score === m.away_score;
   const w = m.winner_team_id;
   return (
-    <div className={`overflow-hidden rounded-xl border bg-surface shadow-card ${live ? "border-live/50" : "border-line"} ${size}`}>
-      <div className="flex justify-between gap-2 border-b border-line px-3 py-1 text-[11px] text-ink-3">
+    <div className={`overflow-hidden rounded-[10px] border bg-surface shadow-card ${live ? "border-live/60 ring-2 ring-live/20" : "border-line"} ${size}`}>
+      <div className="flex justify-between gap-2 border-b border-dashed border-line-strong bg-surface-2/60 px-3 py-1 font-cond text-[11px] font-bold tracking-[0.08em] text-ink-3 uppercase">
         <span className="truncate">{m.label}</span>
         <span className="whitespace-nowrap">
           {live ? (
@@ -74,13 +74,13 @@ export function Bracket({ v, big = false }: { v: View; big?: boolean }) {
   return (
     <div className="space-y-4">
       {champion && (
-        <div className="theme-dark scoreboard-grid flex items-center gap-4 overflow-hidden rounded-2xl border border-line px-5 py-4">
-          <span className="grid size-12 shrink-0 place-items-center rounded-2xl bg-warn-soft text-warn">
-            <IconTrophy className="size-6" />
+        <div className="board relative flex items-center gap-4 overflow-hidden rounded-[10px] px-5 py-4">
+          <span className="grid size-14 shrink-0 place-items-center rounded-full border-2 border-led/60 text-led shadow-[0_0_30px_rgb(255_176_0/0.35)]">
+            <IconTrophy className="size-7" />
           </span>
           <div className="min-w-0">
-            <div className="eyebrow text-warn">Vainqueur du tournoi</div>
-            <div className={`truncate font-semibold tracking-tight ${big ? "text-3xl" : "text-2xl"}`}>{v.teams.get(champion)}</div>
+            <div className="font-cond text-[12px] font-extrabold tracking-[0.18em] text-[#b4afa3] uppercase">Vainqueur du tournoi</div>
+            <div className={`led truncate ${big ? "text-5xl" : "text-[40px]"} leading-tight`}>{v.teams.get(champion)}</div>
           </div>
         </div>
       )}
@@ -88,14 +88,14 @@ export function Bracket({ v, big = false }: { v: View; big?: boolean }) {
         <div className="flex min-w-max gap-4">
           {cols.map((list, i) => (
             <div key={i} className={`flex ${big ? "w-72" : "w-52"} flex-col`}>
-              <div className="eyebrow mb-3 text-center">{roundName(i + 1, rounds)}</div>
+              <div className="display mb-3 border-b-2 border-accent pb-1 text-center text-[20px]">{roundName(i + 1, rounds)}</div>
               <div className="flex flex-1 flex-col justify-around gap-3">
                 {list.map((m) => (
                   <BracketMatch key={m.id} m={m} v={v} big={big} />
                 ))}
                 {i === rounds - 1 && third && (
                   <div className="mt-6">
-                    <div className="eyebrow mb-2 text-center">Petite finale</div>
+                    <div className="display mb-2 text-center text-[18px] text-ink-3">Petite finale</div>
                     <BracketMatch m={third} v={v} big={big} />
                   </div>
                 )}

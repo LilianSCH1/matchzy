@@ -67,3 +67,24 @@ export async function refereeCourt(tournamentId: string): Promise<string | null>
 export async function clearReferee(tournamentId: string) {
   (await cookies()).delete(refCookie(tournamentId));
 }
+
+// ---------------------------------------------------------------- Participants et spectateurs
+
+const viewCookie = (tournamentId: string) => `mz_view_${tournamentId.replace(/-/g, "")}`;
+/** Durée maximale acceptée par les navigateurs : l'appareil reste reconnu tant qu'il ne change pas. */
+const VIEW_TTL = 400 * DAY;
+
+export async function setViewer(tournamentId: string) {
+  (await cookies()).set(viewCookie(tournamentId), sign(`view|${tournamentId}|${Math.floor(Date.now() / 1000) + VIEW_TTL}`), { ...cookieOpts, maxAge: VIEW_TTL });
+}
+
+export async function clearViewer(tournamentId: string) {
+  (await cookies()).delete(viewCookie(tournamentId));
+}
+
+/** Peut voir le tournoi : organisateur, arbitre du tournoi ou participant ayant saisi le code. */
+export async function canView(tournamentId: string): Promise<boolean> {
+  if (await isOrganizer()) return true;
+  if (await refereeCourt(tournamentId)) return true;
+  return verify((await cookies()).get(viewCookie(tournamentId))?.value) === `view|${tournamentId}`;
+}

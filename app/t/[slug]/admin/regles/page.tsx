@@ -3,7 +3,8 @@ import { CourtsAdmin } from "@/components/CourtsAdmin";
 import { DeleteTournamentButton } from "@/components/TournamentActions";
 import { RulesEditor } from "@/components/RulesEditor";
 import { Page, PageHeader, Section } from "@/components/TopBar";
-import { courtCodes } from "@/lib/server/data";
+import { accessCode, courtCodes } from "@/lib/server/data";
+import { ShareAccess } from "@/components/ShareAccess";
 import { bundleOr404 } from "@/lib/server/page";
 import { fmtTime, FORMAT_LABEL } from "@/lib/view";
 
@@ -12,10 +13,13 @@ export const dynamic = "force-dynamic";
 export default async function RulesPage({ params }: { params: Promise<{ slug: string }> }) {
   const b = await bundleOr404((await params).slug);
   const t = b.tournament;
-  const codes = await courtCodes(t.id);
+  const [codes, access] = await Promise.all([courtCodes(t.id), accessCode(t.id)]);
   return (
     <Page wide>
-      <PageHeader eyebrow="Organisation" title="Règles & accès" description="Codes arbitres, configuration du tournoi et règles du sport appliquées à ce tournoi." />
+      <PageHeader eyebrow="Organisation" title="Règles & accès" description="Accès participants, codes arbitres, configuration du tournoi et règles du sport appliquées à ce tournoi." />
+      <Section title="Participants et public" hint="Toutes les personnes présentes sur place : même affichage en lecture seule pour les équipes et les spectateurs.">
+        <ShareAccess slug={t.slug} code={access} />
+      </Section>
       <Section title={`${t.rules.labels.courtPlural[0].toUpperCase()}${t.rules.labels.courtPlural.slice(1)} et codes arbitres`}>
         <CourtsAdmin courts={b.courts.map((c) => ({ id: c.id, name: c.name, code: codes.get(c.id) ?? "?" }))} refereeUrl={`/t/${t.slug}/arbitre`} />
       </Section>
@@ -43,7 +47,8 @@ export default async function RulesPage({ params }: { params: Promise<{ slug: st
       </Section>
 
       <Section title="Zone dangereuse">
-        <div className="flex flex-wrap items-center justify-between gap-4 rounded-2xl border border-danger/30 p-5">
+        <div className="flex flex-wrap items-center justify-between gap-4 overflow-hidden rounded-[10px] border border-danger/30 p-5 pt-7 relative">
+          <div className="hazard absolute inset-x-0 top-0 h-2" aria-hidden />
           <p className="text-sm text-ink-2">Supprime définitivement le tournoi, ses équipes, matchs et résultats.</p>
           <DeleteTournamentButton id={t.id} name={t.name} redirectTo="/" />
         </div>

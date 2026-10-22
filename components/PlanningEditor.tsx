@@ -90,7 +90,7 @@ export function PlanningEditor({ items, courts, timezone, matchDuration, courtLa
       </div>
 
       {swapFrom && (
-        <div className="sticky top-[7.5rem] z-10 flex items-center gap-3 rounded-xl bg-ink px-4 py-3 text-sm text-canvas shadow-lg">
+        <div className="sticky top-[7.5rem] z-10 flex items-center gap-3 rounded-md bg-ink px-4 py-3 text-sm text-canvas shadow-lg">
           <IconSwap className="size-4 shrink-0" />
           <span className="flex-1">Touchez le match avec lequel échanger.</span>
           <button className="rounded-full px-2 py-1 font-medium opacity-70 hover:opacity-100" onClick={() => setSwapFrom(null)}>
@@ -197,7 +197,7 @@ function EditForm({
   const [court, setCourt] = useState(it.courtId ?? courts[0]?.id);
   const [cascade, setCascade] = useState(false);
   return (
-    <div className="rise mt-3 grid gap-3 rounded-xl bg-surface-2 p-3 sm:grid-cols-[8rem_1fr] sm:items-center">
+    <div className="rise mt-3 grid gap-3 rounded-md bg-surface-2 p-3 sm:grid-cols-[8rem_1fr] sm:items-center">
       <input type="time" className="input" value={time} onChange={(e) => setTime(e.target.value)} aria-label="Horaire" />
       <select className="input" value={court} onChange={(e) => setCourt(e.target.value)} aria-label="Lieu">
         {courts.map((c) => (

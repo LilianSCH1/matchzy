@@ -2,18 +2,20 @@ import Link from "next/link";
 import { Bracket } from "@/components/Bracket";
 import { Commands, SearchButton } from "@/components/CommandPalette";
 import { FollowTeam } from "@/components/FollowTeam";
-import { IconBack, IconBolt, IconBracket, IconCalendar, IconList, IconScreen, IconSettings, IconWhistle } from "@/components/Icons";
+import { IconBack, IconBolt, IconBracket, IconCalendar, IconList, IconScreen, IconSettings, IconTrophy, IconWhistle } from "@/components/Icons";
+import { CourtLines, SportBadge, sportKey, Ticker } from "@/components/Stadium";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { MatchRow, Scoreboard } from "@/components/MatchRow";
 import { Standings } from "@/components/Standings";
 import { TeamFilter } from "@/components/TeamFilter";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Empty, Page, Section, TabBar } from "@/components/TopBar";
+import { Empty, LedBar, Logo, Page, Section, TabBar } from "@/components/TopBar";
 import { tournamentCommands } from "@/lib/commands";
 import { teamSummaries } from "@/lib/follow";
 import { champion, courtStatuses, forecast } from "@/lib/insights";
 import { resolveTournament } from "@/lib/resolve";
-import { isOrganizer } from "@/lib/server/auth";
+import { canView, isOrganizer } from "@/lib/server/auth";
+import { Gate } from "@/components/Gate";
 import { bundleOr404 } from "@/lib/server/page";
 import type { Match } from "@/lib/types";
 import { byTime, fmtDate, fmtTime, View } from "@/lib/view";
@@ -31,8 +33,9 @@ export default async function PublicPage({ params, searchParams }: Params) {
   const { slug } = await params;
   const { v: tab = "direct", equipe } = await searchParams;
   const [b, org] = await Promise.all([bundleOr404(slug), isOrganizer()]);
-  const v = new View(b);
   const t = b.tournament;
+  if (!(await canView(t.id))) return <Gate name={t.name} sport={t.sport_name} slug={t.slug} />;
+  const v = new View(b);
   const base = `/t/${t.slug}`;
   const now = Date.now();
   const r = resolveTournament(b, new Date(now));
@@ -65,22 +68,35 @@ export default async function PublicPage({ params, searchParams }: Params) {
   );
 }
 
-/** Bandeau « tableau d'affichage » : identité du tournoi et état en direct. */
+/** Bandeau du tournoi : le terrain du sport vu d'en haut, éclairé, avec l'état en direct et le défilant des résultats. */
 function Hero({ v, org, now }: { v: View; org: boolean; now: number }) {
   const t = v.b.tournament;
   const base = `/t/${t.slug}`;
   const f = forecast(v.b, now);
-  const pct = f.total ? Math.round((100 * f.done) / f.total) : 0;
   const champ = f.total && f.done === f.total ? champion(v.b) : null;
   const started = now >= new Date(t.start_at).getTime() || f.done > 0 || f.live > 0;
+  const sport = sportKey(t.sport_name);
+  const recent = v
+    .playable()
+    .filter((m) => m.status === "finished")
+    .sort((a, b) => (b.finished_at ?? "").localeCompare(a.finished_at ?? ""))
+    .slice(0, 8);
   return (
-    <header className="theme-dark scoreboard-grid border-b border-line">
-      <div className="mx-auto max-w-5xl px-3 pt-2 pb-5 sm:px-5 sm:pb-6">
+    <header data-sport={sport} className="theme-dark turf relative isolate overflow-hidden border-b border-line">
+      <div aria-hidden className="floodlight absolute inset-0 -z-10">
+        <CourtLines sport={sport} className="absolute top-1/2 right-[-12%] h-[150%] w-auto -translate-y-1/2 text-white/[0.13] sm:right-[-4%]" />
+        <div className="absolute -top-20 left-[30%] h-[140%] w-48 -rotate-[20deg] bg-[linear-gradient(180deg,rgb(255_247_222/0.12),transparent_70%)] blur-2xl" />
+        <div className="absolute -top-20 right-[12%] h-[140%] w-48 rotate-[20deg] bg-[linear-gradient(180deg,rgb(255_247_222/0.12),transparent_70%)] blur-2xl" />
+      </div>
+      <div className="mx-auto max-w-5xl px-3 pt-2 pb-6 sm:px-5 sm:pb-8">
         <div className="flex h-12 items-center gap-1">
           <Link href="/" className="btn-icon -ml-1" aria-label="Tous les tournois">
             <IconBack />
           </Link>
-          <span className="mr-auto" />
+          <Link href="/" className="mr-auto hidden opacity-80 transition hover:opacity-100 sm:block" aria-label="Matchzy, accueil">
+            <Logo />
+          </Link>
+          <span className="mr-auto sm:hidden" />
           {org && (
             <Link href={`${base}/admin`} className="btn-quiet h-9 gap-1.5 px-2.5 text-sm" title="Organiser">
               <IconSettings className="size-4" />
@@ -98,9 +114,9 @@ function Hero({ v, org, now }: { v: View; org: boolean; now: number }) {
           <SearchButton compact />
           <ThemeToggle />
         </div>
-        <div className="rise mt-3 space-y-3 px-1">
+        <div className="rise mt-5 space-y-4 px-1">
           <div className="flex flex-wrap items-center gap-2">
-            <span className="chip bg-surface-3 text-ink-2">{t.sport_name}</span>
+            <SportBadge name={t.sport_name} className="bg-black/40!" />
             {f.live > 0 ? (
               <span className="chip bg-live text-white">
                 <span className="live-dot size-1.5 rounded-full bg-white" /> {f.live} match{f.live > 1 ? "s" : ""} en direct
@@ -108,32 +124,47 @@ function Hero({ v, org, now }: { v: View; org: boolean; now: number }) {
             ) : champ ? (
               <span className="chip bg-ok text-on-ok">Terminé</span>
             ) : !started ? (
-              <span className="chip bg-accent text-on-accent">Début à {fmtTime(t.start_at, t.timezone)}</span>
+              <span className="chip bg-accent text-on-accent">Coup d&apos;envoi à {fmtTime(t.start_at, t.timezone)}</span>
             ) : null}
           </div>
-          <h1 className="text-3xl font-semibold tracking-[-0.03em] text-balance sm:text-5xl">{t.name}</h1>
-          <p className="text-sm text-ink-2 first-letter:uppercase">
-            {fmtDate(t.date)} · {v.b.teams.length} équipes
-            {champ && (
-              <>
-                {" "}
-                · vainqueur <span className="font-semibold text-ink">{champ}</span>
-              </>
-            )}
+          <h1 className="display max-w-3xl text-[clamp(3rem,9vw,6rem)] [text-shadow:0_4px_30px_rgb(0_0_0/0.5)]">{t.name}</h1>
+          <p className="font-cond text-[15px] font-semibold tracking-[0.08em] text-ink-2 uppercase">
+            {fmtDate(t.date)} · {v.b.teams.length} équipes · {v.b.courts.length} {v.b.courts.length > 1 ? t.rules.labels.courtPlural : t.rules.labels.court}
           </p>
-          {started && f.total > 0 && (
-            <div className="flex max-w-md items-center gap-3 pt-1">
-              <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-3">
-                <div className="h-full rounded-full bg-accent transition-[width] duration-700" style={{ width: `${pct}%` }} />
-              </div>
-              <span className="text-xs text-ink-2 tabular-nums">
-                {f.done}/{f.total} matchs
-                {f.projectedEnd && !champ && ` · fin vers ${fmtTime(f.projectedEnd.toISOString(), t.timezone)}`}
+          {champ && (
+            <div className="board inline-flex items-center gap-3 rounded-md py-2 pr-4 pl-3">
+              <IconTrophy className="size-6 text-led" />
+              <span className="font-cond text-[12px] font-bold tracking-[0.16em] text-ink-3 uppercase">Vainqueur</span>
+              <span className="display text-[26px] text-led">{champ}</span>
+            </div>
+          )}
+          {started && f.total > 0 && !champ && (
+            <div className="flex max-w-lg items-center gap-3 pt-1">
+              <LedBar value={f.done} total={f.total} cells={30} className="flex-1 text-white" />
+              <span className="shrink-0 font-cond text-[13px] font-bold tracking-[0.06em] text-ink-2 uppercase tabular-nums">
+                <span className="led text-[15px]">{f.done}</span>/{f.total} matchs
+                {f.projectedEnd && ` · fin vers ${fmtTime(f.projectedEnd.toISOString(), t.timezone)}`}
               </span>
             </div>
           )}
         </div>
       </div>
+      {recent.length > 0 && (
+        <Ticker label="Résultats" className="border-t border-white/10">
+          {recent.map((m) => (
+            <span key={m.id} className="flex items-center gap-2.5 font-cond text-[15px] font-bold tracking-[0.04em] uppercase">
+              <span className={m.winner_team_id === m.home_team_id ? "text-[#f3efe4]" : "text-[#858074]"}>{v.home(m)}</span>
+              <span className="led text-[17px]">
+                {m.home_score}-{m.away_score}
+              </span>
+              <span className={m.winner_team_id === m.away_team_id ? "text-[#f3efe4]" : "text-[#858074]"}>{v.away(m)}</span>
+              <span className="text-[#ff6b1a]" aria-hidden>
+                ◆
+              </span>
+            </span>
+          ))}
+        </Ticker>
+      )}
     </header>
   );
 }
@@ -220,17 +251,17 @@ function Programme({ v, team, base }: { v: View; team?: string; base: string }) 
         </p>
       </div>
       {list.length ? (
-        <ol className="relative space-y-5 border-l border-line pl-5 sm:pl-6">
+        <ol className="relative space-y-6 border-l-2 border-dashed border-line-strong pl-5 sm:pl-7">
           {[...slots].map(([time, ms]) => {
             const state = ms.some((m) => m.status === "live") ? "live" : ms.every((m) => m.status === "finished") ? "done" : "todo";
             return (
               <li key={time} className="relative space-y-2">
                 <span
-                  className={`absolute top-1 -left-[25.5px] size-2.5 rounded-full ring-4 ring-canvas sm:-left-[29.5px] ${
-                    state === "live" ? "live-ring bg-live" : state === "done" ? "bg-ink-3" : "bg-line-strong"
+                  className={`absolute top-2 -left-[27px] size-3 rounded-full ring-4 ring-canvas sm:-left-[35px] ${
+                    state === "live" ? "live-ring bg-live" : state === "done" ? "bg-ink-3" : "bg-accent"
                   }`}
                 />
-                <div className={`text-sm font-semibold tabular-nums ${state === "done" ? "text-ink-3" : ""}`}>{time}</div>
+                <div className={`display text-[28px] tabular-nums ${state === "done" ? "text-ink-3" : state === "live" ? "text-live" : ""}`}>{time}</div>
                 <div className="grid gap-2 md:grid-cols-2">
                   {ms.map((m) => (
                     <MatchRow key={m.id} m={m} v={v} highlight={team} />

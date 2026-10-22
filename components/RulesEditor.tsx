@@ -177,7 +177,7 @@ export function RulesEditor({
       </Group>
 
       <Group title="Critères de départage" hint="Appliqués dans l'ordre. En dernier recours : tirage au sort.">
-        <ol className="divide-y divide-line overflow-hidden rounded-xl border border-line">
+        <ol className="divide-y divide-line overflow-hidden rounded-md border border-line">
           {r.tiebreakers.map((c, i) => (
             <li key={c} className="flex items-center gap-2 py-1.5 pr-1.5 pl-4 text-sm">
               <span className="w-5 font-medium text-ink-3 tabular-nums">{i + 1}</span>

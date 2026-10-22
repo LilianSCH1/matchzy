@@ -16,6 +16,7 @@ import type { Match, SetScore, Side, SportRules } from "@/lib/types";
 import { IconCheck, IconFlag, IconPencil, IconPlay, IconPlus } from "./Icons";
 import { toast, useConfirm } from "./feedback";
 import { LiveBadge } from "./MatchRow";
+import { Led } from "./Stadium";
 import { ErrorText } from "./ui";
 
 interface Props {
@@ -138,8 +139,8 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
     return (
       <main className="rise mx-auto max-w-xl space-y-4 px-4 pt-6 pb-16">
         <Teams homeName={homeName} awayName={awayName} />
-        {!teamsKnown && <p className="rounded-xl bg-surface-2 px-4 py-3 text-center text-sm text-ink-2">Les équipes seront connues à l&apos;issue des matchs précédents.</p>}
-        <button className="btn-accent h-16 w-full rounded-2xl text-lg font-semibold" disabled={!teamsKnown || pending} onClick={() => run(() => startMatchAction(m.id), () => setEditing(true))}>
+        {!teamsKnown && <p className="rounded-md bg-surface-2 px-4 py-3 text-center text-sm text-ink-2">Les équipes seront connues à l&apos;issue des matchs précédents.</p>}
+        <button className="btn-accent h-16 w-full rounded-md text-xl" disabled={!teamsKnown || pending} onClick={() => run(() => startMatchAction(m.id), () => setEditing(true))}>
           <IconPlay className="size-5" /> Démarrer le match
         </button>
         {teamsKnown && <ForfeitPanel open={showForfeit} setOpen={setShowForfeit} homeName={homeName} awayName={awayName} onForfeit={forfeit} pending={pending} />}
@@ -155,18 +156,18 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
     const detail = scoreText(m, rules).replace(/^\d+ - \d+ ?/, "");
     return (
       <main className="rise mx-auto max-w-xl space-y-4 px-4 pt-6 pb-16">
-        <div className="card px-5 py-8 text-center">
-          <div className="eyebrow">{m.forfeit ? "Forfait" : "Résultat final"}</div>
+        <div className="board rounded-[10px] px-5 py-7 text-center">
+          <div className="font-cond text-[12px] font-extrabold tracking-[0.2em] text-[#b4afa3] uppercase">{m.forfeit ? "Forfait" : "Fin du match"}</div>
           <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             <TeamName name={homeName} win={o === "home"} dim={o === "away"} />
-            <div className="text-6xl font-semibold tracking-tighter tabular-nums">
-              {m.home_score}
-              <span className="px-2 text-ink-3">–</span>
-              {m.away_score}
+            <div className="flex items-center gap-2">
+              <Led value={m.home_score} digits={2} className="text-[64px]" />
+              <span className="led text-[40px] opacity-60">:</span>
+              <Led value={m.away_score} digits={2} className="text-[64px]" />
             </div>
             <TeamName name={awayName} win={o === "away"} dim={o === "home"} />
           </div>
-          {detail && <div className="mt-4 text-sm text-ink-2">{detail}</div>}
+          {detail && <div className="mt-4 text-sm text-[#b4afa3]">{detail}</div>}
         </div>
         <button className="btn-outline h-12 w-full" onClick={() => setEditing(true)}>
           <IconPencil className="size-4" /> Corriger le score
@@ -237,12 +238,12 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
               <button
                 key={i}
                 onClick={() => setActive(i)}
-                className={`min-w-[76px] shrink-0 rounded-xl border px-3 py-2 text-center transition ${on ? "border-ink bg-ink text-canvas" : "border-line bg-surface"}`}
+                className={`min-w-[76px] shrink-0 rounded-md border px-3 py-2 text-center transition ${on ? "board border-transparent ring-2 ring-accent" : "border-line bg-surface"}`}
               >
-                <div className={`text-[10px] font-medium tracking-wide uppercase ${on ? "opacity-60" : "text-ink-3"}`}>
+                <div className={`font-cond text-[11px] font-bold tracking-[0.1em] uppercase ${on ? "text-[#b4afa3]" : "text-ink-3"}`}>
                   {rules.labels.set} {i + 1}
                 </div>
-                <div className="flex items-center justify-center gap-1 font-semibold tabular-nums">
+                <div className={`flex items-center justify-center gap-1 tabular-nums ${on ? "led text-lg" : "font-cond text-lg font-extrabold"}`}>
                   {s.home}-{s.away}
                   {w && <IconCheck className="size-3.5" />}
                 </div>
@@ -256,22 +257,26 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
         {(["home", "away"] as Side[]).map((side) => {
           const value = isSets ? cur[side] : side === "home" ? home : away;
           return (
-            <div key={side} className="card flex flex-col items-center gap-4 p-3 pt-5">
-              <div className="line-clamp-2 flex min-h-[2.5rem] items-center text-center leading-tight font-semibold">{side === "home" ? homeName : awayName}</div>
+            <div key={side} className="card flex flex-col items-center gap-3 overflow-hidden p-3 pt-0">
+              <div className={`-mx-3 h-1.5 self-stretch ${side === "home" ? "bg-accent" : "bg-ink-3"}`} aria-hidden />
+              <div className="eyebrow -mb-2">{side === "home" ? "Domicile" : "Visiteur"}</div>
+              <div className="display line-clamp-2 flex min-h-[3rem] items-center text-center text-[24px] leading-[0.95]">{side === "home" ? homeName : awayName}</div>
               {isSets && (
-                <div className="-mt-2 text-xs text-ink-3">
-                  {rules.labels.set}s gagnés : <span className="font-semibold text-ink">{won[side]}</span>
+                <div className="-mt-1 font-cond text-[13px] font-bold tracking-[0.06em] text-ink-3 uppercase">
+                  {rules.labels.set}s gagnés : <span className="text-ink">{won[side]}</span>
                 </div>
               )}
-              <div className="text-[5.5rem] leading-none font-semibold tracking-tighter tabular-nums">{value}</div>
+              <div className="board w-full rounded-md py-3 text-center">
+                <Led value={value} digits={2} className="text-[5.5rem]" />
+              </div>
               <div className="grid w-full gap-2">
                 {rules.increments.map((inc) => (
-                  <button key={inc} className="btn-primary h-16 gap-1 rounded-2xl text-2xl font-semibold" onClick={() => bump(side, inc)}>
+                  <button key={inc} className="btn-primary h-16 gap-1 rounded-md text-[28px]" onClick={() => bump(side, inc)}>
                     <IconPlus className="size-5" />
                     {inc}
                   </button>
                 ))}
-                <button className="btn-ghost h-12 rounded-2xl text-lg" onClick={() => bump(side, -1)} aria-label="Retirer 1">
+                <button className="btn-ghost h-12 rounded-md text-xl" onClick={() => bump(side, -1)} aria-label="Retirer 1">
                   −1
                 </button>
               </div>
@@ -325,7 +330,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
       )}
 
       {tie && rules.knockoutTiebreak === "extra_time" && (
-        <p className="rounded-xl bg-warn-soft px-4 py-3 text-center text-sm text-warn">Égalité : jouez la prolongation et continuez la saisie.</p>
+        <p className="rounded-md border border-warn/40 bg-warn-soft px-4 py-3 text-center text-sm font-medium text-warn">Égalité : jouez la prolongation et continuez la saisie.</p>
       )}
       {showShootout && (
         <div className="card space-y-3 p-4">
@@ -336,7 +341,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
                 <button className="btn-ghost size-12 p-0 text-xl" onClick={() => setShootout((s) => ({ ...s, [side]: Math.max(0, s[side] - 1) }))} aria-label="Moins">
                   −
                 </button>
-                <span className="w-10 text-center text-4xl font-semibold tabular-nums">{shootout[side]}</span>
+                <span className="board w-14 rounded-md py-1 text-center"><Led value={shootout[side]} digits={1} className="text-4xl" /></span>
                 <button className="btn-primary size-12 p-0" onClick={() => setShootout((s) => ({ ...s, [side]: s[side] + 1 }))} aria-label="Plus">
                   <IconPlus className="size-5" />
                 </button>
@@ -348,7 +353,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
 
       <div className="space-y-2 pt-2">
         <button
-          className={`${m.status === "finished" ? "btn-primary" : "btn-accent"} h-16 w-full rounded-2xl text-lg font-semibold`}
+          className={`${m.status === "finished" ? "btn-primary" : "btn-accent"} h-16 w-full rounded-md text-xl`}
           disabled={pending || !!invalid}
           onClick={async () =>
             (await ask(
@@ -384,8 +389,8 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
 
 function TeamName({ name, win, dim }: { name: string; win: boolean; dim: boolean }) {
   return (
-    <div className={`flex flex-col items-center gap-2 text-base leading-tight ${win ? "font-semibold" : ""} ${dim ? "text-ink-2" : ""}`}>
-      <span className={`size-2 rounded-full ${win ? "bg-ok" : "bg-transparent"}`} />
+    <div className={`flex flex-col items-center gap-2 font-cond text-[17px] leading-tight font-bold uppercase ${dim ? "text-[#858074]" : "text-[#f3efe4]"}`}>
+      <span className={`h-1 w-6 rounded-full ${win ? "bg-[#3ddc84]" : "bg-transparent"}`} />
       {name}
     </div>
   );
@@ -393,10 +398,10 @@ function TeamName({ name, win, dim }: { name: string; win: boolean; dim: boolean
 
 function Teams({ homeName, awayName }: { homeName: string; awayName: string }) {
   return (
-    <div className="card grid grid-cols-[1fr_auto_1fr] items-center gap-4 px-5 py-10 text-center">
-      <div className="text-xl leading-tight font-semibold tracking-tight">{homeName}</div>
-      <div className="grid size-10 place-items-center rounded-full bg-surface-2 text-xs font-medium text-ink-3">vs</div>
-      <div className="text-xl leading-tight font-semibold tracking-tight">{awayName}</div>
+    <div className="board grid grid-cols-[1fr_auto_1fr] items-center gap-4 rounded-[10px] px-5 py-10 text-center">
+      <div className="display text-[30px] leading-[0.95] text-[#f3efe4]">{homeName}</div>
+      <div className="led text-[34px]">VS</div>
+      <div className="display text-[30px] leading-[0.95] text-[#f3efe4]">{awayName}</div>
     </div>
   );
 }
@@ -422,10 +427,11 @@ function ForfeitPanel({
         Déclarer un forfait…
       </button>
     );
-  const btn = "btn h-12 w-full rounded-xl bg-danger-soft text-danger hover:opacity-80";
+  const btn = "btn h-12 w-full rounded-md border border-danger/30 bg-danger-soft text-danger hover:opacity-80";
   return (
-    <div className="card rise space-y-2 p-4">
-      <div className="pb-1 text-center text-sm font-medium">Quelle équipe déclare forfait ?</div>
+    <div className="card rise space-y-2 overflow-hidden p-4 pt-0">
+      <div className="hazard -mx-4 mb-3 h-1.5" aria-hidden />
+      <div className="display pb-1 text-center text-[22px]">Quelle équipe déclare forfait ?</div>
       <div className="grid grid-cols-2 gap-2">
         <button className={btn} disabled={pending} onClick={() => onForfeit("home")}>
           <span className="truncate">{homeName}</span>

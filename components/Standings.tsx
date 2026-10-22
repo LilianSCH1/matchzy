@@ -15,17 +15,17 @@ export function Standings({ v, big = false }: { v: View; big?: boolean }) {
       ))}
       {nth && (
         <div className="card overflow-hidden">
-          <div className="px-4 py-3">
-            <h3 className="text-[15px] font-semibold tracking-tight">Classement des {ordinal(nthRank)}s</h3>
-            <p className="text-xs text-ink-3">
+          <div className="board px-4 py-2.5">
+            <h3 className="display text-[22px] text-[#f3efe4]">Classement des {ordinal(nthRank)}s</h3>
+            <p className="text-xs text-[#b4afa3]">
               {t.best_extra} qualifié{t.best_extra > 1 ? "s" : ""} · comparaison à la moyenne par match
             </p>
           </div>
-          <ol className="divide-y divide-line border-t border-line text-sm">
+          <ol className="divide-y divide-line text-sm">
             {nth.map((row, i) => (
               <li key={row.teamId} className="flex items-center gap-3 px-4 py-2">
                 <span
-                  className={`inline-flex size-6 items-center justify-center rounded-full text-xs font-semibold ${
+                  className={`inline-flex size-6 items-center justify-center rounded-[4px] font-cond text-sm font-extrabold ${
                     i < t.best_extra ? "bg-ok text-on-ok" : "text-ink-3"
                   }`}
                 >

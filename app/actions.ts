@@ -4,8 +4,9 @@ import { revalidatePath, revalidateTag } from "next/cache";
 import { redirect } from "next/navigation";
 import { buildTournament, slugify, validateInput, type TournamentInput } from "@/lib/build";
 import { cleanRules, safeNext, validateRules } from "@/lib/rules";
-import { clearReferee, isOrganizer, loginOrganizer, logout, refereeCourt, setReferee } from "@/lib/server/auth";
-import { getTournament, toRow } from "@/lib/server/data";
+import { isAccessCode, normalizeAccessCode, parseTournamentRef, type ParticipantSummary, type SavedTournament } from "@/lib/access";
+import { canView, clearReferee, clearViewer, isOrganizer, loginOrganizer, logout, refereeCourt, setReferee, setViewer } from "@/lib/server/auth";
+import { checkAccessCode, getTournament, toRow, tournamentStats } from "@/lib/server/data";
 import { db, withTournamentLock, type Q } from "@/lib/server/db";
 import { createDemo } from "@/lib/server/demo";
 import { recompute, saveBuiltTournament, updateMatch } from "@/lib/server/persist";
@@ -95,6 +96,63 @@ export async function refereeLoginAction(_: unknown, form: FormData): Promise<{ 
 export async function refereeLogoutAction(slug: string, tournamentId: string) {
   await clearReferee(tournamentId);
   redirect(`/t/${slug}/arbitre`);
+}
+
+// ---------------------------------------------------------------- Participants et spectateurs
+
+export type JoinResult = { error?: string; entry?: SavedTournament };
+
+/**
+ * Rejoint un tournoi en lecture seule avec son identifiant et son code participant.
+ * L'appareil est mémorisé (cookie longue durée) et le client ajoute le tournoi à sa liste locale.
+ */
+export async function joinTournamentAction(_: unknown, form: FormData): Promise<JoinResult> {
+  const slug = parseTournamentRef(String(form.get("tournament") ?? ""));
+  const code = normalizeAccessCode(String(form.get("code") ?? ""));
+  if (!slug) return { error: "Indiquez le nom du tournoi communiqué par l'organisateur." };
+  const ipKey = `view:${await clientIp()}`;
+  const wait = await hitLimits([
+    { key: ipKey, max: 20, windowSec: 15 * 60 },
+    { key: `view:${slug}`, max: 300, windowSec: 60 * 60 },
+  ]);
+  if (wait) return { error: tooMany(wait) };
+  // Même message pour un tournoi inconnu et un mauvais code : on ne révèle pas quels tournois existent.
+  const t = isAccessCode(code) ? await checkAccessCode(slug, code) : null;
+  if (!t) return { error: "Tournoi ou code incorrect. Vérifiez auprès de l'organisateur." };
+  await clearLimits([ipKey]);
+  await setViewer(t.id);
+  return { entry: { slug: t.slug, code, name: t.name, sport: t.sport_name, date: t.date, addedAt: Date.now() } };
+}
+
+/** Retire un tournoi de l'appareil : l'accès mémorisé est oublié. */
+export async function leaveTournamentAction(slug: string): Promise<void> {
+  const t = await getTournament({ slug: parseTournamentRef(slug) });
+  if (t) await clearViewer(t.id);
+}
+
+/**
+ * État en direct des tournois enregistrés sur l'appareil. Chaque code est revérifié (et l'accès renouvelé),
+ * ce qui garde la liste à jour même si le cookie a expiré ou si un tournoi a été supprimé.
+ */
+export async function myTournamentsAction(items: { slug: string; code: string }[]): Promise<ParticipantSummary[]> {
+  const list = items.slice(0, 30);
+  if (!list.length) return [];
+  const wait = await hitLimits([{ key: `viewlist:${await clientIp()}`, max: 120, windowSec: 15 * 60 }]);
+  if (wait) return list.map((i) => ({ slug: i.slug, found: true }));
+  const stats = await tournamentStats();
+  const out: ParticipantSummary[] = [];
+  for (const i of list) {
+    const code = normalizeAccessCode(i.code);
+    const t = isAccessCode(code) ? await checkAccessCode(parseTournamentRef(i.slug), code) : null;
+    if (!t) {
+      out.push({ slug: i.slug, found: false });
+      continue;
+    }
+    if (!(await canView(t.id))) await setViewer(t.id);
+    const s = stats.get(t.id);
+    out.push({ slug: t.slug, found: true, name: t.name, sport: t.sport_name, date: t.date, live: s?.live ?? 0, done: s?.done ?? 0, total: s?.total ?? 0 });
+  }
+  return out;
 }
 
 // ---------------------------------------------------------------- Création

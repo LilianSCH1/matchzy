@@ -15,7 +15,7 @@ export function CourtsAdmin({ courts, refereeUrl }: { courts: { id: string; name
         {courts.map((c) => (
           <div key={c.id} className="card flex items-center gap-3 p-2 pl-3">
             <input
-              className="h-10 min-w-0 flex-1 rounded-lg bg-transparent px-2 font-medium outline-none hover:bg-surface-2 focus:bg-surface-2"
+              className="h-10 min-w-0 flex-1 rounded-md bg-transparent px-2 font-medium outline-none hover:bg-surface-2 focus:bg-surface-2"
               value={names[c.id]}
               aria-label="Nom"
               onChange={(e) => setNames({ ...names, [c.id]: e.target.value })}
@@ -35,7 +35,7 @@ export function CourtsAdmin({ courts, refereeUrl }: { courts: { id: string; name
                 });
               }}
             />
-            <div className="rounded-xl bg-surface-2 px-3 py-1.5 text-right">
+            <div className="rounded-md bg-surface-2 px-3 py-1.5 text-right">
               <div className="text-[10px] font-medium tracking-wide text-ink-3 uppercase">Code</div>
               <div className="font-mono text-xl font-semibold tracking-[0.2em]">{c.code}</div>
             </div>

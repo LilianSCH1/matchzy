@@ -3,11 +3,12 @@ import { scoreText } from "@/lib/scoring";
 import type { Match } from "@/lib/types";
 import { fmtTime, type View } from "@/lib/view";
 import { IconCheck, IconChevron } from "./Icons";
+import { Led } from "./Stadium";
 
 export function LiveBadge({ className = "", label = "En cours" }: { className?: string; label?: string }) {
   return (
-    <span className={`chip bg-live-soft text-live ${className}`}>
-      <span className="live-dot inline-block size-1.5 rounded-full bg-live" /> {label}
+    <span className={`chip bg-live text-white ${className}`}>
+      <span className="live-dot inline-block size-1.5 rounded-full bg-white" /> {label}
     </span>
   );
 }
@@ -25,6 +26,7 @@ function extraText(m: Match, v: View) {
   return done && (m.sets?.length || m.shootout || m.forfeit) ? scoreText(m, v.b.tournament.rules).replace(/^\d+ - \d+ ?/, "") : "";
 }
 
+/** Ligne de match présentée comme un billet : talon horaire détachable à gauche, affiche à droite. */
 export function MatchRow({
   m,
   v,
@@ -45,19 +47,20 @@ export function MatchRow({
   const w = m.winner_team_id;
   const extra = extraText(m, v);
   const live = m.status === "live";
+  const stub = big ? "8rem" : "5.6rem";
 
   const line = (id: string | null, name: string, score: number | null) => {
     const winner = !!w && w === id;
     const loser = !!w && !winner;
     const mine = !!highlight && highlight === id;
     return (
-      <div className={`flex items-center justify-between gap-3 ${big ? "text-xl" : "text-[15px]"}`}>
-        <span className={`flex min-w-0 items-center gap-1.5 ${winner ? "font-semibold" : ""} ${loser ? "text-ink-2" : ""} ${!id ? "text-ink-3 italic" : ""}`}>
-          <span className={`truncate ${mine ? "rounded-md bg-accent-soft px-1.5 text-accent-ink" : ""}`}>{name}</span>
-          {winner && <IconCheck className={`shrink-0 text-ok ${big ? "size-5" : "size-3.5"}`} />}
+      <div className={`flex items-center justify-between gap-3 ${big ? "text-xl" : "text-[16px]"}`}>
+        <span className={`flex min-w-0 items-center gap-1.5 ${winner ? "font-bold" : "font-medium"} ${loser ? "text-ink-3" : ""} ${!id ? "text-ink-3 italic" : ""}`}>
+          <span className={`truncate ${mine ? "rounded-[4px] bg-accent px-1.5 text-on-accent" : ""}`}>{name}</span>
+          {winner && <IconCheck className={`shrink-0 text-ok ${big ? "size-5" : "size-4"}`} />}
         </span>
         {done && (
-          <span className={`font-semibold tabular-nums ${live ? "text-live" : loser ? "text-ink-3" : ""} ${big ? "text-3xl" : "text-base"}`}>{score}</span>
+          <span className={`font-cond font-extrabold tabular-nums ${live ? "text-live" : loser ? "text-ink-3" : ""} ${big ? "text-3xl" : "text-[20px] leading-none"}`}>{score}</span>
         )}
       </div>
     );
@@ -65,23 +68,27 @@ export function MatchRow({
 
   const body = (
     <div
-      className={`card relative flex items-center gap-4 overflow-hidden transition ${big ? "p-5" : "px-4 py-3"} ${live ? "border-live/40" : ""} ${
-        href ? "hover:border-line-strong hover:shadow-float active:scale-[0.995]" : ""
+      style={{ "--cut": stub } as React.CSSProperties}
+      className={`ticket relative flex items-stretch overflow-hidden rounded-[10px] border bg-surface shadow-card transition ${live ? "border-live/50" : "border-line"} ${
+        href ? "hover:border-line-strong hover:bg-surface-2/50 active:translate-y-px" : ""
       }`}
     >
-      {live && <span className="absolute inset-y-0 left-0 w-[3px] bg-live" />}
-      <div className={`shrink-0 border-r border-line pr-3 ${big ? "w-28" : "w-[4.75rem]"}`}>
-        <div className={`font-semibold tabular-nums ${big ? "text-xl" : "text-sm"} ${m.status === "finished" ? "text-ink-3" : ""}`}>{fmtTime(m.scheduled_at, v.tz)}</div>
-        {showCourt && <div className={`truncate text-ink-3 ${big ? "text-sm" : "text-xs"}`}>{v.court(m)}</div>}
+      {live && <span className="absolute inset-y-0 left-0 w-1 bg-live" />}
+      {/* Talon */}
+      <div style={{ width: stub }} className={`perforation flex shrink-0 flex-col justify-center ${big ? "px-5 py-4" : "px-3.5 py-3"}`}>
+        <div className={`display tabular-nums ${big ? "text-[34px]" : "text-[26px]"} ${m.status === "finished" ? "text-ink-3" : ""}`}>{fmtTime(m.scheduled_at, v.tz)}</div>
+        {showCourt && <div className={`mt-0.5 truncate font-cond font-bold tracking-[0.06em] text-ink-3 uppercase ${big ? "text-sm" : "text-[11px]"}`}>{v.court(m)}</div>}
       </div>
-      <div className="min-w-0 flex-1 space-y-0.5">
-        {m.label && <div className="eyebrow truncate">{m.label}</div>}
-        {line(m.home_team_id, v.home(m), m.home_score)}
-        {line(m.away_team_id, v.away(m), m.away_score)}
-        {extra && <div className="truncate text-xs text-ink-3">{extra}</div>}
+      <div className={`flex min-w-0 flex-1 items-center gap-3 ${big ? "px-5 py-4" : "py-2.5 pr-3.5 pl-4"}`}>
+        <div className="min-w-0 flex-1 space-y-0.5">
+          {m.label && <div className="eyebrow truncate text-[11px]">{m.label}</div>}
+          {line(m.home_team_id, v.home(m), m.home_score)}
+          {line(m.away_team_id, v.away(m), m.away_score)}
+          {extra && <div className="truncate text-xs text-ink-3">{extra}</div>}
+        </div>
+        <StatusChip m={m} delay={v.delay(m)} />
+        {href && <IconChevron className="-mr-1 size-4 shrink-0 text-ink-3" />}
       </div>
-      <StatusChip m={m} delay={v.delay(m)} />
-      {href && <IconChevron className="-mr-1 size-4 shrink-0 text-ink-3" />}
     </div>
   );
   return href ? (
@@ -96,7 +103,7 @@ export function MatchRow({
 }
 
 /**
- * Tableau d'affichage d'un match : noms et scores en grand, état et chrono.
+ * Tableau d'affichage d'un match : panneau noir, noms des équipes et scores en LED ambre, état et chrono.
  * Utilisé pour les terrains en direct (public, organisation, arbitre, écran géant).
  */
 export function Scoreboard({
@@ -124,21 +131,25 @@ export function Scoreboard({
   const delay = v.delay(m, now);
   const startsIn = m.status === "scheduled" && m.scheduled_at ? Math.round((new Date(m.scheduled_at).getTime() - now) / 60000) : null;
   const extra = extraText(m, v);
-  const name = { md: "text-base", lg: "text-xl", xl: "text-3xl" }[size];
-  const score = { md: "text-3xl", lg: "text-4xl", xl: "text-6xl" }[size];
-  const pad = { md: "p-4", lg: "p-5", xl: "p-6" }[size];
+  const name = { md: "text-[18px]", lg: "text-[22px]", xl: "text-[34px]" }[size];
+  const score = { md: "text-[44px]", lg: "text-[56px]", xl: "text-[88px]" }[size];
+  const pad = { md: "p-3.5", lg: "p-4", xl: "p-6" }[size];
+  const digits = Math.max(2, String(m.home_score ?? 0).length, String(m.away_score ?? 0).length);
 
-  const row = (id: string | null, label: string, s: number | null) => {
+  const row = (id: string | null, label: string, s: number | null, side: "home" | "away") => {
     const win = !!w && w === id;
     const lose = !!w && !win;
     return (
       <div className="flex items-center gap-3">
-        <span className={`min-w-0 flex-1 truncate leading-tight font-semibold tracking-tight ${name} ${lose ? "text-ink-3" : ""} ${!id ? "font-medium text-ink-3 italic" : ""}`}>
+        <span className={`w-1 self-stretch rounded-full ${side === "home" ? "bg-[#ff6b1a]" : "bg-[#f3efe4]/70"}`} aria-hidden />
+        <span
+          className={`min-w-0 flex-1 truncate font-cond leading-tight font-bold tracking-[0.03em] uppercase ${name} ${lose ? "text-[#858074]" : "text-[#f3efe4]"} ${!id ? "font-semibold text-[#858074] normal-case italic" : ""}`}
+        >
           {label}
         </span>
-        {win && <IconCheck className="size-5 shrink-0 text-ok" />}
-        <span className={`min-w-[1.6ch] text-right leading-none font-semibold tracking-tight tabular-nums ${score} ${live ? "text-ink" : lose ? "text-ink-3" : ""}`}>
-          {m.status === "scheduled" ? <span className="text-line-strong">–</span> : s}
+        {win && <IconCheck className="size-5 shrink-0 text-[#3ddc84]" />}
+        <span className={`rounded-[4px] bg-black/60 px-1.5 py-1 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)] ${lose ? "opacity-55" : ""}`}>
+          <Led value={m.status === "scheduled" ? null : s} digits={digits} className={score} />
         </span>
       </div>
     );
@@ -146,43 +157,52 @@ export function Scoreboard({
 
   const body = (
     <div
-      className={`card relative flex h-full flex-col gap-3 overflow-hidden ${pad} transition ${live ? "border-live/40 shadow-float" : ""} ${
-        href ? "hover:border-line-strong hover:shadow-float active:scale-[0.995]" : ""
+      className={`board relative flex h-full flex-col gap-3 overflow-hidden rounded-[10px] ${pad} transition ${live ? "ring-2 ring-[#ff4436]/60" : "ring-1 ring-white/5"} ${
+        href ? "hover:ring-2 hover:ring-[#ff6b1a]/70 active:translate-y-px" : ""
       }`}
     >
-      {live && <span className="absolute inset-x-0 top-0 h-[3px] bg-live" />}
-      <div className="flex items-center gap-2 text-xs text-ink-3">
-        {court && <span className="font-semibold text-ink-2">{court}</span>}
+      <div className="flex items-center gap-2 font-cond text-[12px] font-bold tracking-[0.12em] text-[#b4afa3] uppercase">
+        {court && <span className="text-[#f3efe4]">{court}</span>}
         {court && m.label && <span aria-hidden>·</span>}
         {m.label && <span className="truncate">{m.label}</span>}
         <span className="ml-auto flex shrink-0 items-center gap-2">
           {live ? (
-            <LiveBadge label={elapsed !== null ? `${elapsed}′` : "En cours"} className="tabular-nums" />
+            <span className="flex items-center gap-1.5 rounded-[4px] bg-[#ff4436] px-1.5 py-0.5 text-white">
+              <span className="live-dot size-1.5 rounded-full bg-white" />
+              {elapsed !== null ? <span className="tabular-nums">{elapsed}′</span> : "Live"}
+            </span>
           ) : done ? (
-            <span className="chip bg-surface-2 text-ink-2">{m.forfeit ? "Forfait" : "Terminé"}</span>
+            <span className="rounded-[4px] bg-white/10 px-1.5 py-0.5 text-[#f3efe4]">{m.forfeit ? "Forfait" : "Fin"}</span>
           ) : delay > 0 ? (
-            <span className="chip bg-warn-soft text-warn tabular-nums">Retard {delay} min</span>
+            <span className="rounded-[4px] bg-[#ffd23f] px-1.5 py-0.5 text-[#15130e] tabular-nums">Retard {delay} min</span>
           ) : startsIn !== null && startsIn <= 60 && startsIn >= 0 ? (
-            <span className="chip bg-accent-soft text-accent-ink tabular-nums">Dans {startsIn} min</span>
+            <span className="rounded-[4px] bg-[#ff6b1a] px-1.5 py-0.5 text-[#160800] tabular-nums">Dans {startsIn} min</span>
           ) : (
-            <span className="chip bg-surface-2 text-ink-2 tabular-nums">{fmtTime(m.scheduled_at, t.timezone)}</span>
+            <span className="led text-[16px] tracking-normal">{fmtTime(m.scheduled_at, t.timezone)}</span>
           )}
         </span>
       </div>
       <div className="space-y-2">
-        {row(m.home_team_id, v.home(m), m.home_score)}
-        {row(m.away_team_id, v.away(m), m.away_score)}
+        {row(m.home_team_id, v.home(m), m.home_score, "home")}
+        {row(m.away_team_id, v.away(m), m.away_score, "away")}
       </div>
       {(extra || cta || (live && elapsed !== null)) && (
         <div className="mt-auto flex items-center gap-3 pt-1">
           {live && elapsed !== null && (
-            <div className="h-1 flex-1 overflow-hidden rounded-full bg-surface-2" title={`${elapsed} / ${t.match_duration} min`}>
-              <div className={`h-full rounded-full ${elapsed > t.match_duration ? "bg-warn" : "bg-live"}`} style={{ width: `${Math.min(100, (100 * elapsed) / t.match_duration)}%` }} />
+            <div className="flex h-1.5 flex-1 gap-[2px]" title={`${elapsed} / ${t.match_duration} min`}>
+              {Array.from({ length: 20 }, (_, i) => (
+                <span
+                  key={i}
+                  className={`flex-1 rounded-[1px] ${
+                    i < Math.round((20 * Math.min(elapsed, t.match_duration)) / t.match_duration) ? (elapsed > t.match_duration ? "bg-[#ffd23f]" : "bg-[#ff4436]") : "bg-white/10"
+                  }`}
+                />
+              ))}
             </div>
           )}
-          {extra && <span className="min-w-0 flex-1 truncate text-xs text-ink-3">{extra}</span>}
+          {extra && <span className="min-w-0 flex-1 truncate text-xs text-[#b4afa3]">{extra}</span>}
           {cta && (
-            <span className="ml-auto inline-flex shrink-0 items-center gap-1 text-sm font-medium text-accent-ink">
+            <span className="ml-auto inline-flex shrink-0 items-center gap-1 rounded-md bg-[#ff6b1a] px-3 py-1.5 font-cond text-[14px] font-extrabold tracking-[0.06em] text-[#160800] uppercase">
               {cta} <IconChevron className="size-4" />
             </span>
           )}

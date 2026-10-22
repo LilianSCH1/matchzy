@@ -3,20 +3,24 @@ import { LiveRefresh } from "@/components/LiveRefresh";
 import { MatchRow, Scoreboard } from "@/components/MatchRow";
 import { Clock, Rotator } from "@/components/Rotator";
 import { StandingsTable } from "@/components/StandingsTable";
-import { Logo } from "@/components/TopBar";
+import { CourtLines, SportBadge, sportKey, Ticker } from "@/components/Stadium";
+import { LedBar, Logo } from "@/components/TopBar";
 import { courtStatuses, forecast } from "@/lib/insights";
 import { resolveTournament } from "@/lib/resolve";
 import { bundleOr404 } from "@/lib/server/page";
+import { canView } from "@/lib/server/auth";
+import { Gate } from "@/components/Gate";
 import type { Match } from "@/lib/types";
 import { byTime, View } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
 
-/** Écran géant : lecture seule, sans connexion, rafraîchi en direct. */
+/** Écran géant : lecture seule (code participant, organisateur ou arbitre), rafraîchi en direct. */
 export default async function BigScreen({ params }: { params: Promise<{ slug: string }> }) {
   const b = await bundleOr404((await params).slug);
-  const v = new View(b);
   const t = b.tournament;
+  if (!(await canView(t.id))) return <Gate name={t.name} sport={t.sport_name} slug={t.slug} />;
+  const v = new View(b);
   const now = Date.now();
   const courts = courtStatuses(b, now);
   const f = forecast(b, now, courts);
@@ -68,28 +72,27 @@ export default async function BigScreen({ params }: { params: Promise<{ slug: st
   const cols = boards.length > 3 ? "grid-cols-2" : "grid-cols-1";
 
   return (
-    <div className="theme-dark scoreboard-grid flex h-dvh flex-col overflow-hidden">
+    <div data-sport={sportKey(t.sport_name)} className="theme-dark relative isolate flex h-dvh flex-col overflow-hidden">
+      <CourtLines sport={sportKey(t.sport_name)} className="absolute inset-0 -z-10 m-auto h-[90%] w-auto text-white/[0.035]" />
       <LiveRefresh seconds={5} />
-      <header className="flex items-center gap-6 px-8 pt-6">
+      <header className="board flex items-center gap-6 px-8 py-4">
         <Logo className="opacity-90" />
-        <div className="h-8 w-px bg-line" />
-        <h1 className="truncate text-4xl font-semibold tracking-[-0.03em]">{t.name}</h1>
-        <span className="chip h-8 shrink-0 bg-surface-3 px-4 text-base text-ink-2">{t.sport_name}</span>
+        <div className="h-10 w-px bg-white/15" />
+        <h1 className="display truncate text-[56px]">{t.name}</h1>
+        <SportBadge name={t.sport_name} className="h-8 px-3 text-base" />
         {f.live > 0 && (
           <span className="chip h-8 shrink-0 bg-live px-4 text-base text-white">
             <span className="live-dot size-2 rounded-full bg-white" /> {f.live} en direct
           </span>
         )}
         <div className="ml-auto flex items-center gap-6">
-          <div className="w-40 space-y-1.5 text-right">
-            <div className="text-sm text-ink-2 tabular-nums">
-              {f.done}/{f.total} matchs
+          <div className="w-48 space-y-1.5 text-right">
+            <div className="font-cond text-base font-bold tracking-[0.08em] text-ink-2 uppercase tabular-nums">
+              <span className="led text-xl">{f.done}</span>/{f.total} matchs · {pct} %
             </div>
-            <div className="h-1.5 overflow-hidden rounded-full bg-surface-3">
-              <div className="h-full rounded-full bg-accent" style={{ width: `${pct}%` }} />
-            </div>
+            <LedBar value={f.done} total={f.total} cells={24} className="text-white" />
           </div>
-          <span className="text-6xl font-semibold tracking-tight tabular-nums">
+          <span className="led rounded-md bg-black px-3 py-1 text-[64px] leading-none">
             <Clock tz={t.timezone} />
           </span>
         </div>
@@ -97,7 +100,7 @@ export default async function BigScreen({ params }: { params: Promise<{ slug: st
 
       <div className="grid min-h-0 flex-1 grid-cols-1 gap-8 px-8 py-6 lg:grid-cols-[minmax(0,1fr)_minmax(0,1.5fr)]">
         <section className="flex min-h-0 flex-col gap-4">
-          <h2 className="flex items-center gap-3 text-2xl font-semibold tracking-tight">
+          <h2 className="display flex items-center gap-3 text-[40px]">
             <span className="live-dot size-3 rounded-full bg-live" /> Sur les {t.rules.labels.courtPlural}
           </h2>
           <div className={`grid min-h-0 gap-3 overflow-hidden ${cols}`}>
@@ -114,23 +117,21 @@ export default async function BigScreen({ params }: { params: Promise<{ slug: st
       </div>
 
       {recent.length > 0 && (
-        <footer className="flex h-14 shrink-0 items-center overflow-hidden border-t border-line bg-surface/80">
-          <span className="z-10 flex h-full shrink-0 items-center bg-accent px-6 text-sm font-semibold tracking-wide text-on-accent uppercase">Résultats</span>
-          <div className="relative min-w-0 flex-1 overflow-hidden">
-            <div className="ticker flex w-max gap-10 pl-10 text-lg whitespace-nowrap">
-              {[...recent, ...recent].map((m, i) => (
-                <span key={`${m.id}-${i}`} className="flex items-center gap-3">
-                  <span className={m.winner_team_id === m.home_team_id ? "font-semibold" : "text-ink-2"}>{v.home(m)}</span>
-                  <span className="rounded-md bg-surface-3 px-2 font-semibold tabular-nums">
-                    {m.home_score} – {m.away_score}
-                  </span>
-                  <span className={m.winner_team_id === m.away_team_id ? "font-semibold" : "text-ink-2"}>{v.away(m)}</span>
-                  <span className="text-sm text-ink-3">{m.label}</span>
-                </span>
-              ))}
-            </div>
-          </div>
-        </footer>
+        <Ticker label="Résultats" className="h-14 shrink-0 border-t border-white/10 [&>span]:px-6 [&>span]:text-base">
+          {recent.map((m) => (
+            <span key={m.id} className="flex items-center gap-3 font-cond text-2xl font-bold tracking-[0.03em] uppercase">
+              <span className={m.winner_team_id === m.home_team_id ? "text-ink" : "text-ink-3"}>{v.home(m)}</span>
+              <span className="led text-[26px]">
+                {m.home_score}-{m.away_score}
+              </span>
+              <span className={m.winner_team_id === m.away_team_id ? "text-ink" : "text-ink-3"}>{v.away(m)}</span>
+              <span className="text-base text-ink-3">{m.label}</span>
+              <span className="text-accent" aria-hidden>
+                ◆
+              </span>
+            </span>
+          ))}
+        </Ticker>
       )}
     </div>
   );

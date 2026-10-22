@@ -4,7 +4,7 @@ import { IconLogout, IconWhistle } from "@/components/Icons";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { RefereeLoginForm } from "@/components/LoginForm";
 import { MatchRow, Scoreboard } from "@/components/MatchRow";
-import { Empty, Page, Ring, Section, TopBar } from "@/components/TopBar";
+import { Empty, LedBar, Page, Section, TopBar } from "@/components/TopBar";
 import { courtStatuses } from "@/lib/insights";
 import { isOrganizer, refereeCourt } from "@/lib/server/auth";
 import { bundleOr404 } from "@/lib/server/page";
@@ -30,15 +30,16 @@ export default async function RefereePage({ params, searchParams }: { params: Pr
         <Page narrow>
           <div className="rise mx-auto max-w-sm space-y-8 pt-8">
             <div className="space-y-3 text-center">
-              <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-accent text-on-accent shadow-float">
-                <IconWhistle className="size-6" />
+              <span className="mx-auto grid size-16 -rotate-6 place-items-center rounded-[10px] bg-accent text-on-accent shadow-[inset_0_-4px_0_rgb(0_0_0/0.25)]">
+                <IconWhistle className="size-7" />
               </span>
-              <h1 className="text-2xl font-semibold tracking-tight">Espace arbitre</h1>
+              <p className="eyebrow text-accent-ink">{t.name}</p>
+              <h1 className="display text-[52px]">Table de marque</h1>
               <p className="text-sm leading-relaxed text-ink-2">
                 Entrez le code à 6 chiffres de votre {L.court}, communiqué par l&apos;organisateur. Vous verrez ensuite vos matchs dans l&apos;ordre.
               </p>
             </div>
-            <div className="card p-5">
+            <div className="card p-4">
               <RefereeLoginForm slug={t.slug} courtLabel={L.court} />
             </div>
           </div>
@@ -85,8 +86,8 @@ export default async function RefereePage({ params, searchParams }: { params: Pr
               <Link
                 key={c.courtId}
                 href={`${base}/arbitre?terrain=${c.courtId}`}
-                className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-3.5 text-sm font-medium transition ${
-                  c.courtId === courtId ? "bg-ink text-canvas" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
+                className={`inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md px-3.5 font-cond text-[14px] font-bold tracking-[0.06em] uppercase transition ${
+                  c.courtId === courtId ? "bg-ink text-canvas shadow-[inset_0_-2px_0_rgb(0_0_0/0.35)]" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
                 }`}
               >
                 {c.live && <span className="live-dot size-1.5 rounded-full bg-live" />}
@@ -98,13 +99,15 @@ export default async function RefereePage({ params, searchParams }: { params: Pr
         </nav>
       )}
       <Page narrow>
-        <div className="card flex items-center gap-4 p-4">
-          <Ring value={pct} size={48} stroke={5} className={pct === 100 ? "text-ok" : "text-accent"} />
-          <div className="min-w-0 flex-1">
-            <div className="text-sm font-semibold">
-              {done.length} / {matches.length} matchs joués
-            </div>
-            <div className="text-xs text-ink-3">
+        <div className="board flex items-center gap-4 rounded-[10px] p-4">
+          <div className="shrink-0 text-center">
+            <span className="led text-[40px] leading-none">{done.length}</span>
+            <span className="font-cond text-lg font-bold text-[#858074]">/{matches.length}</span>
+          </div>
+          <div className="min-w-0 flex-1 space-y-2">
+            <div className="font-cond text-[13px] font-bold tracking-[0.12em] text-[#f3efe4] uppercase">Matchs joués</div>
+            <LedBar value={done.length} total={matches.length} cells={16} tone={pct === 100 ? "ok" : "led"} className="text-white" />
+            <div className="text-xs text-[#b4afa3]">
               {status?.state === "late"
                 ? `Retard de ${status.delay} min sur ce ${L.court}`
                 : todo.length
@@ -112,7 +115,7 @@ export default async function RefereePage({ params, searchParams }: { params: Pr
                   : "Journée terminée, merci !"}
             </div>
           </div>
-          {status?.state === "late" && <span className="chip bg-warn-soft text-warn tabular-nums">+{status.delay} min</span>}
+          {status?.state === "late" && <span className="chip bg-[#ffd23f] text-[#15130e] tabular-nums">+{status.delay} min</span>}
         </div>
 
         {current ? (

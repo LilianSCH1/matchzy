@@ -42,13 +42,13 @@ export function RefereeLoginForm({ slug, courtLabel }: { slug: string; courtLabe
           autoComplete="one-time-code"
           autoFocus
           required
-          placeholder="••••••"
-          className="input h-20 rounded-2xl text-center font-mono text-4xl font-medium tracking-[0.4em] placeholder:tracking-[0.4em]"
+          placeholder="000000"
+          className="board h-24 w-full rounded-[10px] border-0 text-center font-led text-5xl font-extrabold tracking-[0.3em] text-led caret-[#ff6b1a] outline-none placeholder:tracking-[0.3em] placeholder:text-[rgb(255_176_0/0.15)] focus:ring-4 focus:ring-accent/40"
           maxLength={8}
         />
       </div>
       <ErrorText>{state?.error}</ErrorText>
-      <button className="btn-accent h-14 w-full text-base" disabled={pending}>
+      <button className="btn-accent h-14 w-full text-lg" disabled={pending}>
         {pending ? "Vérification…" : "Accéder à mes matchs"}
         {!pending && <IconArrowRight className="size-4" />}
       </button>

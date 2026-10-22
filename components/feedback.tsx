@@ -4,7 +4,7 @@
 // et bouton de formulaire avec état « en cours ».
 import { useEffect, useRef, useState, useSyncExternalStore } from "react";
 import { useFormStatus } from "react-dom";
-import { IconAlert, IconCheck, IconX } from "./Icons";
+import { IconAlert, IconX } from "./Icons";
 
 // ------------------------------------------------------------------ Notifications
 
@@ -43,20 +43,25 @@ export function Toaster() {
   );
   return (
     <div className="pointer-events-none fixed inset-x-0 top-3 z-[60] flex flex-col items-center gap-2 px-4" aria-live="polite" role="status">
-      {list.map((t) => (
-        <div
-          key={t.id}
-          className={`rise pointer-events-auto flex max-w-md items-center gap-2.5 rounded-full py-2 pr-2 pl-4 text-sm font-medium shadow-[0_8px_30px_rgb(0_0_0/0.18)] ${
-            t.tone === "error" ? "bg-danger text-white" : "bg-ink text-canvas"
-          }`}
-        >
-          {t.tone === "error" ? <IconAlert className="size-4 shrink-0" /> : t.tone === "ok" ? <IconCheck className="size-4 shrink-0 text-accent" /> : null}
-          <span className="min-w-0">{t.message}</span>
-          <button className="grid size-7 shrink-0 place-items-center rounded-full opacity-60 hover:opacity-100" onClick={() => dismiss(t.id)} aria-label="Fermer">
-            <IconX className="size-3.5" />
-          </button>
-        </div>
-      ))}
+      {list.map((t) => {
+        // Chaque notification est un carton brandi par l'arbitre : vert validé, rouge erreur, blanc information.
+        const card = t.tone === "error" ? "bg-danger" : t.tone === "ok" ? "bg-ok" : "bg-[#f3efe4]";
+        const tag = t.tone === "error" ? "Carton rouge" : t.tone === "ok" ? "Validé" : "Info";
+        return (
+          <div key={t.id} className="card-show board pointer-events-auto flex max-w-md items-center gap-3 rounded-md py-2 pr-2 pl-2.5 shadow-[0_12px_40px_rgb(0_0_0/0.35)]">
+            <span aria-hidden className={`h-8 w-6 shrink-0 -rotate-6 rounded-[3px] ${card} shadow-[inset_0_-3px_0_rgb(0_0_0/0.2)]`} />
+            <span className="min-w-0">
+              <span className={`block font-cond text-[11px] font-extrabold tracking-[0.16em] uppercase ${t.tone === "error" ? "text-[#ff6a63]" : t.tone === "ok" ? "text-[#3ddc84]" : "text-led"}`}>
+                {tag}
+              </span>
+              <span className="block text-[14px] leading-snug font-medium text-[#f3efe4]">{t.message}</span>
+            </span>
+            <button className="grid size-7 shrink-0 place-items-center rounded-md text-[#f3efe4] opacity-60 hover:opacity-100" onClick={() => dismiss(t.id)} aria-label="Fermer">
+              <IconX className="size-3.5" />
+            </button>
+          </div>
+        );
+      })}
     </div>
   );
 }
@@ -131,23 +136,24 @@ function ConfirmDialog({ title, body, confirmLabel = "Confirmer", tone = "defaul
         if (!pending) onClose(false);
       }}
       onClick={(e) => e.target === ref.current && !pending && onClose(false)}
-      className="m-auto w-[calc(100%-2rem)] max-w-md rounded-3xl border border-line bg-surface p-0 text-ink shadow-2xl backdrop:bg-black/50 backdrop:backdrop-blur-sm"
+      className="pop m-auto w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-[10px] border border-line bg-surface p-0 text-ink shadow-pop backdrop:bg-black/60 backdrop:backdrop-blur-sm"
     >
       <form
         method="dialog"
-        className="space-y-4 p-6"
+        className="space-y-4 p-6 pt-5"
         onSubmit={(e) => {
           e.preventDefault();
           confirm();
         }}
       >
+        <div className={`-mx-6 -mt-5 mb-5 h-1.5 ${tone === "danger" ? "hazard" : "bg-accent"}`} aria-hidden />
         {tone === "danger" && (
-          <span className="grid size-11 place-items-center rounded-2xl bg-danger-soft text-danger">
-            <IconAlert className="size-5" />
+          <span className="flex items-center gap-2 font-cond text-[12px] font-extrabold tracking-[0.16em] text-danger uppercase">
+            <IconAlert className="size-4" /> Attention
           </span>
         )}
         <div className="space-y-1.5">
-          <h2 className="text-lg font-semibold tracking-tight">{title}</h2>
+          <h2 className="display text-[28px]">{title}</h2>
           {body && <div className="text-sm leading-relaxed text-ink-2">{body}</div>}
         </div>
         {requireText && (
@@ -158,7 +164,7 @@ function ConfirmDialog({ title, body, confirmLabel = "Confirmer", tone = "defaul
             <input className="input font-mono" value={typed} onChange={(e) => setTyped(e.target.value)} autoFocus autoComplete="off" spellCheck={false} disabled={pending} />
           </label>
         )}
-        {error && <p className="rounded-xl bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger">{error}</p>}
+        {error && <p className="rounded-md bg-danger-soft px-3.5 py-2.5 text-sm font-medium text-danger">{error}</p>}
         <div className="flex flex-col-reverse gap-2 pt-1 sm:flex-row sm:justify-end">
           <button type="button" className="btn-ghost" disabled={pending} onClick={() => onClose(false)} autoFocus={!requireText}>
             Annuler

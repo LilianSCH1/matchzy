@@ -329,7 +329,7 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
     <div className="space-y-8 pb-40">
       {dialog}
       {restored && (
-        <div className="rise flex items-center justify-between gap-3 rounded-2xl bg-accent-soft px-4 py-3 text-sm">
+        <div className="rise flex items-center justify-between gap-3 rounded-[10px] bg-accent-soft px-4 py-3 text-sm">
           <span>Nous avons repris votre brouillon là où vous l&apos;aviez laissé.</span>
           <button className="shrink-0 font-medium underline underline-offset-4" onClick={resetAll}>
             Tout recommencer
@@ -450,7 +450,7 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
           {notice && <p className="rise text-sm text-ink-2">{notice}</p>}
 
           {n === 0 && (
-            <div className="flex flex-wrap items-center gap-2 rounded-2xl border border-dashed border-line-strong p-4">
+            <div className="flex flex-wrap items-center gap-2 rounded-[10px] border border-dashed border-line-strong p-4">
               <span className="mr-auto text-sm text-ink-2">Pas encore les noms ?</span>
               <div className="w-36">
                 <Stepper value={placeholderCount} min={MIN_TEAMS} max={MAX_TEAMS} onChange={setPlaceholderCount} />
@@ -523,7 +523,7 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
                 <button
                   key={f}
                   onClick={() => setFormatChoice(f)}
-                  className={`relative flex flex-col rounded-2xl border p-4 text-left transition ${on ? "border-ink bg-surface ring-1 ring-ink" : "border-line bg-surface hover:border-line-strong"}`}
+                  className={`relative flex flex-col rounded-[10px] border p-4 text-left transition ${on ? "border-ink bg-surface ring-1 ring-ink" : "border-line bg-surface hover:border-line-strong"}`}
                 >
                   <span className={`absolute top-4 right-4 grid size-5 place-items-center rounded-full ${on ? "bg-accent text-on-accent" : "border border-line-strong"}`}>
                     {on && <IconCheck className="size-3" />}
@@ -559,7 +559,7 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
                         <button
                           key={k}
                           onClick={() => setPoolChoice(k)}
-                          className={`rounded-xl px-3.5 py-2 text-left transition ${on ? "bg-ink text-canvas" : "border border-line bg-surface hover:border-line-strong"}`}
+                          className={`rounded-md px-3.5 py-2 text-left transition ${on ? "bg-ink text-canvas" : "border border-line bg-surface hover:border-line-strong"}`}
                         >
                           <span className="block text-sm font-semibold">{plural(k, "poule")}</span>
                           <span className={`block text-xs ${on ? "opacity-60" : "text-ink-3"}`}>de {s.join(" ou ")} équipes</span>
@@ -631,7 +631,7 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
                     <button
                       key={`${o.qualifiers}-${o.bestExtra}`}
                       onClick={() => setQualChoice({ q: o.qualifiers, extra: o.bestExtra })}
-                      className={`flex items-center gap-3 rounded-xl border px-4 py-3 text-left transition ${on ? "border-ink ring-1 ring-ink" : "border-line hover:border-line-strong"}`}
+                      className={`flex items-center gap-3 rounded-md border px-4 py-3 text-left transition ${on ? "border-ink ring-1 ring-ink" : "border-line hover:border-line-strong"}`}
                     >
                       <span className={`grid size-5 shrink-0 place-items-center rounded-full ${on ? "bg-accent text-on-accent" : "border border-line-strong"}`}>{on && <IconCheck className="size-3" />}</span>
                       <span className="min-w-0 flex-1">
@@ -661,7 +661,7 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
               </div>
               <ol className="grid grid-cols-2 gap-1.5 text-sm sm:grid-cols-3">
                 {order.map((i, k) => (
-                  <li key={i} className="flex items-center gap-2 truncate rounded-lg bg-surface-2 px-2.5 py-1.5">
+                  <li key={i} className="flex items-center gap-2 truncate rounded-md bg-surface-2 px-2.5 py-1.5">
                     <span className="w-5 text-xs font-medium text-ink-3 tabular-nums">{k + 1}</span>
                     <span className="truncate">{teams[i]}</span>
                   </li>
@@ -797,12 +797,12 @@ function Summary({ preview, start, courts, courtsLabel }: { preview: ReturnType<
   const nextDay = preview.end.toDateString() !== start.toDateString();
   return (
     <div className="space-y-2">
-      <div className="grid grid-cols-3 gap-4 rounded-2xl bg-ink p-5 text-canvas">
+      <div className="grid grid-cols-3 gap-4 rounded-[10px] bg-ink p-5 text-canvas">
         <Stat label="Matchs" value={`${preview.matches}`} />
         <Stat label="Durée" value={fmtDuration(minutes)} sub={`sur ${courts} ${courtsLabel}`} />
         <Stat label="Fin estimée" value={hhmm(preview.end)} accent />
       </div>
-      {nextDay && <p className="rounded-xl bg-warn-soft px-4 py-2.5 text-sm font-medium text-warn">Le tournoi finirait le lendemain : ajoutez des {courtsLabel}, raccourcissez les matchs ou fixez une heure de fin ci-dessous.</p>}
+      {nextDay && <p className="rounded-md bg-warn-soft px-4 py-2.5 text-sm font-medium text-warn">Le tournoi finirait le lendemain : ajoutez des {courtsLabel}, raccourcissez les matchs ou fixez une heure de fin ci-dessous.</p>}
     </div>
   );
 }
@@ -848,7 +848,7 @@ function PoolDrop({ index, size, single, children }: { index: number; size: numb
   const { setNodeRef, isOver } = useDroppable({ id: `pool-${index}` });
   const bad = !single && (size < POOL_MIN || size > POOL_MAX);
   return (
-    <div ref={setNodeRef} className={`min-h-24 rounded-xl p-2.5 transition ${isOver ? "bg-accent-soft ring-2 ring-accent" : "bg-surface-2"}`}>
+    <div ref={setNodeRef} className={`min-h-24 rounded-md p-2.5 transition ${isOver ? "bg-accent-soft ring-2 ring-accent" : "bg-surface-2"}`}>
       <div className="mb-2 flex items-center justify-between px-1">
         <span className="text-sm font-semibold">Poule {poolName(index)}</span>
         <span className={`text-xs ${bad ? "font-medium text-warn" : "text-ink-3"}`}>{size} équipes</span>
@@ -866,7 +866,7 @@ function TeamChip({ id, name }: { id: number; name: string }) {
       {...listeners}
       {...attributes}
       style={transform ? { transform: `translate(${transform.x}px, ${transform.y}px)` } : undefined}
-      className={`cursor-grab touch-none rounded-lg border border-line bg-surface px-2.5 py-1.5 text-sm font-medium select-none ${
+      className={`cursor-grab touch-none rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm font-medium select-none ${
         isDragging ? "relative z-50 cursor-grabbing border-ink shadow-xl" : "hover:border-line-strong"
       }`}
     >

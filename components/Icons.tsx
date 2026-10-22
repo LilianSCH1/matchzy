@@ -55,3 +55,4 @@ export const IconPulse = (p: P) => <Svg {...p}><path d="M3 12h4l2.5-6 5 12 2.5-6
 export const IconCourt = (p: P) => <Svg {...p}><rect x="3" y="5" width="18" height="14" rx="1.5" /><path d="M12 5v14" /><circle cx="12" cy="12" r="2.5" /></Svg>;
 export const IconInfo = (p: P) => <Svg {...p}><circle cx="12" cy="12" r="8.5" /><path d="M12 11v5M12 8h.01" /></Svg>;
 export const IconCornerDownLeft = (p: P) => <Svg {...p}><path d="M20 5v7a3 3 0 0 1-3 3H5M9 11l-4 4 4 4" /></Svg>;
+export const IconTicket = (p: P) => <Svg {...p}><path d="M3.5 7.5a1 1 0 0 1 1-1h15a1 1 0 0 1 1 1v2.25a2.25 2.25 0 0 0 0 4.5v2.25a1 1 0 0 1-1 1h-15a1 1 0 0 1-1-1v-2.25a2.25 2.25 0 0 0 0-4.5z" /><path d="M14.5 6.5v11" strokeDasharray="1.5 2" /></Svg>;

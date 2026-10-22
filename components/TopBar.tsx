@@ -1,18 +1,34 @@
 import Link from "next/link";
 import { SearchButton } from "./CommandPalette";
 import { IconBack } from "./Icons";
+import { CourtLines } from "./Stadium";
 import { ThemeToggle } from "./ThemeToggle";
+
+/** Marque : un mini tableau d'affichage, lignes de terrain à la craie et ballon ambre au rond central. */
+export function LogoMark({ className = "size-8" }: { className?: string }) {
+  return (
+    <svg viewBox="0 0 32 32" className={className} aria-hidden>
+      <rect x="1" y="1" width="30" height="30" rx="6" fill="#060707" />
+      <rect x="1.5" y="1.5" width="29" height="29" rx="5.5" fill="none" stroke="rgb(255 255 255 / 0.14)" />
+      <g fill="none" stroke="#f3efe4" strokeWidth="1.5">
+        <rect x="6" y="8" width="20" height="16" rx="1" />
+        <path d="M16 8v16M6 12.5h3.5v7H6M26 12.5h-3.5v7H26" />
+      </g>
+      <circle cx="16" cy="16" r="3.2" fill="#ffb000" />
+      <circle cx="16" cy="16" r="5.5" fill="none" stroke="#ffb000" strokeOpacity="0.35" />
+    </svg>
+  );
+}
 
 export function Logo({ className = "", mark = false }: { className?: string; mark?: boolean }) {
   return (
     <span className={`inline-flex items-center gap-2 ${className}`}>
-      <span className="grid size-7 place-items-center rounded-[9px] bg-accent shadow-[0_1px_0_rgb(255_255_255/0.25)_inset,0_2px_6px_-1px_color-mix(in_oklab,var(--accent)_60%,transparent)]">
-        <svg viewBox="0 0 24 24" className="size-4" fill="none" aria-hidden>
-          <path d="M4 6.5h5v11H4M9 12h5" stroke="#fff" strokeWidth={2.2} strokeLinecap="round" strokeLinejoin="round" />
-          <circle cx="17.5" cy="12" r="2.6" fill="#fff" />
-        </svg>
-      </span>
-      {!mark && <span className="text-[17px] font-semibold tracking-tight">matchzy</span>}
+      <LogoMark />
+      {!mark && (
+        <span className="display text-[24px] leading-none tracking-[0.02em]">
+          Match<span className="text-accent">zy</span>
+        </span>
+      )}
     </span>
   );
 }
@@ -36,7 +52,7 @@ export function TopBar({
   wide?: boolean;
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-canvas/80 backdrop-blur-xl">
+    <header className="sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-xl">
       <div className={`mx-auto flex h-14 items-center gap-2 px-3 sm:px-5 ${wide ? "max-w-7xl" : "max-w-5xl"}`}>
         {back && (
           <Link href={back} className="btn-icon -ml-1" aria-label="Retour">
@@ -44,13 +60,13 @@ export function TopBar({
           </Link>
         )}
         {brand ? (
-          <Link href="/" className="mr-auto">
+          <Link href="/" className="mr-auto" aria-label="Matchzy, accueil">
             <Logo />
           </Link>
         ) : (
           <div className="min-w-0 flex-1">
-            <h1 className="truncate text-[15px] leading-tight font-semibold tracking-tight">{title}</h1>
-            {subtitle && <p className="truncate text-xs text-ink-3">{subtitle}</p>}
+            <h1 className="display truncate text-[22px] leading-none">{title}</h1>
+            {subtitle && <p className="mt-0.5 truncate font-cond text-[12px] font-semibold tracking-[0.08em] text-ink-3 uppercase">{subtitle}</p>}
           </div>
         )}
         <div className="flex shrink-0 items-center gap-1">
@@ -86,12 +102,12 @@ export function TabBar({ items, active, dock = false }: { items: { href: string;
     <nav
       className={
         dock
-          ? "pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line bg-canvas/90 backdrop-blur-xl sm:sticky sm:top-0 sm:bottom-auto sm:border-t-0 sm:border-b sm:pb-0"
-          : "sticky top-14 z-20 border-b border-line bg-canvas/80 backdrop-blur-xl"
+          ? "pb-safe fixed inset-x-0 bottom-0 z-30 border-t border-line bg-canvas/92 backdrop-blur-xl sm:sticky sm:top-0 sm:bottom-auto sm:border-t-0 sm:border-b sm:pb-0"
+          : "sticky top-14 z-20 border-b border-line bg-canvas/85 backdrop-blur-xl"
       }
       aria-label="Sections"
     >
-      <div className={`mx-auto flex max-w-5xl gap-1 px-2 sm:px-5 sm:py-2 ${dock ? "py-1" : "no-scrollbar overflow-x-auto py-2"}`}>
+      <div className={`mx-auto flex max-w-5xl gap-1 px-2 sm:px-5 ${dock ? "py-1 sm:py-0" : "no-scrollbar overflow-x-auto"}`}>
         {items.map((i) => {
           const on = i.key === active;
           return (
@@ -100,18 +116,16 @@ export function TabBar({ items, active, dock = false }: { items: { href: string;
               href={i.href}
               scroll={false}
               aria-current={on ? "page" : undefined}
-              className={
+              className={`relative font-cond font-bold tracking-[0.08em] uppercase transition ${
                 dock
-                  ? `flex flex-1 flex-col items-center gap-0.5 rounded-xl py-1.5 text-[11px] font-medium transition sm:h-9 sm:flex-none sm:flex-row sm:gap-1.5 sm:px-3.5 sm:text-sm ${
-                      on ? "text-accent-ink sm:bg-ink sm:text-canvas" : "text-ink-3 hover:text-ink sm:text-ink-2 sm:hover:bg-surface-2"
-                    }`
-                  : `inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-3.5 text-sm font-medium transition ${
-                      on ? "bg-ink text-canvas" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
-                    }`
-              }
+                  ? "flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] sm:h-12 sm:flex-none sm:flex-row sm:gap-2 sm:px-3.5 sm:text-[14px]"
+                  : "inline-flex h-12 shrink-0 items-center gap-2 px-3.5 text-[14px]"
+              } ${on ? "text-accent-ink sm:text-ink" : "text-ink-3 hover:text-ink"}`}
             >
               {i.icon}
               <span className="truncate">{i.label}</span>
+              {/* Liseré orange de l'onglet actif, comme le bandeau d'une retransmission. */}
+              {on && <span className={`absolute inset-x-2 h-[3px] rounded-full bg-accent ${dock ? "top-0 sm:top-auto sm:bottom-0" : "bottom-0"}`} />}
             </Link>
           );
         })}
@@ -141,12 +155,16 @@ export function Section({
     <section className="space-y-3">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="flex items-center gap-2 text-[15px] font-semibold tracking-tight">
-            {icon && <span className="text-ink-3">{icon}</span>}
+          <h2 className="display flex items-center gap-2.5 text-[26px]">
+            {icon && <span className="text-accent">{icon}</span>}
             {title}
-            {count !== undefined && <span className="chip h-5 bg-surface-2 px-2 text-[11px] text-ink-2 tabular-nums">{count}</span>}
+            {count !== undefined && (
+              <span className="board inline-flex h-6 min-w-7 items-center justify-center rounded-[4px] px-1.5 font-led text-[15px] leading-none font-extrabold text-led tabular-nums">
+                {count}
+              </span>
+            )}
           </h2>
-          {hint && <p className="mt-0.5 text-[13px] text-ink-3">{hint}</p>}
+          {hint && <p className="mt-1 text-[14px] text-ink-3">{hint}</p>}
         </div>
         {action}
       </div>
@@ -155,37 +173,44 @@ export function Section({
   );
 }
 
+/** État vide : un terrain désert, tracé à la craie. */
 export function Empty({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) {
   return (
-    <div className="flex flex-col items-center gap-2 rounded-2xl border border-dashed border-line-strong px-4 py-7 text-center text-sm text-ink-3">
-      {icon && <span className="grid size-10 place-items-center rounded-xl bg-surface-2 text-ink-3">{icon}</span>}
+    <div className="relative isolate flex flex-col items-center gap-2 overflow-hidden rounded-[10px] border border-dashed border-line-strong px-4 py-9 text-center text-[15px] text-ink-3">
+      <CourtLines sport="custom" className="absolute inset-0 -z-10 h-full w-full p-3 text-ink opacity-[0.06]" />
+      {icon && <span className="grid size-11 place-items-center rounded-full border-2 border-dashed border-line-strong text-ink-3">{icon}</span>}
       <div>{children}</div>
     </div>
   );
 }
 
-export function Page({ children, narrow, wide, className = "" }: { children: React.ReactNode; narrow?: boolean; wide?: boolean; className?: string }) {
-  return <main className={`mx-auto space-y-8 px-4 pt-6 pb-16 sm:px-5 ${narrow ? "max-w-xl" : wide ? "max-w-7xl" : "max-w-5xl"} ${className}`}>{children}</main>;
+export function Page({ children, narrow, wide, className = "", id }: { children: React.ReactNode; narrow?: boolean; wide?: boolean; className?: string; id?: string }) {
+  return <main id={id} className={`mx-auto space-y-9 px-4 pt-6 pb-16 sm:px-5 ${narrow ? "max-w-xl" : wide ? "max-w-7xl" : "max-w-5xl"} ${className}`}>{children}</main>;
 }
 
 export function Notice({ tone = "info", children }: { tone?: "info" | "warn" | "danger" | "ok"; children: React.ReactNode }) {
   const cls = {
-    info: "bg-surface-2 text-ink-2",
-    warn: "bg-warn-soft text-warn",
-    danger: "bg-danger-soft text-danger",
-    ok: "bg-ok-soft text-ok",
+    info: "border-line bg-surface-2 text-ink-2",
+    warn: "border-warn/40 bg-warn-soft text-warn",
+    danger: "border-danger/30 bg-danger-soft text-danger",
+    ok: "border-ok/30 bg-ok-soft text-ok",
   }[tone];
-  return <div className={`rounded-xl px-4 py-3 text-sm ${cls}`}>{children}</div>;
+  return <div className={`rounded-md border border-l-4 px-4 py-3 text-sm ${cls}`}>{children}</div>;
 }
 
 /** En-tête de page (espace organisateur) : titre, description et actions. */
 export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?: string; title: string; description?: React.ReactNode; actions?: React.ReactNode }) {
   return (
     <div className="flex flex-wrap items-end justify-between gap-4">
-      <div className="min-w-0 space-y-1">
-        {eyebrow && <div className="eyebrow">{eyebrow}</div>}
-        <h1 className="text-2xl font-semibold tracking-[-0.02em] sm:text-[28px]">{title}</h1>
-        {description && <p className="max-w-2xl text-sm leading-relaxed text-ink-2">{description}</p>}
+      <div className="min-w-0 space-y-2">
+        {eyebrow && (
+          <div className="eyebrow flex items-center gap-2 text-accent-ink">
+            <span className="h-[3px] w-5 rounded-full bg-accent" />
+            {eyebrow}
+          </div>
+        )}
+        <h1 className="display text-[40px] sm:text-[52px]">{title}</h1>
+        {description && <p className="max-w-2xl text-[15px] leading-relaxed text-ink-2">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}
     </div>
@@ -206,11 +231,23 @@ export function Ring({ value, size = 44, stroke = 5, className = "text-accent" }
         fill="none"
         stroke="currentColor"
         strokeWidth={stroke}
-        strokeLinecap="round"
         strokeDasharray={c}
         strokeDashoffset={c * (1 - Math.min(100, Math.max(0, value)) / 100)}
         className="transition-[stroke-dashoffset] duration-700"
       />
     </svg>
+  );
+}
+
+/** Barre de progression en LED : une rangée de points qui s'allument. */
+export function LedBar({ value, total, cells = 24, tone = "led", className = "" }: { value: number; total: number; cells?: number; tone?: "led" | "ok"; className?: string }) {
+  const lit = total ? Math.round((cells * value) / total) : 0;
+  const on = tone === "ok" ? "bg-ok shadow-[0_0_6px_var(--ok)]" : "bg-led shadow-[0_0_6px_rgb(255_176_0/0.7)]";
+  return (
+    <div className={`flex gap-[3px] ${className}`} role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={value}>
+      {Array.from({ length: cells }, (_, i) => (
+        <span key={i} className={`h-2 flex-1 rounded-[2px] ${i < lit ? on : "bg-current opacity-15"}`} />
+      ))}
+    </div>
   );
 }

@@ -70,7 +70,7 @@ export function SearchButton({ compact = false, className = "" }: { compact?: bo
     <button
       type="button"
       onClick={openCommandPalette}
-      className={`flex h-9 w-full items-center gap-2 rounded-xl border border-line bg-surface px-3 text-sm text-ink-3 shadow-card transition hover:border-line-strong hover:text-ink-2 ${className}`}
+      className={`flex h-9 w-full items-center gap-2 rounded-md border border-line bg-surface px-3 text-sm text-ink-3 shadow-card transition hover:border-line-strong hover:text-ink-2 ${className}`}
     >
       <IconSearch className="size-4" />
       <span className="flex-1 text-left">Rechercher…</span>
@@ -180,9 +180,10 @@ function PaletteDialog({ groups, onClose }: { groups: CommandGroup[]; onClose: (
         onClose();
       }}
       onClick={(e) => e.target === ref.current && onClose()}
-      className="pop mx-auto mt-[10vh] w-[calc(100%-1.5rem)] max-w-xl overflow-hidden rounded-2xl border border-line bg-surface p-0 text-ink shadow-pop backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+      className="pop mx-auto mt-[10vh] w-[calc(100%-1.5rem)] max-w-xl overflow-hidden rounded-[10px] border border-line bg-surface p-0 text-ink shadow-pop backdrop:bg-black/40 backdrop:backdrop-blur-sm"
       aria-label="Palette de commandes"
     >
+      <div className="h-1 bg-accent" aria-hidden />
       <div className="flex items-center gap-3 border-b border-line px-4">
         <IconSearch className="size-5 shrink-0 text-ink-3" />
         <input
@@ -237,9 +238,9 @@ function PaletteDialog({ groups, onClose }: { groups: CommandGroup[]; onClose: (
                   type="button"
                   onMouseMove={() => setActive(i)}
                   onClick={() => run(it)}
-                  className={`flex w-full items-center gap-3 rounded-xl px-3 py-2 text-left transition-colors ${on ? "bg-accent-soft" : ""}`}
+                  className={`flex w-full items-center gap-3 rounded-md px-3 py-2 text-left transition-colors ${on ? "bg-accent-soft" : ""}`}
                 >
-                  <span className={`grid size-8 shrink-0 place-items-center rounded-lg ${on ? "bg-accent text-on-accent" : "bg-surface-2 text-ink-2"}`}>
+                  <span className={`grid size-8 shrink-0 place-items-center rounded-md ${on ? "bg-accent text-on-accent" : "bg-surface-2 text-ink-2"}`}>
                     <Icon className="size-4" />
                   </span>
                   <span className="min-w-0 flex-1">

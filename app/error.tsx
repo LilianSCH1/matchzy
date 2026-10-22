@@ -15,17 +15,18 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
       <TopBar brand back="/" />
       <Page narrow>
         <div className="rise mx-auto max-w-sm space-y-6 pt-10 text-center">
-          <span className="mx-auto grid size-12 place-items-center rounded-2xl bg-surface-2">
-            <IconAlert className="size-5" />
-          </span>
+          <div className="board mx-auto inline-flex items-center gap-3 rounded-[10px] px-4 py-3">
+            <IconAlert className="size-6 text-[#ffd23f]" />
+            <span className="led text-[34px] leading-none">T.MORT</span>
+          </div>
           <div className="space-y-2">
-            <h1 className="text-2xl font-semibold tracking-tight">Connexion perdue</h1>
-            <p className="text-sm text-ink-2">
+            <h1 className="display text-[56px]">Temps mort</h1>
+            <p className="text-[15px] text-ink-2">
               Les données du tournoi n&apos;ont pas pu être chargées. Vérifiez le réseau puis réessayez : les scores déjà enregistrés sont conservés.
             </p>
           </div>
           <div className="flex flex-col gap-2">
-            <button className="btn-primary h-12 w-full" onClick={reset}>
+            <button className="btn-accent h-12 w-full" onClick={reset}>
               Réessayer
             </button>
             <Link href="/" className="btn-quiet h-12 w-full">

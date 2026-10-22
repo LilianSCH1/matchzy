@@ -58,6 +58,13 @@ create table if not exists public.court_codes (
   unique (tournament_id, code)
 );
 
+-- Code participant de chaque tournoi (accès en lecture seule des participants et spectateurs).
+-- Table séparée, comme les codes arbitres : jamais envoyée aux vues publiques.
+create table if not exists public.tournament_access (
+  tournament_id uuid primary key references public.tournaments(id) on delete cascade,
+  code text not null
+);
+
 -- Tentatives de connexion (organisateur, codes arbitres) : limite les essais par fenêtre de temps
 create table if not exists public.login_attempts (
   key text primary key,
@@ -124,3 +131,13 @@ create trigger matches_touch before update on public.matches
 drop trigger if exists sports_touch on public.sports;
 create trigger sports_touch before update on public.sports
   for each row execute function public.touch_updated_at();
+
+-- Tournois créés avant l'arrivée des codes participants : un code est tiré pour chacun.
+-- (La sous-requête dépend de la ligne, donc le tirage est refait pour chaque tournoi.)
+insert into public.tournament_access (tournament_id, code)
+select t.id, (
+  select string_agg(substr('ABCDEFGHJKMNPQRSTUVWXYZ23456789', 1 + floor(random() * 31)::int, 1), '')
+  from generate_series(1, 6) where t.id is not null
+)
+from public.tournaments t
+where not exists (select 1 from public.tournament_access a where a.tournament_id = t.id);

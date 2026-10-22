@@ -12,7 +12,7 @@ export function ShiftButton({ matchId, courtId, scheduledAt, minutes, label }: {
   const [pending, start] = useTransition();
   return (
     <button
-      className="btn-outline h-7 gap-1 rounded-lg px-2.5 text-xs"
+      className="btn-outline h-7 gap-1 rounded-md px-2.5 text-xs"
       disabled={pending}
       title={`Repousser ce match et les suivants de ${minutes} min`}
       onClick={() =>

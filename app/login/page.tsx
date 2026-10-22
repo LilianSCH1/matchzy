@@ -17,19 +17,21 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
       <Page narrow>
         <div className="rise mx-auto max-w-sm space-y-8 pt-8">
           <div className="space-y-3 text-center">
-            <span className="mx-auto grid size-14 place-items-center rounded-2xl bg-ink text-canvas shadow-float">
-              <IconLock className="size-6" />
+            <span className="board mx-auto grid size-16 place-items-center rounded-[10px] text-led">
+              <IconLock className="size-7" />
             </span>
-            <h1 className="text-2xl font-semibold tracking-tight">Espace organisateur</h1>
-            <p className="text-sm text-ink-2">Créez des tournois, pilotez le planning et corrigez les résultats.</p>
+            <p className="eyebrow text-accent-ink">Accès réservé au staff</p>
+            <h1 className="display text-[52px]">Vestiaire organisateur</h1>
+            <p className="text-[15px] text-ink-2">Créez des tournois, pilotez le planning et corrigez les résultats.</p>
           </div>
-          <div className="card p-5">
+          <div className="card overflow-hidden p-5 pt-0">
+            <div className="-mx-5 mb-5 h-1.5 bg-accent" aria-hidden />
             <LoginForm next={safeNext(next)} />
           </div>
           <ul className="space-y-2.5">
             {PERKS.map(({ Icon, text }) => (
-              <li key={text} className="flex items-start gap-3 text-sm text-ink-2">
-                <span className="grid size-7 shrink-0 place-items-center rounded-lg bg-accent-soft text-accent-ink">
+              <li key={text} className="flex items-start gap-3 text-[15px] text-ink-2">
+                <span className="grid size-8 shrink-0 place-items-center rounded-md border border-dashed border-accent/60 text-accent-ink">
                   <Icon className="size-4" />
                 </span>
                 <span className="pt-1">{text}</span>

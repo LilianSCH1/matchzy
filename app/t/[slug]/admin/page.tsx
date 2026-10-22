@@ -3,16 +3,20 @@ import { CourtBoard } from "@/components/CourtBoard";
 import { IconBracket, IconClock, IconPulse, IconScreen, IconTarget, IconWhistle } from "@/components/Icons";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MatchRow } from "@/components/MatchRow";
-import { Empty, Page, PageHeader, Ring, Section } from "@/components/TopBar";
+import { Led } from "@/components/Stadium";
+import { Empty, LedBar, Page, PageHeader, Section } from "@/components/TopBar";
 import { courtStatuses, forecast, tournamentInsights } from "@/lib/insights";
 import { resolveTournament } from "@/lib/resolve";
 import { bundleOr404 } from "@/lib/server/page";
+import { accessCode } from "@/lib/server/data";
+import { ShareAccess } from "@/components/ShareAccess";
 import { fmtDate, fmtTime, View } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
 
 export default async function Dashboard({ params }: { params: Promise<{ slug: string }> }) {
   const b = await bundleOr404((await params).slug);
+  const access = await accessCode(b.tournament.id);
   const v = new View(b);
   const t = b.tournament;
   const L = t.rules.labels;
@@ -73,32 +77,31 @@ export default async function Dashboard({ params }: { params: Promise<{ slug: st
       {/* Indicateurs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
         <Kpi label="Progression" icon={<IconTarget className="size-4" />}>
-          <div className="flex items-center gap-3">
-            <Ring value={pct} size={40} stroke={5} />
-            <div>
-              <div className="text-2xl font-semibold tracking-tight tabular-nums">{pct} %</div>
-              <div className="text-xs text-ink-3 tabular-nums">
-                {f.done} / {f.total} matchs
-              </div>
-            </div>
+          <div className="flex items-baseline gap-1">
+            <Led value={pct} digits={3} className="text-[40px]" />
+            <span className="led text-[22px]">%</span>
+          </div>
+          <LedBar value={f.done} total={f.total} cells={20} className="text-white" />
+          <div className="text-xs text-[#858074] tabular-nums">
+            {f.done} / {f.total} matchs
           </div>
         </Kpi>
         <Kpi label="En cours" icon={<IconPulse className="size-4" />} tone={f.live ? "live" : undefined}>
-          <div className="text-3xl font-semibold tracking-tight tabular-nums">{f.live}</div>
-          <div className="text-xs text-ink-3">
+          <Led value={f.live} digits={2} className="text-[40px]" color={f.live ? "#ff4436" : undefined} />
+          <div className="text-xs text-[#858074]">
             sur {b.courts.length} {b.courts.length > 1 ? L.courtPlural : L.court}
           </div>
         </Kpi>
         <Kpi label="Retard" icon={<IconClock className="size-4" />} tone={f.maxDelay >= 5 ? "warn" : undefined}>
-          <div className="text-3xl font-semibold tracking-tight tabular-nums">
-            {f.maxDelay}
-            <span className="ml-1 text-base font-medium text-ink-3">min</span>
+          <div className="flex items-baseline gap-1.5">
+            <Led value={f.maxDelay} digits={2} className="text-[40px]" color={f.maxDelay >= 5 ? "#ffd23f" : undefined} />
+            <span className="font-cond text-sm font-bold text-[#858074] uppercase">min</span>
           </div>
-          <div className="text-xs text-ink-3">{lateCourts ? `${lateCourts} ${lateCourts > 1 ? `${L.courtPlural} en retard` : `${L.court} en retard`}` : "Planning tenu"}</div>
+          <div className="text-xs text-[#858074]">{lateCourts ? `${lateCourts} ${lateCourts > 1 ? `${L.courtPlural} en retard` : `${L.court} en retard`}` : "Planning tenu"}</div>
         </Kpi>
         <Kpi label="Fin projetée" icon={<IconBracket className="size-4" />}>
-          <div className="text-3xl font-semibold tracking-tight tabular-nums">{f.projectedEnd ? fmtTime(f.projectedEnd.toISOString(), t.timezone) : "–"}</div>
-          <div className={`text-xs ${slip > 0 ? "text-warn" : "text-ink-3"}`}>
+          <Led value={f.projectedEnd ? fmtTime(f.projectedEnd.toISOString(), t.timezone) : "--:--"} digits={5} className="text-[40px]" />
+          <div className={`text-xs ${slip > 0 ? "text-[#ffd23f]" : "text-[#858074]"}`}>
             {slip > 0 ? `+${slip} min sur le planning` : f.plannedEnd ? `Prévue à ${fmtTime(f.plannedEnd.toISOString(), t.timezone)}` : ""}
           </div>
         </Kpi>
@@ -120,10 +123,8 @@ export default async function Dashboard({ params }: { params: Promise<{ slug: st
                   const done = p.done === p.total;
                   return (
                     <div key={p.key} className="flex items-center gap-4 px-4 py-2.5 text-sm">
-                      <span className="w-28 shrink-0 truncate font-medium">{p.label}</span>
-                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-2">
-                        <div className={`h-full rounded-full transition-[width] duration-700 ${done ? "bg-ok" : "bg-accent"}`} style={{ width: `${(100 * p.done) / p.total}%` }} />
-                      </div>
+                      <span className="w-28 shrink-0 truncate font-cond text-[15px] font-bold tracking-[0.04em] uppercase">{p.label}</span>
+                      <LedBar value={p.done} total={p.total} cells={24} tone={done ? "ok" : "led"} className="flex-1 text-ink" />
                       <span className={`w-14 text-right text-xs tabular-nums ${done ? "font-medium text-ok" : "text-ink-3"}`}>
                         {p.done}/{p.total}
                       </span>
@@ -147,8 +148,9 @@ export default async function Dashboard({ params }: { params: Promise<{ slug: st
           </Section>
         </div>
 
-        <aside className="xl:sticky xl:top-6">
+        <aside className="space-y-6 xl:sticky xl:top-6">
           <InsightsPanel insights={insights} />
+          <ShareAccess slug={t.slug} code={access} compact />
         </aside>
       </div>
     </Page>
@@ -157,9 +159,9 @@ export default async function Dashboard({ params }: { params: Promise<{ slug: st
 
 function Kpi({ label, icon, tone, children }: { label: string; icon: React.ReactNode; tone?: "live" | "warn"; children: React.ReactNode }) {
   return (
-    <div className={`card space-y-2 p-4 ${tone === "live" ? "border-live/30" : tone === "warn" ? "border-warn/40 bg-warn-soft/40" : ""}`}>
-      <div className={`flex items-center gap-1.5 text-xs font-medium ${tone === "live" ? "text-live" : tone === "warn" ? "text-warn" : "text-ink-3"}`}>
-        {tone === "live" ? <span className="live-dot size-2 rounded-full bg-live" /> : icon}
+    <div className={`board space-y-2 rounded-[10px] p-4 ${tone === "live" ? "ring-2 ring-[#ff4436]/50" : tone === "warn" ? "ring-2 ring-[#ffd23f]/50" : ""}`}>
+      <div className={`flex items-center gap-1.5 font-cond text-[12px] font-bold tracking-[0.14em] uppercase ${tone === "live" ? "text-[#ff4436]" : tone === "warn" ? "text-[#ffd23f]" : "text-[#b4afa3]"}`}>
+        {tone === "live" ? <span className="live-dot size-2 rounded-full bg-[#ff4436]" /> : icon}
         {label}
       </div>
       {children}

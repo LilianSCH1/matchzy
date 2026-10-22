@@ -42,6 +42,20 @@ export async function courtCodes(tournamentId: string): Promise<Map<string, stri
   return new Map(rows.map((r) => [r.court_id, r.code]));
 }
 
+/** Code participant du tournoi (espace organisateur uniquement). */
+export async function accessCode(tournamentId: string): Promise<string | null> {
+  const [row] = await db()<{ code: string }[]>`select code from tournament_access where tournament_id = ${tournamentId}`;
+  return row?.code ?? null;
+}
+
+/** Vérifie un code participant ; renvoie l'identifiant du tournoi s'il est bon. */
+export async function checkAccessCode(slug: string, code: string): Promise<Tournament | null> {
+  const [row] = await db()<{ id: string }[]>`
+    select t.id from tournaments t join tournament_access a on a.tournament_id = t.id
+    where t.slug = ${slug} and a.code = ${code}`;
+  return row ? await getTournament({ slug }) : null;
+}
+
 export interface TournamentStats {
   live: number;
   done: number;

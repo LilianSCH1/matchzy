@@ -6,7 +6,9 @@ createDemo()
   .then(async (list) => {
     for (const b of list) console.log(`✔ ${b.tournament.name} → /t/${b.tournament.slug}`);
     for (const b of list)
-      console.log(`  Codes arbitres ${b.tournament.name} : ${b.courtCodes.map((c, i) => `${b.courts[i].name} = ${c.code}`).join(", ")}`);
+      console.log(
+        `  ${b.tournament.name} · code participant ${b.accessCode} · codes arbitres : ${b.courtCodes.map((c, i) => `${b.courts[i].name} = ${c.code}`).join(", ")}`,
+      );
     await db().end();
   })
   .catch((e) => {

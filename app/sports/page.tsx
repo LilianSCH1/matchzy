@@ -16,7 +16,7 @@ export default async function SportsPage({ searchParams }: { searchParams: Promi
   const selected = id === "new" ? null : (sports.find((s) => s.id === id) ?? sports[0]);
   const initial = selected?.rules ?? presetBySlug("personnalise")!.rules;
   const pill = (on: boolean) =>
-    `inline-flex h-9 shrink-0 items-center gap-1.5 rounded-xl px-3.5 text-sm font-medium transition ${on ? "bg-ink text-canvas" : "border border-line bg-surface text-ink-2 shadow-card hover:text-ink"}`;
+    `inline-flex h-9 shrink-0 items-center gap-1.5 rounded-md px-3.5 text-sm font-medium transition ${on ? "bg-ink text-canvas" : "border border-line bg-surface text-ink-2 shadow-card hover:text-ink"}`;
   return (
     <>
       <TopBar title="Sports & règles" subtitle="Modèles utilisés à la création des tournois" back="/" />

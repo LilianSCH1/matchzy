@@ -11,6 +11,7 @@ export async function saveBuiltTournament(b: BuiltTournament): Promise<void> {
     if (b.pools.length) await sql`insert into pools ${sql(b.pools.map(toRow))}`;
     await sql`insert into courts ${sql(b.courts.map(toRow))}`;
     await sql`insert into court_codes ${sql(b.courtCodes.map(toRow))}`;
+    await sql`insert into tournament_access (tournament_id, code) values (${b.tournament.id}, ${b.accessCode})`;
     await sql`insert into teams ${sql(b.teams.map(toRow))}`;
     for (let i = 0; i < b.matches.length; i += 500) await sql`insert into matches ${sql(b.matches.slice(i, i + 500).map(toRow))}`;
     await applyResolution(b, sql);
