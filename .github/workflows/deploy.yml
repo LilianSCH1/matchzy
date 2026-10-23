@@ -35,11 +35,12 @@ jobs:
         run: |
           npm ci
           npm run build
+          # Jamais de secrets ni de base locale dans le serveur envoyé
+          rm -rf .next/standalone/.env* .next/standalone/data
           cp -r .next/static .next/standalone/.next/static
           [ -d public ] && cp -r public .next/standalone/public || true
         env:
-          # La compilation n'accède pas à la base ; valeurs factices pour les modules serveur.
-          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+          # Valeurs factices pour les modules serveur (la compilation n'ouvre pas la base).
           SESSION_SECRET: ci
           ORGANIZER_PASSWORD: ci
 

@@ -1,10 +1,10 @@
 import { headers } from "next/headers";
 import { db } from "./db";
 
-/** Adresse IP du client (derrière le proxy de Vercel ou d'un autre hébergeur). */
+/** Adresse IP du client (derrière Cloudflare et Nginx, ou un autre proxy). */
 export async function clientIp(): Promise<string> {
   const h = await headers();
-  return h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "inconnue";
+  return h.get("cf-connecting-ip") || h.get("x-forwarded-for")?.split(",")[0]?.trim() || h.get("x-real-ip") || "inconnue";
 }
 
 export interface Limit {
@@ -19,15 +19,17 @@ export interface Limit {
  */
 export async function hitLimits(limits: Limit[]): Promise<number> {
   const sql = db();
+  const now = Math.floor(Date.now() / 1000);
   let wait = 0;
   for (const l of limits) {
-    const [row] = await sql<{ count: number; reset_in: number }[]>`
-      insert into login_attempts (key, count, window_start) values (${l.key}, 1, now())
+    // Nouvelle fenêtre si la précédente est écoulée, sinon une tentative de plus.
+    const [row] = await sql<{ count: number; window_start: number }[]>`
+      insert into login_attempts (key, count, window_start) values (${l.key}, 1, ${now})
       on conflict (key) do update set
-        count = case when login_attempts.window_start < now() - make_interval(secs => ${l.windowSec}) then 1 else login_attempts.count + 1 end,
-        window_start = case when login_attempts.window_start < now() - make_interval(secs => ${l.windowSec}) then now() else login_attempts.window_start end
-      returning count, extract(epoch from (window_start + make_interval(secs => ${l.windowSec}) - now()))::int as reset_in`;
-    if (row.count > l.max) wait = Math.max(wait, Math.ceil(row.reset_in / 60));
+        count = case when login_attempts.window_start < ${now - l.windowSec} then 1 else login_attempts.count + 1 end,
+        window_start = case when login_attempts.window_start < ${now - l.windowSec} then ${now} else login_attempts.window_start end
+      returning count, window_start`;
+    if (row.count > l.max) wait = Math.max(wait, Math.ceil((row.window_start + l.windowSec - now) / 60));
   }
   return wait;
 }

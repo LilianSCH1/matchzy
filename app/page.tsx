@@ -280,9 +280,8 @@ function SetupNeeded() {
           <h1 className="display text-4xl">Configuration requise</h1>
           <p className="text-[15px] leading-relaxed text-ink-2">
             Copiez <code className="rounded bg-surface-2 px-1 font-mono text-sm">.env.example</code> vers{" "}
-            <code className="rounded bg-surface-2 px-1 font-mono text-sm">.env</code>, renseignez <code className="rounded bg-surface-2 px-1 font-mono text-sm">DATABASE_URL</code>{" "}
-            (Neon), le mot de passe organisateur et le secret de session, lancez <code className="rounded bg-surface-2 px-1 font-mono text-sm">npm run db:migrate</code> puis relancez le
-            serveur.
+            <code className="rounded bg-surface-2 px-1 font-mono text-sm">.env</code>, renseignez le mot de passe organisateur et le secret de session, puis relancez le serveur.
+            La base SQLite se crée toute seule dans <code className="rounded bg-surface-2 px-1 font-mono text-sm">DATA_DIR</code>.
           </p>
         </div>
       </Page>

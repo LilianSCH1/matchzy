@@ -1,19 +1,12 @@
-// npm run db:migrate : crée / met à jour le schéma et les préréglages de sports (idempotent).
-import { readFileSync } from "node:fs";
-import { join } from "node:path";
-import { db } from "../lib/server/db";
-import { SPORT_PRESETS } from "../lib/sports";
+// npm run db:migrate : crée la base SQLite (DATA_DIR/matchzy.db) si besoin, applique le schéma
+// et ajoute les préréglages de sports (idempotent). L'application le fait aussi à son démarrage.
+import path from "node:path";
+import { dataDir, db } from "../lib/server/db";
 
 async function main() {
   const sql = db();
-  await sql.unsafe(readFileSync(join(__dirname, "..", "db", "schema.sql"), "utf8"));
-  for (const p of SPORT_PRESETS) {
-    // Les préréglages déjà présents ne sont pas écrasés (ils ont pu être modifiés dans l'application).
-    await sql`insert into sports (slug, name, rules, is_preset) values (${p.slug}, ${p.name}, ${sql.json(p.rules as never)}, true)
-              on conflict (slug) do nothing`;
-  }
-  const [{ n }] = await sql`select count(*)::int as n from sports`;
-  console.log(`✔ Schéma à jour, ${n} sports en base.`);
+  const [{ n }] = await sql<{ n: number }[]>`select count(*) as n from sports`;
+  console.log(`✔ Base à jour (${path.join(dataDir(), "matchzy.db")}), ${n} sports.`);
   await sql.end();
 }
 

@@ -7,6 +7,8 @@ set -euo pipefail
 DOMAIN=matchzy.neoheberg.fr
 APP_USER=matchzy
 APP_DIR=/home/matchzy/app
+# Base SQLite : hors du dossier déployé, jamais touchée par rsync
+DATA_DIR=/home/matchzy/data
 PORT=3009
 
 if ss -ltn | grep -q ":$PORT "; then
@@ -18,7 +20,7 @@ fi
 if ! id "$APP_USER" >/dev/null 2>&1; then
   useradd --system --create-home --home-dir /home/matchzy/home --shell /usr/sbin/nologin "$APP_USER"
 fi
-mkdir -p "$APP_DIR" /var/www/certbot
+mkdir -p "$APP_DIR" "$DATA_DIR" /var/www/certbot
 chown -R "$APP_USER:$APP_USER" /home/matchzy
 
 # 1. Site HTTP seul, le temps d'obtenir le certificat

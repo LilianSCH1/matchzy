@@ -2,7 +2,7 @@
 
 Application web mobile d'abord pour dérouler un tournoi : création, poules, planning, saisie des scores au bord du terrain, classements en direct et phase finale. Pas d'inscriptions, de budget ni de logistique : uniquement le sportif.
 
-**Stack :** Next.js 15 (App Router, Server Actions) · React 19 · TypeScript · Tailwind CSS 4 · PostgreSQL (Neon), via le pilote `postgres`.
+**Stack :** Next.js 15 (App Router, Server Actions) · React 19 · TypeScript · Tailwind CSS 4 · SQLite intégré à Node (`node:sqlite`, aucune dépendance), comme Team Sezen.
 
 ---
 
@@ -11,7 +11,7 @@ Application web mobile d'abord pour dérouler un tournoi : création, poules, pl
 ```bash
 npm install
 cp .env.example .env         # puis compléter
-npm run db:migrate           # crée le schéma et les sports
+npm run db:migrate           # facultatif : crée la base et les sports (l'app le fait aussi au démarrage)
 npm run dev                  # http://localhost:3000
 ```
 
@@ -19,17 +19,15 @@ npm run dev                  # http://localhost:3000
 
 | Variable | Rôle |
 | --- | --- |
-| `DATABASE_URL` | Chaîne de connexion PostgreSQL. Sur Neon : *Dashboard → Connect*, version **pooled** (hôte en `-pooler`), avec `sslmode=require` |
+| `DATA_DIR` | Dossier de la base SQLite `matchzy.db`. Vide en développement : `./data` à la racine du projet |
 | `ORGANIZER_PASSWORD` | Mot de passe de l'organisateur |
 | `SESSION_SECRET` | Secret de signature des cookies de session (chaîne aléatoire longue) |
 
-### Base de données (Neon)
+### Base de données (SQLite)
 
-1. Créez un projet gratuit sur [neon.tech](https://neon.tech), ou via le Vercel Marketplace si l'application est déployée sur Vercel.
-2. Copiez la chaîne de connexion *pooled* dans `DATABASE_URL`.
-3. Lancez `npm run db:migrate`. Le script applique `db/schema.sql` et ajoute les **9 préréglages de sports**. Il peut être relancé sans risque : il n'écrase ni les données ni les sports modifiés.
+La base est un simple fichier, `DATA_DIR/matchzy.db`, géré par le module SQLite intégré à Node (≥ 22.13), sans serveur ni dépendance à installer. Elle est créée au premier démarrage avec son schéma (`lib/server/schema.ts`) et les **9 préréglages de sports** ; les préréglages déjà présents ne sont jamais écrasés.
 
-N'importe quel PostgreSQL ≥ 13 convient aussi, par exemple en local : `docker run -e POSTGRES_PASSWORD=pg -p 5432:5432 postgres:16`.
+Le client (`lib/server/db.ts`) garde une syntaxe de requêtes en gabarits (`` sql`select … ${valeur}` ``), convertit les colonnes JSON et booléennes, et sérialise les transactions.
 
 La base n'est jamais exposée au navigateur : toutes les lectures et écritures passent par le serveur Next.js.
 
@@ -126,7 +124,7 @@ Chaque sport stocke un objet `SportRules` en JSON (voir `lib/types.ts`). Il est 
   - quand toutes les poules sont terminées, les qualifiés (y compris les meilleurs Nᵉˢ) remplissent le tableau ;
   - les vainqueurs avancent et les perdants des demies vont en petite finale ;
   - les exemptés passent directement au tour suivant.
-- **Écritures concurrentes** : chaque score, forfait ou correction est enregistré et recalculé dans une seule transaction qui verrouille le tournoi (`withTournamentLock`, verrou consultatif PostgreSQL). Deux terrains qui valident en même temps ne peuvent pas produire un tableau incohérent.
+- **Écritures concurrentes** : chaque score, forfait ou correction est enregistré et recalculé dans une seule transaction qui verrouille le tournoi (`withTournamentLock`, les transactions SQLite sont exécutées l'une après l'autre). Deux terrains qui valident en même temps ne peuvent pas produire un tableau incohérent.
 - **Corrections** : un score corrigé met à jour le classement et le tableau. Si le qualifié ou le vainqueur change, les matchs de phase finale qui en dépendent sont remis à « Programmé » avec les bonnes équipes.
 - **Abandon** d'une équipe (Organiser → Équipes) : ses matchs non joués sont perdus par forfait et elle est classée dernière de sa poule. Une réintégration reste possible.
 - **Retards** : le tableau de bord affiche le retard de chaque terrain et propose un bouton « Décaler +5 » qui repousse le prochain match et tous les suivants.
@@ -194,7 +192,7 @@ lib/
   commands.ts             Index et recherche de la palette de commandes
   build.ts                Construction complète d'un tournoi (pur, utilisé aussi pour l'aperçu)
   server/                 Connexion Postgres, sessions, persistance, démo
-db/schema.sql             Schéma SQL (idempotent)
+lib/server/schema.ts      Schéma SQLite (idempotent, appliqué à l'ouverture de la base)
 scripts/migrate.ts        Applique le schéma et les préréglages
 scripts/seed.ts           Jeu de démo
 tests/                    Tests unitaires (Vitest)
@@ -202,7 +200,7 @@ tests/                    Tests unitaires (Vitest)
 
 Toute la logique sportive est écrite en **fonctions pures**, testables et partagées entre le client (aperçu de l'assistant) et le serveur. La base stocke les résultats bruts et la provenance des places du tableau (`home_source` / `away_source` : « 1ᵉʳ poule A », « vainqueur Quart 2 », « meilleur 3ᵉ n°1 »…). Les classements et l'avancement du tableau en sont toujours **déduits**, ce qui rend les corrections sûres.
 
-Les préréglages de sports sont définis dans `lib/sports.ts` et insérés par `npm run db:migrate` (seulement s'ils n'existent pas encore).
+Les préréglages de sports sont définis dans `lib/sports.ts` et insérés à l'ouverture de la base (seulement s'ils n'existent pas encore).
 
 ---
 
@@ -216,12 +214,17 @@ Production : **https://matchzy.neoheberg.fr**, sur le même VPS que Bingezy (Clo
 | Port local | `3009` (Nginx en reverse proxy, HTTPS Let's Encrypt) |
 | Serveur | Next en mode `standalone` dans `/home/matchzy/app/server`, lancé par PM2 (`deploy/ecosystem.config.js`) |
 | Secrets | `/home/matchzy/app/.env` (chmod 600), lu par `node --env-file` ; jamais envoyé par GitHub |
+| Base | `/home/matchzy/data/matchzy.db` (SQLite, `DATA_DIR` dans le `.env`) |
 
 Le VPS n'a que 512 Mo de mémoire : **le build se fait dans GitHub Actions** (`.github/workflows/deploy.yml`), qui envoie le serveur compilé par `rsync` puis lance `deploy/deploy.sh` (config Nginx, redémarrage PM2, vérification de `/health`). Le déploiement part à chaque push sur `master`, ou à la main depuis l'onglet *Actions*.
 
 Le workflow a besoin, dans les réglages du dépôt, des mêmes valeurs que Bingezy : variables `SSH_HOST` et `SSH_HOST_FINGERPRINT`, secret `SSH_PRIVATE_KEY_B64`.
 
-Après un changement du schéma (`db/schema.sql`), lancer `npm run db:migrate` depuis un poste qui a le `.env` de production (le serveur compilé ne contient pas les scripts).
+La base SQLite est dans `/home/matchzy/data/matchzy.db`, hors du dossier déployé : un déploiement n'y touche jamais. Le schéma est appliqué par l'application à son démarrage. Sauvegarde à chaud, avec le Node du VPS (pas besoin du client `sqlite3`) :
+
+```bash
+node -e "new (require('node:sqlite').DatabaseSync)('/home/matchzy/data/matchzy.db').exec(\"VACUUM INTO '/root/matchzy-$(date +%F).db'\")"
+```
 
 ```bash
 PM2="runuser -u matchzy -- env HOME=/home/matchzy/home PM2_HOME=/home/matchzy/home/.pm2 pm2"

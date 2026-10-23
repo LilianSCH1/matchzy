@@ -340,10 +340,12 @@ export async function moveMatchAction(matchId: string, scheduledAt: string, cour
     if (!court) return fail("Terrain introuvable.");
     if (cascade && m.scheduled_at && m.court_id === courtId) {
       // Décale aussi tous les matchs suivants (non terminés) du même terrain
-      const delta = Math.round((newTime.getTime() - new Date(m.scheduled_at).getTime()) / 1000);
-      await sql`update matches set scheduled_at = scheduled_at + make_interval(secs => ${delta})
+      const delta = newTime.getTime() - new Date(m.scheduled_at).getTime();
+      const later = await sql<Pick<Match, "id" | "scheduled_at">[]>`select id, scheduled_at from matches
                 where tournament_id = ${t.id} and court_id = ${courtId} and scheduled_at > ${m.scheduled_at}
                   and status <> 'finished' and id <> ${matchId}`;
+      for (const x of later)
+        await sql`update matches set scheduled_at = ${new Date(new Date(x.scheduled_at!).getTime() + delta).toISOString()} where id = ${x.id}`;
     }
     await updateMatch(matchId, { scheduled_at: newTime.toISOString(), court_id: courtId }, sql);
   });
@@ -433,9 +435,9 @@ export async function renameCourtAction(courtId: string, name: string): Promise<
     const n = String(name).trim();
     if (!n) return fail("Nom vide.");
     if (n.length > 40) return fail("Nom trop long (40 caractères au plus).");
-    const [row] = await db()<{ slug: string }[]>`update courts c set name = ${n} from tournaments t
-                                                 where c.id = ${courtId} and t.id = c.tournament_id returning t.slug`;
+    const [row] = await db()<{ slug: string }[]>`select t.slug from courts c join tournaments t on t.id = c.tournament_id where c.id = ${courtId}`;
     if (!row) return fail("Terrain introuvable.");
+    await db()`update courts set name = ${n} where id = ${courtId}`;
     refresh(row.slug);
   });
 }
@@ -453,7 +455,7 @@ export async function saveSportRulesAction(id: string | null, rules: SportRules,
     if (id) await sql`update sports set name = ${n}, rules = ${sql.json(clean as never)} where id = ${id}`;
     else {
       const slug = `${slugify(n) || "sport"}-${Math.random().toString(36).slice(2, 5)}`;
-      await sql`insert into sports (slug, name, rules, is_preset) values (${slug}, ${n}, ${sql.json(clean as never)}, false)`;
+      await sql`insert into sports (id, slug, name, rules, is_preset) values (${crypto.randomUUID()}, ${slug}, ${n}, ${sql.json(clean as never)}, false)`;
     }
     revalidatePath("/sports");
   });

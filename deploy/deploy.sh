@@ -5,16 +5,19 @@
 set -euo pipefail
 
 APP_DIR=/home/matchzy/app
+DATA_DIR=/home/matchzy/data
 APP_USER=matchzy
 PORT=3009
 PM2="runuser -u $APP_USER -- env HOME=/home/matchzy/home PM2_HOME=/home/matchzy/home/.pm2 pm2"
 NGINX_CONF=/etc/nginx/sites-available/matchzy.conf
 
 if [ ! -f "$APP_DIR/.env" ]; then
-  echo "$APP_DIR/.env manquant : DATABASE_URL, ORGANIZER_PASSWORD et SESSION_SECRET (voir .env.example)" >&2
+  echo "$APP_DIR/.env manquant : DATA_DIR, ORGANIZER_PASSWORD et SESSION_SECRET (voir .env.example)" >&2
   exit 1
 fi
-chown -R "$APP_USER:$APP_USER" "$APP_DIR"
+mkdir -p "$DATA_DIR"
+chown -R "$APP_USER:$APP_USER" "$APP_DIR" "$DATA_DIR"
+chmod 700 "$DATA_DIR"
 chmod 600 "$APP_DIR/.env"
 
 # Nginx : n'installer et recharger que si la config du dépôt a changé
