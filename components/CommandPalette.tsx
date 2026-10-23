@@ -105,7 +105,7 @@ const BUILTIN: CommandGroup = {
   label: "Général",
   items: [
     { id: "g-home", label: "Accueil", hint: "Tous les tournois", href: "/", icon: "home" },
-    { id: "g-theme", label: "Changer de thème", hint: "Système, clair ou sombre", action: "theme", icon: "theme", keywords: "sombre clair dark mode nuit" },
+    { id: "g-theme", label: "Changer de thème", hint: "Clair ou sombre", action: "theme", icon: "theme", keywords: "sombre clair dark mode nuit" },
     { id: "g-login", label: "Espace organisateur", hint: "Connexion", href: "/login", icon: "lock", keywords: "admin connexion" },
   ],
 };

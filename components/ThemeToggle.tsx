@@ -1,8 +1,8 @@
 "use client";
 
-// Thème clair / sombre / système, mémorisé dans le navigateur (attribut data-theme sur <html>).
+// Thème clair / sombre, mémorisé dans le navigateur (attribut data-theme sur <html>).
 import { useEffect, useState } from "react";
-import { IconMonitor, IconMoon, IconSun } from "./Icons";
+import { IconMoon, IconSun } from "./Icons";
 
 export type ThemeChoice = "light" | "dark" | "system";
 
@@ -31,27 +31,36 @@ export function applyTheme(t: ThemeChoice) {
   window.dispatchEvent(new Event("matchzy:theme"));
 }
 
-/** Passe au thème suivant : système → clair → sombre → système. */
+/** Passe directement du thème clair au thème sombre, et inversement. */
 export function cycleTheme() {
-  const order: ThemeChoice[] = ["system", "light", "dark"];
-  applyTheme(order[(order.indexOf(readTheme()) + 1) % order.length]);
+  const current = readTheme();
+  if (current === "system") {
+    const prefersDark = window.matchMedia("(prefers-color-scheme: dark)").matches;
+    applyTheme(prefersDark ? "light" : "dark");
+  } else {
+    applyTheme(current === "dark" ? "light" : "dark");
+  }
 }
-
-const META: Record<ThemeChoice, { label: string; Icon: (p: { className?: string }) => React.ReactNode }> = {
-  system: { label: "Thème : système", Icon: IconMonitor },
-  light: { label: "Thème : clair", Icon: IconSun },
-  dark: { label: "Thème : sombre", Icon: IconMoon },
-};
 
 export function ThemeToggle({ withLabel = false, className = "" }: { withLabel?: boolean; className?: string }) {
   const [theme, setTheme] = useState<ThemeChoice>("system");
+  const [prefersDark, setPrefersDark] = useState(false);
   useEffect(() => {
     const sync = () => setTheme(readTheme());
     sync();
+    const media = window.matchMedia("(prefers-color-scheme: dark)");
+    const syncSystem = () => setPrefersDark(media.matches);
+    syncSystem();
     window.addEventListener("matchzy:theme", sync);
-    return () => window.removeEventListener("matchzy:theme", sync);
+    media.addEventListener("change", syncSystem);
+    return () => {
+      window.removeEventListener("matchzy:theme", sync);
+      media.removeEventListener("change", syncSystem);
+    };
   }, []);
-  const { label, Icon } = META[theme];
+  const isDark = theme === "dark" || (theme === "system" && prefersDark);
+  const Icon = isDark ? IconMoon : IconSun;
+  const label = isDark ? "Passer au thème clair" : "Passer au thème sombre";
   return (
     <button
       type="button"
