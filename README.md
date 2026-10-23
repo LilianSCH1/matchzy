@@ -203,3 +203,30 @@ tests/                    Tests unitaires (Vitest)
 Toute la logique sportive est écrite en **fonctions pures**, testables et partagées entre le client (aperçu de l'assistant) et le serveur. La base stocke les résultats bruts et la provenance des places du tableau (`home_source` / `away_source` : « 1ᵉʳ poule A », « vainqueur Quart 2 », « meilleur 3ᵉ n°1 »…). Les classements et l'avancement du tableau en sont toujours **déduits**, ce qui rend les corrections sûres.
 
 Les préréglages de sports sont définis dans `lib/sports.ts` et insérés par `npm run db:migrate` (seulement s'ils n'existent pas encore).
+
+---
+
+## Mise en ligne (VPS Neoheberg)
+
+Production : **https://matchzy.neoheberg.fr**, sur le même VPS que Bingezy (Cloudflare → Nginx → PM2).
+
+| | |
+| --- | --- |
+| Utilisateur Linux / dossier | `matchzy` · `/home/matchzy/app` |
+| Port local | `3009` (Nginx en reverse proxy, HTTPS Let's Encrypt) |
+| Serveur | Next en mode `standalone` dans `/home/matchzy/app/server`, lancé par PM2 (`deploy/ecosystem.config.js`) |
+| Secrets | `/home/matchzy/app/.env` (chmod 600), lu par `node --env-file` ; jamais envoyé par GitHub |
+
+Le VPS n'a que 512 Mo de mémoire : **le build se fait dans GitHub Actions** (`.github/workflows/deploy.yml`), qui envoie le serveur compilé par `rsync` puis lance `deploy/deploy.sh` (config Nginx, redémarrage PM2, vérification de `/health`). Le déploiement part à chaque push sur `master`, ou à la main depuis l'onglet *Actions*.
+
+Le workflow a besoin, dans les réglages du dépôt, des mêmes valeurs que Bingezy : variables `SSH_HOST` et `SSH_HOST_FINGERPRINT`, secret `SSH_PRIVATE_KEY_B64`.
+
+Après un changement du schéma (`db/schema.sql`), lancer `npm run db:migrate` depuis un poste qui a le `.env` de production (le serveur compilé ne contient pas les scripts).
+
+```bash
+PM2="runuser -u matchzy -- env HOME=/home/matchzy/home PM2_HOME=/home/matchzy/home/.pm2 pm2"
+$PM2 status
+$PM2 logs matchzy --lines 100
+$PM2 restart matchzy                 # après une modif du .env
+curl -i http://127.0.0.1:3009/health
+```

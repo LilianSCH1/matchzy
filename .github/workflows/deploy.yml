@@ -1,0 +1,71 @@
+name: Deploy VPS
+
+on:
+  push:
+    branches: [master]
+    paths-ignore:
+      - 'README.md'
+      - 'tests/**'
+  workflow_dispatch:
+
+concurrency:
+  group: deploy-vps
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    env:
+      SSH_HOST: ${{ vars.SSH_HOST }}
+      SSH_USER: root
+      APP_DIR: /home/matchzy/app
+      SITE_URL: https://matchzy.neoheberg.fr
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+
+      # Le VPS (512 Mo) ne peut pas compiler Next : on compile ici et on envoie le serveur autonome.
+      - name: Compiler
+        run: |
+          npm ci
+          npm run build
+          cp -r .next/static .next/standalone/.next/static
+          [ -d public ] && cp -r public .next/standalone/public || true
+        env:
+          # La compilation n'accède pas à la base ; valeurs factices pour les modules serveur.
+          DATABASE_URL: postgresql://ci:ci@localhost:5432/ci
+          SESSION_SECRET: ci
+          ORGANIZER_PASSWORD: ci
+
+      - name: Préparer SSH
+        env:
+          SSH_PRIVATE_KEY_B64: ${{ secrets.SSH_PRIVATE_KEY_B64 }}
+          SSH_HOST_FINGERPRINT: ${{ vars.SSH_HOST_FINGERPRINT }}
+        run: |
+          mkdir -p ~/.ssh && chmod 700 ~/.ssh
+          echo "$SSH_PRIVATE_KEY_B64" | base64 -d > ~/.ssh/deploy_key
+          chmod 600 ~/.ssh/deploy_key
+          ssh-keyscan -t ed25519 "$SSH_HOST" > ~/.ssh/known_hosts 2>/dev/null
+          actual=$(ssh-keygen -lf ~/.ssh/known_hosts | awk '{print $2}')
+          if [ "$actual" != "$SSH_HOST_FINGERPRINT" ]; then
+            echo "Empreinte SSH inattendue : $actual (attendue : $SSH_HOST_FINGERPRINT)"
+            exit 1
+          fi
+
+      # --delete ne nettoie que server/ et deploy/ : le .env à la racine de l'app n'est jamais touché.
+      - name: Envoyer les fichiers
+        run: |
+          rsync -az --delete -e "ssh -i ~/.ssh/deploy_key" .next/standalone/ "$SSH_USER@$SSH_HOST:$APP_DIR/server/"
+          rsync -az --delete -e "ssh -i ~/.ssh/deploy_key" deploy "$SSH_USER@$SSH_HOST:$APP_DIR/"
+
+      - name: Déployer
+        run: ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "bash $APP_DIR/deploy/deploy.sh"
+
+      - name: Vérifier le site
+        run: curl -fsS -o /dev/null -w "%{http_code}\n" "$SITE_URL/health"
