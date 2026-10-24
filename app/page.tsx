@@ -7,7 +7,7 @@ import { JoinForm, MyTournaments } from "@/components/Participant";
 import { TournamentCard } from "@/components/TournamentCard";
 import { CourtLines, Led, SportGlyph, type SportKey } from "@/components/Stadium";
 import { DeleteAllButton, DeleteTournamentButton, DemoButton } from "@/components/TournamentActions";
-import { Empty, Page, Section, TopBar } from "@/components/TopBar";
+import { Empty, Footer, Page, Section, TopBar } from "@/components/TopBar";
 import { homeCommands } from "@/lib/commands";
 import { isOrganizer } from "@/lib/server/auth";
 import { listTournaments, tournamentStats, type TournamentStats } from "@/lib/server/data";
@@ -205,6 +205,7 @@ export default async function Home() {
           </>
         )}
       </Page>
+      <Footer />
     </>
   );
 }

@@ -16,7 +16,19 @@ const hand = Permanent_Marker({ subsets: ["latin"], weight: "400", variable: "--
 export const metadata: Metadata = {
   title: "Matchzy — tournoi en direct",
   description: "Poules, matchs, scores, classements et phase finale le jour du tournoi, pour tous les sports.",
+  authors: [{ name: "Lilian SCHMITT" }],
+  creator: "Lilian SCHMITT",
 };
+
+// Signature, comme sur Bingezy : données structurées et message dans la console.
+const JSON_LD = JSON.stringify({
+  "@context": "https://schema.org",
+  "@type": "WebApplication",
+  name: "Matchzy",
+  inLanguage: "fr-FR",
+  author: { "@type": "Person", name: "Lilian SCHMITT" },
+});
+const SIGNATURE_SCRIPT = `console.log("%cMATCHZY%c conçu et développé par Lilian SCHMITT", "font: 900 18px Impact, sans-serif; color: #ff6b1a;", "font: 14px monospace; color: #ffd23f;");`;
 
 export const viewport: Viewport = {
   width: "device-width",
@@ -34,6 +46,8 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
       <head>
         {/* Applique le thème choisi avant le premier rendu (évite le flash clair → sombre). */}
         <script dangerouslySetInnerHTML={{ __html: THEME_SCRIPT }} />
+        <script type="application/ld+json" dangerouslySetInnerHTML={{ __html: JSON_LD }} />
+        <script dangerouslySetInnerHTML={{ __html: SIGNATURE_SCRIPT }} />
       </head>
       <body className="min-h-dvh font-sans antialiased">
         {children}

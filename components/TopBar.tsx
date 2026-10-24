@@ -188,6 +188,21 @@ export function Page({ children, narrow, wide, className = "", id }: { children:
   return <main id={id} className={`mx-auto space-y-9 px-4 pt-6 pb-16 sm:px-5 ${narrow ? "max-w-xl" : wide ? "max-w-7xl" : "max-w-5xl"} ${className}`}>{children}</main>;
 }
 
+/** Pied de page signé, comme sur Bingezy. */
+export function Footer() {
+  return (
+    <footer className="border-t border-line">
+      <div className="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-4 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] font-cond text-[12px] font-bold tracking-[0.16em] text-ink-3 uppercase sm:px-5">
+        <span>Fin du match</span>
+        <span className="inline-flex items-baseline gap-2.5 normal-case">
+          Réalisé par <b className="hand inline-block -rotate-3 text-[22px] leading-none text-accent [text-shadow:0_0_12px_var(--glow)]">Lilian SCHMITT</b>
+        </span>
+        <span>MATCHZY &copy; 2026 Lilian SCHMITT</span>
+      </div>
+    </footer>
+  );
+}
+
 export function Notice({ tone = "info", children }: { tone?: "info" | "warn" | "danger" | "ok"; children: React.ReactNode }) {
   const cls = {
     info: "border-line bg-surface-2 text-ink-2",
