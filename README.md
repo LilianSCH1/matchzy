@@ -206,17 +206,17 @@ Les préréglages de sports sont définis dans `lib/sports.ts` et insérés à l
 
 ## Mise en ligne (VPS Neoheberg)
 
-Production : **https://matchzy.neoheberg.fr**, sur le même VPS que Bingezy (Cloudflare → Nginx → PM2).
+Production : **https://matchzy.neoheberg.fr**, sur le même VPS que Bingezy (Cloudflare → Nginx → systemd).
 
 | | |
 | --- | --- |
 | Utilisateur Linux / dossier | `matchzy` · `/home/matchzy/app` |
 | Port local | `3009` (Nginx en reverse proxy, HTTPS Let's Encrypt) |
-| Serveur | Next en mode `standalone` dans `/home/matchzy/app/server`, lancé par PM2 (`deploy/ecosystem.config.js`) |
+| Serveur | Next en mode `standalone` dans `/home/matchzy/app/server`, lancé par le service systemd `matchzy` (`deploy/matchzy.service`, redémarrage auto, 300 Mo max) |
 | Secrets | `/home/matchzy/app/.env` (chmod 600), lu par `node --env-file` ; jamais envoyé par GitHub |
 | Base | `/home/matchzy/data/matchzy.db` (SQLite, `DATA_DIR` dans le `.env`) |
 
-Le VPS n'a que 512 Mo de mémoire : **le build se fait dans GitHub Actions** (`.github/workflows/deploy.yml`), qui envoie le serveur compilé par `rsync` puis lance `deploy/deploy.sh` (config Nginx, redémarrage PM2, vérification de `/health`). Le déploiement part à chaque push sur `master`, ou à la main depuis l'onglet *Actions*.
+Le VPS n'a que 512 Mo de mémoire : **le build se fait dans GitHub Actions** (`.github/workflows/deploy.yml`), qui envoie le serveur compilé par `rsync` puis lance `deploy/deploy.sh` (config Nginx, redémarrage du service, vérification de `/health`). Le déploiement part à chaque push sur `master`, ou à la main depuis l'onglet *Actions*.
 
 Le workflow a besoin, dans les réglages du dépôt, des mêmes valeurs que Bingezy : variables `SSH_HOST` et `SSH_HOST_FINGERPRINT`, secret `SSH_PRIVATE_KEY_B64`.
 
@@ -227,9 +227,8 @@ node -e "new (require('node:sqlite').DatabaseSync)('/home/matchzy/data/matchzy.d
 ```
 
 ```bash
-PM2="runuser -u matchzy -- env HOME=/home/matchzy/home PM2_HOME=/home/matchzy/home/.pm2 pm2"
-$PM2 status
-$PM2 logs matchzy --lines 100
-$PM2 restart matchzy                 # après une modif du .env
+systemctl status matchzy
+journalctl -u matchzy -n 100 --no-pager
+systemctl restart matchzy            # après une modif du .env
 curl -i http://127.0.0.1:3009/health
 ```

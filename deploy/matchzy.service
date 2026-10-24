@@ -1,0 +1,28 @@
+[Unit]
+Description=matchzy (serveur Next autonome)
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=matchzy
+Group=matchzy
+WorkingDirectory=/home/matchzy/app/server
+Environment=NODE_ENV=production
+Environment=PORT=3009
+Environment=HOSTNAME=127.0.0.1
+ExecStart=/usr/local/bin/node --env-file=/home/matchzy/app/.env --max-old-space-size=192 --disable-warning=ExperimentalWarning server.js
+Restart=always
+RestartSec=5
+MemoryMax=300M
+KillSignal=SIGTERM
+TimeoutStopSec=15
+StandardOutput=journal
+StandardError=journal
+SyslogIdentifier=matchzy
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=full
+
+[Install]
+WantedBy=multi-user.target

@@ -11,8 +11,8 @@ APP_DIR=/home/matchzy/app
 DATA_DIR=/home/matchzy/data
 PORT=3009
 
-if ss -ltn | grep -q ":$PORT "; then
-  echo "Le port $PORT est déjà utilisé sur ce serveur : changer PORT dans setup.sh, deploy.sh, ecosystem.config.js et nginx/matchzy.conf" >&2
+if [ ! -f /etc/systemd/system/matchzy.service ] && ss -ltn | grep -q ":$PORT "; then
+  echo "Le port $PORT est déjà utilisé sur ce serveur : changer PORT dans setup.sh, deploy.sh, matchzy.service et nginx/matchzy.conf" >&2
   exit 1
 fi
 
@@ -39,7 +39,4 @@ nginx -t && systemctl reload nginx
 # 2. Certificat Let's Encrypt (renouvelé automatiquement par le timer certbot existant)
 certbot certonly --webroot -w /var/www/certbot -d "$DOMAIN" --non-interactive --agree-tos --register-unsafely-without-email --keep-until-expiring
 
-# 3. Relance automatique de PM2 au démarrage du VPS (service pm2-matchzy)
-pm2 startup systemd -u "$APP_USER" --hp /home/matchzy/home --service-name pm2-matchzy
-
-echo "Prêt : créer $APP_DIR/.env (voir .env.example), puis lancer deploy/deploy.sh."
+echo "Prêt : créer $APP_DIR/.env (voir .env.example), puis lancer deploy/deploy.sh (il installe le service systemd matchzy)."

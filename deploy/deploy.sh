@@ -8,7 +8,7 @@ APP_DIR=/home/matchzy/app
 DATA_DIR=/home/matchzy/data
 APP_USER=matchzy
 PORT=3009
-PM2="runuser -u $APP_USER -- env HOME=/home/matchzy/home PM2_HOME=/home/matchzy/home/.pm2 pm2"
+UNIT=/etc/systemd/system/matchzy.service
 NGINX_CONF=/etc/nginx/sites-available/matchzy.conf
 
 if [ ! -f "$APP_DIR/.env" ]; then
@@ -39,11 +39,13 @@ if ! cmp -s "$APP_DIR/deploy/nginx/matchzy.conf" "$NGINX_CONF"; then
   fi
 fi
 
-cd "$APP_DIR"
-# Recharge l'ecosystem (et donc les options node) à chaque déploiement.
-$PM2 delete matchzy >/dev/null 2>&1 || true
-$PM2 start deploy/ecosystem.config.js
-$PM2 save
+# Service systemd : n'installer que si l'unité du dépôt a changé, puis redémarrer
+if ! cmp -s "$APP_DIR/deploy/matchzy.service" "$UNIT"; then
+  cp "$APP_DIR/deploy/matchzy.service" "$UNIT"
+  systemctl daemon-reload
+  systemctl enable -q matchzy
+fi
+systemctl restart matchzy
 
 # Next met quelques secondes à démarrer sur ce petit VPS.
 for i in $(seq 1 20); do
@@ -54,5 +56,5 @@ for i in $(seq 1 20); do
   sleep 1
 done
 echo "Matchzy ne répond pas sur 127.0.0.1:$PORT" >&2
-$PM2 logs matchzy --lines 40 --nostream >&2 || true
+journalctl -u matchzy -n 40 --no-pager >&2 || true
 exit 1
