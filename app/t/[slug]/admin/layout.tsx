@@ -7,7 +7,7 @@ import { IconBack, IconExternal, IconEye, IconLogout, IconScreen, IconSettings, 
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { ThemeToggle } from "@/components/ThemeToggle";
 import { CourtLines, SportBadge, sportKey } from "@/components/Stadium";
-import { Logo } from "@/components/TopBar";
+import { Footer, Logo } from "@/components/TopBar";
 import { tournamentCommands } from "@/lib/commands";
 import { tournamentInsights } from "@/lib/insights";
 import { bundleOr404, requireOrganizerPage } from "@/lib/server/page";
@@ -101,7 +101,7 @@ export default async function AdminLayout({ children, params }: { children: Reac
         </div>
       </aside>
 
-      <div className="min-w-0 pb-24 lg:pb-0">
+      <div className="flex min-w-0 flex-col pb-24 lg:pb-0">
         {/* En-tête mobile */}
         <header className="sticky top-0 z-30 border-b border-line bg-canvas/80 backdrop-blur-xl lg:hidden">
           <div className="flex h-14 items-center gap-2 px-3">
@@ -124,7 +124,10 @@ export default async function AdminLayout({ children, params }: { children: Reac
             <ThemeToggle />
           </div>
         </header>
-        {children}
+        <div className="min-h-[calc(100dvh-12rem)] flex-1">
+          {children}
+        </div>
+        <Footer wide />
       </div>
 
       <AdminDock base={base} badges={badges} />

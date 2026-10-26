@@ -188,16 +188,22 @@ export function Page({ children, narrow, wide, className = "", id }: { children:
   return <main id={id} className={`mx-auto space-y-9 px-4 pt-6 pb-16 sm:px-5 ${narrow ? "max-w-xl" : wide ? "max-w-7xl" : "max-w-5xl"} ${className}`}>{children}</main>;
 }
 
-/** Pied de page signé, comme sur Bingezy. */
-export function Footer() {
+/** Pied de page signé : preuve d'authenticité et signature du créateur. */
+export function Footer({ wide = false }: { wide?: boolean }) {
   return (
-    <footer className="border-t border-line">
-      <div className="mx-auto flex max-w-5xl flex-wrap items-baseline justify-between gap-x-6 gap-y-2 px-4 pt-6 pb-[max(1.5rem,env(safe-area-inset-bottom))] font-cond text-[12px] font-bold tracking-[0.16em] text-ink-3 uppercase sm:px-5">
+    <footer className="mt-auto border-t border-line bg-surface/40">
+      <div className={`mx-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-5 font-cond text-[12px] font-bold tracking-[0.14em] text-ink-3 uppercase sm:px-5 ${wide ? "max-w-7xl" : "max-w-5xl"}`}>
+        <div className="flex items-center gap-2">
+          <LogoMark className="size-4" />
+          <span>MATCHZY &copy; 2026</span>
+        </div>
+        <div className="inline-flex flex-wrap items-center justify-center gap-2 rounded-xl sm:rounded-full border border-line bg-surface/80 px-3.5 py-1.5 shadow-sm">
+          <span className="text-[12px] font-semibold tracking-wider text-ink-2 uppercase">Conçu & développé par</span>
+          <span className="hand inline-block -rotate-2 text-[22px] leading-none text-accent [text-shadow:0_0_12px_var(--glow)]">
+            Lilian SCHMITT
+          </span>
+        </div>
         <span>Fin du match</span>
-        <span className="inline-flex items-baseline gap-2.5 normal-case">
-          Réalisé par <b className="hand inline-block -rotate-3 text-[22px] leading-none text-accent [text-shadow:0_0_12px_var(--glow)]">Lilian SCHMITT</b>
-        </span>
-        <span>MATCHZY &copy; 2026 Lilian SCHMITT</span>
       </div>
     </footer>
   );

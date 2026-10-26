@@ -9,7 +9,7 @@ import { MatchRow, Scoreboard } from "@/components/MatchRow";
 import { Standings } from "@/components/Standings";
 import { TeamFilter } from "@/components/TeamFilter";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Empty, LedBar, Logo, Page, Section, TabBar } from "@/components/TopBar";
+import { Empty, Footer, LedBar, Logo, Page, Section, TabBar } from "@/components/TopBar";
 import { tournamentCommands } from "@/lib/commands";
 import { teamSummaries } from "@/lib/follow";
 import { champion, courtStatuses, forecast } from "@/lib/insights";
@@ -64,6 +64,7 @@ export default async function PublicPage({ params, searchParams }: Params) {
         {tab === "tableau" && <Bracket v={v} />}
         {tab === "programme" && <Programme v={v} team={equipe} base={base} />}
       </Page>
+      <Footer />
     </>
   );
 }

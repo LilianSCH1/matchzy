@@ -286,6 +286,7 @@ function SetupNeeded() {
           </p>
         </div>
       </Page>
+      <Footer />
     </>
   );
 }

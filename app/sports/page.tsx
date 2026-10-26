@@ -2,7 +2,7 @@ import Link from "next/link";
 import { saveSportRulesAction } from "@/app/actions";
 import { IconPlus } from "@/components/Icons";
 import { RulesEditor } from "@/components/RulesEditor";
-import { Page, TopBar } from "@/components/TopBar";
+import { Footer, Page, TopBar } from "@/components/TopBar";
 import { listSports } from "@/lib/server/data";
 import { requireOrganizerPage } from "@/lib/server/page";
 import { presetBySlug } from "@/lib/sports";
@@ -43,6 +43,7 @@ export default async function SportsPage({ searchParams }: { searchParams: Promi
           />
         </div>
       </Page>
+      <Footer />
     </>
   );
 }

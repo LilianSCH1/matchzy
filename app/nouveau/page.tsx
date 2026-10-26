@@ -1,5 +1,5 @@
 import { TournamentWizard } from "@/components/TournamentWizard";
-import { TopBar } from "@/components/TopBar";
+import { Footer, TopBar } from "@/components/TopBar";
 import { listSports } from "@/lib/server/data";
 import { requireOrganizerPage } from "@/lib/server/page";
 
@@ -14,6 +14,7 @@ export default async function NewTournamentPage() {
       <main className="mx-auto max-w-3xl px-4 pt-6 sm:px-5">
         <TournamentWizard sports={sports} />
       </main>
+      <Footer />
     </>
   );
 }

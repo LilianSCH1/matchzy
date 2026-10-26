@@ -1,6 +1,6 @@
 import Link from "next/link";
 import { CourtLines } from "@/components/Stadium";
-import { Page, TopBar } from "@/components/TopBar";
+import { Footer, Page, TopBar } from "@/components/TopBar";
 
 export default function NotFound() {
   return (
@@ -22,6 +22,7 @@ export default function NotFound() {
           </Link>
         </div>
       </Page>
+      <Footer />
     </>
   );
 }

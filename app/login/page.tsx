@@ -1,6 +1,6 @@
 import { IconBolt, IconCalendar, IconLock, IconSparkle } from "@/components/Icons";
 import { LoginForm } from "@/components/LoginForm";
-import { Page, TopBar } from "@/components/TopBar";
+import { Footer, Page, TopBar } from "@/components/TopBar";
 import { safeNext } from "@/lib/rules";
 
 const PERKS = [
@@ -40,6 +40,7 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
           </ul>
         </div>
       </Page>
+      <Footer />
     </>
   );
 }

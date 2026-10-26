@@ -3,7 +3,7 @@
 import Link from "next/link";
 import { useEffect } from "react";
 import { IconAlert } from "@/components/Icons";
-import { Page, TopBar } from "@/components/TopBar";
+import { Footer, Page, TopBar } from "@/components/TopBar";
 
 /** Erreur de chargement (base injoignable, réseau coupé…) : message lisible et bouton pour réessayer. */
 export default function ErrorPage({ error, reset }: { error: Error & { digest?: string }; reset: () => void }) {
@@ -36,6 +36,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
           {error.digest && <p className="font-mono text-xs text-ink-3">Réf. {error.digest}</p>}
         </div>
       </Page>
+      <Footer />
     </>
   );
 }
