@@ -69,4 +69,4 @@ jobs:
         run: ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "bash $APP_DIR/deploy/deploy.sh"
 
       - name: Vérifier le site
-        run: curl -fsS -o /dev/null -w "%{http_code}\n" "$SITE_URL/health"
+        run: curl -fsS -A "Mozilla/5.0 (Windows NT 10.0; Win64; x64)" -o /dev/null -w "%{http_code}\n" "$SITE_URL/health"
