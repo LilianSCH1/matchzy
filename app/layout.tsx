@@ -18,6 +18,10 @@ export const metadata: Metadata = {
   description: "Poules, matchs, scores, classements et phase finale le jour du tournoi, pour tous les sports.",
   authors: [{ name: "Lilian SCHMITT" }],
   creator: "Lilian SCHMITT",
+  icons: {
+    icon: [{ url: "/icon.svg", type: "image/svg+xml" }],
+    apple: [{ url: "/apple-icon.svg", type: "image/svg+xml" }],
+  },
 };
 
 // Signature, comme sur Bingezy : données structurées et message dans la console.
