@@ -16,14 +16,14 @@ export function Forging({ name, matches, courts, courtsLabel, hold }: { name: st
 
   return (
     <div role="status" className="fixed inset-0 z-40 grid place-items-center bg-canvas/70 px-4 backdrop-blur-md">
-      <div className="board rise w-full max-w-sm overflow-hidden rounded-[14px] p-6 text-center">
-        <p className="font-cond text-xs font-extrabold tracking-[0.18em] text-[#f3efe4]/60 uppercase">Génération du planning</p>
+      <div className="card w-full max-w-sm overflow-hidden p-6 text-center shadow-pop">
+        <p className="text-xs font-bold text-ink/60">Génération du planning</p>
         <p className="mt-1 truncate text-lg font-semibold">{name}</p>
-        <Led value={count} digits={String(matches).length} className="mt-5 text-7xl" />
-        <p className="mt-3 text-sm text-[#f3efe4]/70">
+        <Led value={count} digits={String(matches).length} className="mt-5 text-6xl" />
+        <p className="mt-3 text-sm text-ink/70">
           matchs programmés sur {courts} {courtsLabel}
         </p>
-        <span aria-hidden className="mt-5 block h-1 overflow-hidden rounded-full bg-white/10">
+        <span aria-hidden className="mt-5 block h-1 overflow-hidden rounded-full bg-surface-3">
           <span className="fill-x block h-full bg-accent" style={{ "--fill-duration": `${hold}ms` } as React.CSSProperties} />
         </span>
       </div>

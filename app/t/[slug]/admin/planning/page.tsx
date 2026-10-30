@@ -22,7 +22,6 @@ export default async function PlanningPage({ params }: { params: Promise<{ slug:
   return (
     <Page wide>
       <PageHeader
-        eyebrow="Organisation"
         title="Planning"
         description={`Changez l'horaire ou le ${b.tournament.rules.labels.court} d'un match, décalez les suivants ou échangez deux matchs. Les conflits sont signalés en direct.`}
       />

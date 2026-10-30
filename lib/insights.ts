@@ -116,6 +116,8 @@ export interface Insight {
   cta?: string;
   /** Action proposée en un geste : décaler un match et les suivants de son terrain. */
   shift?: { matchId: string; courtId: string; scheduledAt: string; minutes: number };
+  /** Variante pour tout le tournoi : le premier match de chaque terrain en retard (et ses suivants) est recalé. */
+  shiftAll?: { matchId: string; courtId: string; scheduledAt: string; minutes: number }[];
 }
 
 const TONE_ORDER: Record<InsightTone, number> = { danger: 0, warn: 1, info: 2, ok: 3 };
@@ -159,7 +161,22 @@ export function tournamentInsights(b: TournamentBundle, now = Date.now(), r: Res
     });
   }
 
-  for (const c of courts) {
+  // Jour du tournoi, heure du premier match passée, mais rien n'a commencé : une seule alerte, qui recale tout.
+  const firstAt = Math.min(...all.filter((m) => m.scheduled_at && m.court_id).map((m) => new Date(m.scheduled_at!).getTime()));
+  const notStarted = v.isMatchday(now) && all.every((m) => m.status === "scheduled") && Number.isFinite(firstAt) && now - firstAt >= 5 * MIN;
+  if (notStarted) {
+    out.push({
+      id: "not-started",
+      tone: "warn",
+      title: "Le tournoi n'a pas encore commencé",
+      detail: `Le premier match était prévu à ${fmtTime(new Date(firstAt).toISOString(), t.timezone)}. Décalez tout le planning pour commencer maintenant, dans le même ordre.`,
+      shiftAll: courts
+        .filter((c) => c.next?.scheduled_at && c.delay >= 5)
+        .map((c) => ({ matchId: c.next!.id, courtId: c.courtId, scheduledAt: c.next!.scheduled_at!, minutes: Math.ceil(c.delay / 5) * 5 })),
+    });
+  }
+
+  for (const c of notStarted ? [] : courts) {
     // Match en cours bien au-delà de sa durée : score probablement oublié.
     if (c.live && c.elapsed !== null) {
       const over = c.elapsed - t.match_duration;

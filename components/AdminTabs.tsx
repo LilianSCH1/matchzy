@@ -3,15 +3,14 @@
 // Navigation de l'espace organisateur : barre latérale (ordinateur) et barre d'onglets en bas (mobile).
 import Link from "next/link";
 import { usePathname } from "next/navigation";
-import { openCommandPalette } from "./CommandPalette";
-import { IconCalendar, IconGrid, IconSearch, IconSettings, IconUsers } from "./Icons";
+import { IconCalendar, IconGrid, IconSettings, IconUsers } from "./Icons";
 
 function items(base: string) {
   return [
-    { href: base, label: "Tableau de bord", short: "Pilotage", Icon: IconGrid },
+    { href: base, label: "Tableau de bord", short: "Tableau", Icon: IconGrid },
     { href: `${base}/planning`, label: "Planning", short: "Planning", Icon: IconCalendar },
     { href: `${base}/equipes`, label: "Équipes", short: "Équipes", Icon: IconUsers },
-    { href: `${base}/regles`, label: "Règles & accès", short: "Réglages", Icon: IconSettings },
+    { href: `${base}/regles`, label: "Règles et accès", short: "Réglages", Icon: IconSettings },
   ];
 }
 
@@ -27,8 +26,8 @@ export function AdminNav({ base, badges = {} }: { base: string; badges?: Record<
             key={href}
             href={href}
             aria-current={on ? "page" : undefined}
-            className={`group flex h-9 items-center gap-2.5 rounded-md px-2.5 font-cond text-[15px] font-bold tracking-[0.04em] uppercase transition ${
-              on ? "bg-surface-3 text-ink shadow-[inset_3px_0_0_var(--accent)]" : "text-ink-2 hover:bg-surface-3/60 hover:text-ink"
+            className={`group flex h-10 items-center gap-2.5 rounded-lg px-2.5 text-[15px] font-semibold transition ${
+              on ? "bg-accent-soft text-accent-ink" : "text-ink-2 hover:bg-surface-2 hover:text-ink"
             }`}
           >
             <Icon className={`size-[18px] ${on ? "text-accent-ink" : "text-ink-3 group-hover:text-ink-2"}`} />
@@ -54,7 +53,7 @@ export function AdminDock({ base, badges = {} }: { base: string; badges?: Record
               key={href}
               href={href}
               aria-current={on ? "page" : undefined}
-              className={`relative flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 font-cond text-[11px] font-bold tracking-[0.06em] uppercase transition ${on ? "text-accent-ink" : "text-ink-3"}`}
+              className={`relative flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[12px] font-semibold transition ${on ? "text-accent-ink" : "text-ink-3"}`}
             >
               <Icon className="size-5" />
               {short}
@@ -62,10 +61,6 @@ export function AdminDock({ base, badges = {} }: { base: string; badges?: Record
             </Link>
           );
         })}
-        <button type="button" onClick={openCommandPalette} className="flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 font-cond text-[11px] font-bold tracking-[0.06em] text-ink-3 uppercase">
-          <IconSearch className="size-5" />
-          Chercher
-        </button>
       </div>
     </nav>
   );

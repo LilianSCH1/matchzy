@@ -16,7 +16,7 @@ export default async function RulesPage({ params }: { params: Promise<{ slug: st
   const [codes, access] = await Promise.all([courtCodes(t.id), accessCode(t.id)]);
   return (
     <Page wide>
-      <PageHeader eyebrow="Organisation" title="Règles & accès" description="Accès participants, codes arbitres, configuration du tournoi et règles du sport appliquées à ce tournoi." />
+      <PageHeader title="Règles et accès" description="Codes à donner aux joueurs et aux arbitres, réglages du tournoi et règles du sport." />
       <Section title="Participants et public" hint="Toutes les personnes présentes sur place : même affichage en lecture seule pour les équipes et les spectateurs.">
         <ShareAccess slug={t.slug} code={access} />
       </Section>

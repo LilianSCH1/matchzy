@@ -164,7 +164,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
     return (
       <main className="rise mx-auto max-w-xl space-y-4 px-4 pt-6 pb-16">
         <div className="board rounded-[10px] px-5 py-7 text-center">
-          <div className="font-cond text-[12px] font-extrabold tracking-[0.2em] text-[#b4afa3] uppercase">{m.forfeit ? "Forfait" : "Fin du match"}</div>
+          <div className="text-[12px] font-bold text-ink-2">{m.forfeit ? "Forfait" : "Fin du match"}</div>
           <div className="mt-5 grid grid-cols-[1fr_auto_1fr] items-center gap-4">
             <TeamName name={homeName} win={o === "home"} dim={o === "away"} />
             <div className="flex items-center gap-2">
@@ -174,7 +174,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
             </div>
             <TeamName name={awayName} win={o === "away"} dim={o === "home"} />
           </div>
-          {detail && <div className="mt-4 text-sm text-[#b4afa3]">{detail}</div>}
+          {detail && <div className="mt-4 text-sm text-ink-2">{detail}</div>}
         </div>
         <button className="btn-outline h-12 w-full" onClick={() => setEditing(true)}>
           <IconPencil className="size-4" /> Corriger le score
@@ -249,10 +249,10 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
                 onClick={() => setActive(i)}
                 className={`min-w-[76px] shrink-0 rounded-md border px-3 py-2 text-center transition ${on ? "board border-transparent ring-2 ring-accent" : "border-line bg-surface"}`}
               >
-                <div className={`font-cond text-[11px] font-bold tracking-[0.1em] uppercase ${on ? "text-[#b4afa3]" : "text-ink-3"}`}>
+                <div className={` text-[11px] font-bold ${on ? "text-ink-2" : "text-ink-3"}`}>
                   {rules.labels.set} {i + 1}
                 </div>
-                <div className={`flex items-center justify-center gap-1 tabular-nums ${on ? "led text-lg" : "font-cond text-lg font-extrabold"}`}>
+                <div className={`flex items-center justify-center gap-1 tabular-nums ${on ? "led text-lg" : " text-lg font-bold"}`}>
                   {s.home}-{s.away}
                   {w && <IconCheck className="size-3.5" />}
                 </div>
@@ -271,7 +271,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
               <div className="eyebrow -mb-2">{side === "home" ? "Domicile" : "Visiteur"}</div>
               <div className="display line-clamp-2 flex min-h-[3rem] items-center text-center text-[24px] leading-[0.95]">{side === "home" ? homeName : awayName}</div>
               {isSets && (
-                <div className="-mt-1 font-cond text-[13px] font-bold tracking-[0.06em] text-ink-3 uppercase">
+                <div className="-mt-1 text-[13px] font-bold text-ink-3">
                   {rules.labels.set}s gagnés : <span className="text-ink">{won[side]}</span>
                 </div>
               )}
@@ -398,8 +398,8 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
 
 function TeamName({ name, win, dim }: { name: string; win: boolean; dim: boolean }) {
   return (
-    <div className={`flex flex-col items-center gap-2 font-cond text-[17px] leading-tight font-bold uppercase ${dim ? "text-[#858074]" : "text-[#f3efe4]"}`}>
-      <span className={`h-1 w-6 rounded-full ${win ? "bg-[#3ddc84]" : "bg-transparent"}`} />
+    <div className={`flex flex-col items-center gap-2 text-[17px] leading-tight font-bold ${dim ? "text-ink-3" : "text-ink"}`}>
+      <span className={`h-1 w-6 rounded-full ${win ? "bg-ok" : "bg-transparent"}`} />
       {name}
     </div>
   );
@@ -408,9 +408,9 @@ function TeamName({ name, win, dim }: { name: string; win: boolean; dim: boolean
 function Teams({ homeName, awayName }: { homeName: string; awayName: string }) {
   return (
     <div className="board grid grid-cols-[1fr_auto_1fr] items-center gap-4 rounded-[10px] px-5 py-10 text-center">
-      <div className="display text-[30px] leading-[0.95] text-[#f3efe4]">{homeName}</div>
+      <div className="display text-[30px] leading-[0.95] text-ink">{homeName}</div>
       <div className="led text-[34px]">VS</div>
-      <div className="display text-[30px] leading-[0.95] text-[#f3efe4]">{awayName}</div>
+      <div className="display text-[30px] leading-[0.95] text-ink">{awayName}</div>
     </div>
   );
 }

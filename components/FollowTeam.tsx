@@ -85,7 +85,7 @@ export function FollowTeam({ slug, tz, teams, courtLabel }: { slug: string; tz: 
         {team.form.length > 0 && (
           <div className="hidden items-center gap-1 sm:flex" aria-label="Forme">
             {team.form.map((r, i) => (
-              <span key={i} title={RESULT[r].title} className={`grid size-6 place-items-center rounded-[4px] font-cond text-[12px] font-extrabold ${RESULT[r].cls}`}>
+              <span key={i} title={RESULT[r].title} className={`grid size-6 place-items-center rounded-[4px] text-[12px] font-bold ${RESULT[r].cls}`}>
                 {RESULT[r].label}
               </span>
             ))}
@@ -99,7 +99,7 @@ export function FollowTeam({ slug, tz, teams, courtLabel }: { slug: string; tz: 
         <Brief title={team.next?.live ? "En cours" : "Prochain match"} m={team.next} tz={tz} now={now} empty={team.withdrawn ? "Abandon" : "Plus de match prévu"} />
         <Brief title="Dernier résultat" m={team.last} tz={tz} now={now} empty="Pas encore joué" className="border-t border-line sm:border-t-0" />
       </div>
-      <Link href={`/t/${slug}?v=programme&equipe=${team.id}`} scroll={false} className="flex items-center justify-between border-t border-line bg-surface-2/50 px-4 py-2.5 font-cond text-[14px] font-bold tracking-[0.06em] text-accent-ink uppercase transition hover:bg-surface-2">
+      <Link href={`/t/${slug}?v=programme&equipe=${team.id}`} scroll={false} className="flex items-center justify-between border-t border-line bg-surface-2/50 px-4 py-2.5 text-[14px] font-bold text-accent-ink transition hover:bg-surface-2">
         Tous ses matchs{team.remaining ? ` · ${team.remaining} à jouer` : ""}
         <IconChevron className="size-4" />
       </Link>
@@ -133,7 +133,7 @@ function Brief({ title, m, tz, now, empty, className = "" }: { title: string; m:
           <span className="font-semibold">{m.opponent}</span>
         </span>
         {played ? (
-          <span className={`font-cond text-2xl font-extrabold tabular-nums ${m.result === "W" ? "text-ok" : m.result === "L" ? "text-live" : ""}`}>
+          <span className={` text-2xl font-bold tabular-nums ${m.result === "W" ? "text-ok" : m.result === "L" ? "text-live" : ""}`}>
             {m.us}–{m.them}
           </span>
         ) : mins !== null && mins >= 0 && mins <= 120 ? (

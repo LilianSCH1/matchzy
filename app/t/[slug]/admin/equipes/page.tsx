@@ -10,9 +10,8 @@ export default async function TeamsPage({ params }: { params: Promise<{ slug: st
   return (
     <Page wide>
       <PageHeader
-        eyebrow="Organisation"
         title="Équipes"
-        description="Un abandon fait perdre par forfait tous les matchs non joués de l'équipe (score par défaut du sport) ; elle est classée dernière de sa poule. Les pénalités fair-play servent de critère de départage si ce critère est activé."
+        description="Renommez une équipe avec le crayon. « Abandon » donne perdus par forfait tous ses matchs restants."
       />
       <TeamsAdmin
         teams={b.teams.map((t) => ({

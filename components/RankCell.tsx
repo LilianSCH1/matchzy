@@ -4,7 +4,7 @@ export function RankCell({ rank, qualified, big, move }: { rank: number; qualifi
     <td className={`relative pl-4 ${big ? "py-2.5" : "py-2"}`}>
       {qualified && <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-ok" aria-hidden />}
       <span
-        className={`inline-flex items-center justify-center rounded-[4px] font-cond font-extrabold tabular-nums ${big ? "size-8 text-lg" : "size-6 text-sm"} ${
+        className={`inline-flex items-center justify-center rounded-[4px] font-bold tabular-nums ${big ? "size-8 text-lg" : "size-6 text-sm"} ${
           qualified ? "bg-ok text-on-ok" : "text-ink-3"
         }`}
       >

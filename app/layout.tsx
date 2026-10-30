@@ -2,7 +2,6 @@ import type { Metadata, Viewport } from "next";
 import { Barlow, Barlow_Condensed, Big_Shoulders, Doto, Permanent_Marker } from "next/font/google";
 import { CommandPalette } from "@/components/CommandPalette";
 import { Toaster } from "@/components/feedback";
-import { ViewTransitions } from "@/components/stage/ViewTransitions";
 import { THEME_SCRIPT } from "@/components/ThemeToggle";
 import { WebVitals } from "@/components/WebVitals";
 import "./globals.css";
@@ -43,7 +42,7 @@ export const viewport: Viewport = {
   initialScale: 1,
   viewportFit: "cover",
   themeColor: [
-    { media: "(prefers-color-scheme: light)", color: "#ece6d6" },
+    { media: "(prefers-color-scheme: light)", color: "#f4f4f2" },
     { media: "(prefers-color-scheme: dark)", color: "#07090b" },
   ],
 };
@@ -61,7 +60,6 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <CommandPalette />
         <Toaster />
-        <ViewTransitions />
         {process.env.NODE_ENV === "development" && <WebVitals />}
       </body>
     </html>

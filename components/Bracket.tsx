@@ -10,7 +10,7 @@ function Slot({ name, score, win, lose, pending, big }: { name: string; score: s
         {win && <span className="h-3.5 w-1 shrink-0 rounded-full bg-ok" />}
         <span className="truncate">{name}</span>
       </span>
-      <span className={`font-cond text-[1.15em] font-extrabold tabular-nums ${win ? "" : "text-ink-3"}`}>{score ?? ""}</span>
+      <span className={` text-[1.15em] font-bold tabular-nums ${win ? "" : "text-ink-3"}`}>{score ?? ""}</span>
     </div>
   );
 }
@@ -21,7 +21,7 @@ function BracketMatch({ m, v, big }: { m: Match; v: View; big?: boolean }) {
     return (
       <div className={`rounded-[10px] border border-dashed border-line-strong ${size}`}>
         <Slot name={v.home(m)} score={null} win={false} lose={false} pending={!m.home_team_id} big={big} />
-        <div className="px-3 pb-2 font-cond text-[11px] font-bold tracking-[0.1em] text-ink-3 uppercase">Exempté · qualifié d&apos;office</div>
+        <div className="px-3 pb-2 text-[11px] font-bold text-ink-3">Exempté · qualifié d&apos;office</div>
       </div>
     );
   const done = m.status !== "scheduled";
@@ -30,7 +30,7 @@ function BracketMatch({ m, v, big }: { m: Match; v: View; big?: boolean }) {
   const w = m.winner_team_id;
   return (
     <div className={`overflow-hidden rounded-[10px] border bg-surface shadow-card ${live ? "border-live/60 ring-2 ring-live/20" : "border-line"} ${size}`}>
-      <div className="flex justify-between gap-2 border-b border-dashed border-line-strong bg-surface-2/60 px-3 py-1 font-cond text-[11px] font-bold tracking-[0.08em] text-ink-3 uppercase">
+      <div className="flex justify-between gap-2 border-b border-dashed border-line-strong bg-surface-2/60 px-3 py-1 text-[11px] font-bold text-ink-3">
         <span className="truncate">{m.label}</span>
         <span className="whitespace-nowrap">
           {live ? (
@@ -107,7 +107,7 @@ export function Bracket({ v, big = false }: { v: View; big?: boolean }) {
             <IconTrophy className="size-7" />
           </span>
           <div className="min-w-0">
-            <div className="font-cond text-[12px] font-extrabold tracking-[0.18em] text-[#b4afa3] uppercase">Vainqueur du tournoi</div>
+            <div className="text-[12px] font-bold text-ink-2">Vainqueur du tournoi</div>
             <div className={`led truncate ${big ? "text-5xl" : "text-[40px]"} leading-tight`}>{v.teams.get(champion)}</div>
           </div>
         </div>

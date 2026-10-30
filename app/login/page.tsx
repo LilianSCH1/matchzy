@@ -1,13 +1,6 @@
-import { IconBolt, IconCalendar, IconLock, IconSparkle } from "@/components/Icons";
 import { LoginForm } from "@/components/LoginForm";
 import { Footer, Page, TopBar } from "@/components/TopBar";
 import { safeNext } from "@/lib/rules";
-
-const PERKS = [
-  { Icon: IconCalendar, text: "Poules, planning et tableau générés en 4 étapes" },
-  { Icon: IconBolt, text: "Scores saisis au bord du terrain, classements recalculés en direct" },
-  { Icon: IconSparkle, text: "Un assistant qui repère retards et conflits, et propose la correction" },
-];
 
 export default async function LoginPage({ searchParams }: { searchParams: Promise<{ next?: string }> }) {
   const { next } = await searchParams;
@@ -15,29 +8,15 @@ export default async function LoginPage({ searchParams }: { searchParams: Promis
     <>
       <TopBar brand back="/" />
       <Page narrow>
-        <div className="rise mx-auto max-w-sm space-y-8 pt-8">
-          <div className="space-y-3 text-center">
-            <span className="board mx-auto grid size-16 place-items-center rounded-[10px] text-led">
-              <IconLock className="size-7" />
-            </span>
-            <p className="eyebrow text-accent-ink">Accès réservé au staff</p>
-            <h1 className="display text-[52px]">Vestiaire organisateur</h1>
-            <p className="text-[15px] text-ink-2">Créez des tournois, pilotez le planning et corrigez les résultats.</p>
+        <div className="mx-auto max-w-sm space-y-6 pt-6">
+          <div className="space-y-2">
+            <h1 className="display text-[30px]">Espace organisateur</h1>
+            <p className="text-[15px] text-ink-2">Connectez-vous pour créer vos tournois, gérer le planning et saisir les scores.</p>
           </div>
-          <div className="card overflow-hidden p-5 pt-0">
-            <div className="-mx-5 mb-5 h-1.5 bg-accent" aria-hidden />
+          <div className="card p-5">
             <LoginForm next={safeNext(next)} />
           </div>
-          <ul className="space-y-2.5">
-            {PERKS.map(({ Icon, text }) => (
-              <li key={text} className="flex items-start gap-3 text-[15px] text-ink-2">
-                <span className="grid size-8 shrink-0 place-items-center rounded-md border border-dashed border-accent/60 text-accent-ink">
-                  <Icon className="size-4" />
-                </span>
-                <span className="pt-1">{text}</span>
-              </li>
-            ))}
-          </ul>
+          <p className="text-[14px] text-ink-3">Vous êtes joueur ou spectateur ? Pas besoin de compte : revenez à l&apos;accueil et entrez le code du tournoi.</p>
         </div>
       </Page>
       <Footer />

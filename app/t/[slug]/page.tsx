@@ -1,15 +1,15 @@
 import Link from "next/link";
 import { Bracket } from "@/components/Bracket";
-import { Commands, SearchButton } from "@/components/CommandPalette";
+import { Commands } from "@/components/CommandPalette";
 import { FollowTeam } from "@/components/FollowTeam";
 import { IconBack, IconBolt, IconBracket, IconCalendar, IconList, IconScreen, IconSettings, IconTrophy, IconWhistle } from "@/components/Icons";
-import { CourtLines, SportBadge, sportKey, Ticker } from "@/components/Stadium";
+import { SportBadge, sportKey } from "@/components/Stadium";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { MatchRow, Scoreboard } from "@/components/MatchRow";
 import { Standings } from "@/components/Standings";
 import { TeamFilter } from "@/components/TeamFilter";
 import { ThemeToggle } from "@/components/ThemeToggle";
-import { Empty, Footer, LedBar, Logo, Page, Section, TabBar } from "@/components/TopBar";
+import { Empty, Footer, Page, Section, TabBar } from "@/components/TopBar";
 import { tournamentCommands } from "@/lib/commands";
 import { teamSummaries } from "@/lib/follow";
 import { champion, courtStatuses, forecast } from "@/lib/insights";
@@ -69,105 +69,66 @@ export default async function PublicPage({ params, searchParams }: Params) {
   );
 }
 
-/** Bandeau du tournoi : le terrain du sport vu d'en haut, éclairé, avec l'état en direct et le défilant des résultats. */
+/** En-tête du tournoi : navigation, nom, état et avancement. */
 function Hero({ v, org, now }: { v: View; org: boolean; now: number }) {
   const t = v.b.tournament;
   const base = `/t/${t.slug}`;
   const f = forecast(v.b, now);
   const champ = f.total && f.done === f.total ? champion(v.b) : null;
   const started = now >= new Date(t.start_at).getTime() || f.done > 0 || f.live > 0;
-  const sport = sportKey(t.sport_name);
-  const recent = v
-    .playable()
-    .filter((m) => m.status === "finished")
-    .sort((a, b) => (b.finished_at ?? "").localeCompare(a.finished_at ?? ""))
-    .slice(0, 8);
   return (
-    <header data-sport={sport} className="theme-dark turf relative isolate overflow-hidden border-b border-line">
-      <div aria-hidden className="floodlight absolute inset-0 -z-10">
-        <CourtLines sport={sport} className="absolute top-1/2 right-[-12%] h-[150%] w-auto -translate-y-1/2 text-white/[0.13] sm:right-[-4%]" />
-        <div className="absolute -top-20 left-[30%] h-[140%] w-48 -rotate-[20deg] bg-[linear-gradient(180deg,rgb(255_247_222/0.12),transparent_70%)] blur-2xl" />
-        <div className="absolute -top-20 right-[12%] h-[140%] w-48 rotate-[20deg] bg-[linear-gradient(180deg,rgb(255_247_222/0.12),transparent_70%)] blur-2xl" />
-      </div>
-      <div className="mx-auto max-w-5xl px-3 pt-2 pb-6 sm:px-5 sm:pb-8">
+    <header data-sport={sportKey(t.sport_name)} className="border-b border-line bg-surface">
+      <div className="mx-auto max-w-5xl px-3 pt-2 pb-5 sm:px-5">
         <div className="flex h-12 items-center gap-1">
-          <Link href="/" data-vt className="btn-icon -ml-1" aria-label="Tous les tournois">
+          <Link href="/" className="btn-icon -ml-1" aria-label="Accueil">
             <IconBack />
           </Link>
-          <Link href="/" className="mr-auto hidden opacity-80 transition hover:opacity-100 sm:block" aria-label="Matchzy, accueil">
-            <Logo />
-          </Link>
-          <span className="mr-auto sm:hidden" />
+          <span className="mr-auto" />
           {org && (
-            <Link href={`${base}/admin`} className="btn-quiet h-9 gap-1.5 px-2.5 text-sm" title="Organiser">
+            <Link href={`${base}/admin`} className="btn-quiet h-9 gap-1.5 px-2.5 text-sm" title="Gérer le tournoi">
               <IconSettings className="size-4" />
-              <span className="hidden sm:inline">Organiser</span>
+              <span className="hidden sm:inline">Gérer</span>
             </Link>
           )}
-          <Link href={`${base}/arbitre`} className="btn-quiet h-9 gap-1.5 px-2.5 text-sm" title="Arbitrer">
+          <Link href={`${base}/arbitre`} className="btn-quiet h-9 gap-1.5 px-2.5 text-sm" title="Espace arbitre">
             <IconWhistle className="size-4" />
-            <span className="hidden sm:inline">Arbitrer</span>
+            <span className="hidden sm:inline">Arbitre</span>
           </Link>
           <Link href={`${base}/ecran`} className="btn-quiet hidden h-9 gap-1.5 px-2.5 text-sm sm:inline-flex" title="Écran géant">
             <IconScreen className="size-4" />
-            <span className="hidden sm:inline">Écran géant</span>
+            Écran géant
           </Link>
-          <SearchButton compact />
           <ThemeToggle />
         </div>
-        <div className="rise mt-5 space-y-4 px-1">
+        <div className="mt-3 space-y-2 px-1">
           <div className="flex flex-wrap items-center gap-2">
-            <SportBadge name={t.sport_name} vt={`sport-${t.slug}`} className="bg-black/40!" />
+            <SportBadge name={t.sport_name} />
             {f.live > 0 ? (
               <span className="chip bg-live-solid text-white">
                 <span className="live-dot size-1.5 rounded-full bg-white" /> {f.live} match{f.live > 1 ? "s" : ""} en direct
               </span>
             ) : champ ? (
-              <span className="chip bg-ok text-on-ok">Terminé</span>
+              <span className="chip bg-ok-soft text-ok">Terminé</span>
             ) : !started ? (
-              <span className="chip bg-accent text-on-accent">Coup d&apos;envoi à {fmtTime(t.start_at, t.timezone)}</span>
+              <span className="chip bg-accent-soft text-accent-ink">Début à {fmtTime(t.start_at, t.timezone)}</span>
             ) : null}
           </div>
-          <h1 className="display max-w-3xl text-[clamp(3rem,9vw,6rem)] [text-shadow:0_4px_30px_rgb(0_0_0/0.5)]" style={{ viewTransitionName: `name-${t.slug}` }}>
-            {t.name}
-          </h1>
-          <p className="font-cond text-[15px] font-semibold tracking-[0.08em] text-ink-2 uppercase">
+          <h1 className="display text-[28px] sm:text-[34px]">{t.name}</h1>
+          <p className="text-[15px] text-ink-2">
             {fmtDate(t.date)} · {v.b.teams.length} équipes · {v.b.courts.length} {v.b.courts.length > 1 ? t.rules.labels.courtPlural : t.rules.labels.court}
+            {started && f.total > 0 && !champ && ` · ${f.done}/${f.total} matchs joués`}
+            {started && !champ && f.projectedEnd && ` · fin vers ${fmtTime(f.projectedEnd.toISOString(), t.timezone)}`}
           </p>
           {champ && (
-            <div className="board inline-flex items-center gap-3 rounded-md py-2 pr-4 pl-3">
-              <IconTrophy className="size-6 text-led" />
-              <span className="font-cond text-[12px] font-bold tracking-[0.16em] text-ink-3 uppercase">Vainqueur</span>
-              <span className="display text-[26px] text-led">{champ}</span>
-            </div>
-          )}
-          {started && f.total > 0 && !champ && (
-            <div className="flex max-w-lg items-center gap-3 pt-1">
-              <LedBar value={f.done} total={f.total} cells={30} className="flex-1 text-white" />
-              <span className="shrink-0 font-cond text-[13px] font-bold tracking-[0.06em] text-ink-2 uppercase tabular-nums">
-                <span className="led text-[15px]">{f.done}</span>/{f.total} matchs
-                {f.projectedEnd && ` · fin vers ${fmtTime(f.projectedEnd.toISOString(), t.timezone)}`}
+            <div className="inline-flex items-center gap-2 rounded-lg bg-ok-soft px-3 py-2 text-ok">
+              <IconTrophy className="size-5" />
+              <span className="text-[15px]">
+                Vainqueur : <span className="font-bold">{champ}</span>
               </span>
             </div>
           )}
         </div>
       </div>
-      {recent.length > 0 && (
-        <Ticker label="Résultats" className="border-t border-white/10">
-          {recent.map((m) => (
-            <span key={m.id} className="flex items-center gap-2.5 font-cond text-[15px] font-bold tracking-[0.04em] uppercase">
-              <span className={m.winner_team_id === m.home_team_id ? "text-[#f3efe4]" : "text-[#858074]"}>{v.home(m)}</span>
-              <span className="led text-[17px]">
-                {m.home_score}-{m.away_score}
-              </span>
-              <span className={m.winner_team_id === m.away_team_id ? "text-[#f3efe4]" : "text-[#858074]"}>{v.away(m)}</span>
-              <span className="text-[#ff6b1a]" aria-hidden>
-                ◆
-              </span>
-            </span>
-          ))}
-        </Ticker>
-      )}
     </header>
   );
 }
@@ -254,7 +215,7 @@ function Programme({ v, team, base }: { v: View; team?: string; base: string }) 
         </p>
       </div>
       {list.length ? (
-        <ol className="relative space-y-6 border-l-2 border-dashed border-line-strong pl-5 sm:pl-7">
+        <ol className="relative space-y-6 border-l-2 border-line pl-5 sm:pl-7">
           {[...slots].map(([time, ms]) => {
             const state = ms.some((m) => m.status === "live") ? "live" : ms.every((m) => m.status === "finished") ? "done" : "todo";
             return (
@@ -264,7 +225,7 @@ function Programme({ v, team, base }: { v: View; team?: string; base: string }) 
                     state === "live" ? "live-ring bg-live" : state === "done" ? "bg-ink-3" : "bg-accent"
                   }`}
                 />
-                <div className={`display text-[28px] tabular-nums ${state === "done" ? "text-ink-3" : state === "live" ? "text-live" : ""}`}>{time}</div>
+                <div className={`display text-[20px] tabular-nums ${state === "done" ? "text-ink-3" : state === "live" ? "text-live" : ""}`}>{time}</div>
                 <div className="grid gap-2 md:grid-cols-2">
                   {ms.map((m) => (
                     <MatchRow key={m.id} m={m} v={v} highlight={team} />

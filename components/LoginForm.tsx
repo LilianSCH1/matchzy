@@ -43,7 +43,7 @@ export function RefereeLoginForm({ slug, courtLabel }: { slug: string; courtLabe
           autoFocus
           required
           placeholder="000000"
-          className="board h-24 w-full rounded-[10px] border-0 text-center font-led text-5xl font-extrabold tracking-[0.3em] text-led caret-[#ff6b1a] outline-none placeholder:tracking-[0.3em] placeholder:text-[rgb(255_176_0/0.15)] focus:ring-4 focus:ring-accent/40"
+          className="input h-16 text-center text-4xl font-semibold tabular-nums"
           maxLength={8}
         />
       </div>
