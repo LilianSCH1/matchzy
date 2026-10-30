@@ -1,28 +1,26 @@
 "use client";
 
-import { DndContext, PointerSensor, TouchSensor, useDraggable, useDroppable, useSensor, useSensors, type DragEndEvent } from "@dnd-kit/core";
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { createTournamentAction } from "@/app/actions";
 import { validateInput, type TournamentInput } from "@/lib/build";
-import { distributeRandom, distributeSeeded, poolName, poolSizes, POOL_MAX, POOL_MIN, shuffle, suggestPoolCount, validPoolCounts } from "@/lib/pools";
+import { dur, ease, prefersReducedMotion } from "@/lib/motion";
+import { distributeRandom, distributeSeeded, suggestPoolCount, validPoolCounts } from "@/lib/pools";
 import type { Format, Sport } from "@/lib/types";
-import { fmtDuration, FORMAT_LABEL } from "@/lib/view";
-import {
-  defaultQualifierOption,
-  fitMatchDuration,
-  MAX_TEAMS,
-  MIN_TEAMS,
-  parseTeams,
-  placeholderTeams,
-  previewEnd,
-  qualifierOptions,
-  recommendFormat,
-  type QualifierOption,
-} from "@/lib/wizard";
-import { IconArrowLeft, IconArrowRight, IconCheck, IconClock, IconDice, IconDown, IconPlus, IconSparkle, IconUp, IconX } from "./Icons";
+import { defaultQualifierOption, fitMatchDuration, MIN_TEAMS, previewEnd, qualifierOptions, recommendFormat, type QualifierOption } from "@/lib/wizard";
+import { IconArrowLeft, IconArrowRight } from "./Icons";
 import { toast, useConfirm } from "./feedback";
-import { Choice, ErrorText, Field, Stepper, Switch } from "./ui";
+import { MotionIsland } from "./motion/MotionIsland";
+import { sportKey } from "./Stadium";
+import { AnimatedNumber } from "./wizard/AnimatedNumber";
+import { Forging } from "./wizard/Forging";
+import { FORMATS, hhmm, plural, suggestName, todayLocal } from "./wizard/shared";
+import { WizardStepFormat } from "./wizard/WizardStepFormat";
+import { WizardStepReview } from "./wizard/WizardStepReview";
+import { WizardStepTeams } from "./wizard/WizardStepTeams";
+import { WizardStepTournament } from "./wizard/WizardStepTournament";
 
 const STEPS = ["Tournoi", "Équipes", "Format", "Horaires"];
 const STEP_TITLES = ["Le tournoi", "Les équipes", "Le format", "Horaires et terrains"];
@@ -32,22 +30,16 @@ const STEP_HINTS = [
   "Comparez les formules : le nombre de matchs et l'heure de fin se calculent en direct.",
   "Réglez le rythme et vérifiez l'heure de fin, puis créez le tournoi.",
 ];
-const FORMAT_HINT: Record<Format, string> = {
-  pools: "Chacun rencontre toutes les équipes de sa poule. Un classement par poule.",
-  pools_knockout: "Des poules, puis un tableau final avec les meilleurs. Le plus classique.",
-  knockout: "Tableau direct : un match perdu et c'est fini. Le plus rapide.",
-};
-const FORMATS: Format[] = ["pools_knockout", "pools", "knockout"];
 const DRAFT_KEY = "matchzy:nouveau-tournoi";
+/** Durée minimale du moment de génération : le temps que les chiffres roulent, jamais plus que la création elle-même au-delà. */
+const FORGE_MS = 1200;
 
-function todayLocal() {
-  const d = new Date();
-  return `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, "0")}-${String(d.getDate()).padStart(2, "0")}`;
-}
-
-const suggestName = (s?: Sport) => (!s || s.name === "Personnalisé" ? "Mon tournoi" : `Tournoi de ${s.name.toLowerCase()}`);
-const hhmm = (d: Date) => d.toLocaleTimeString("fr-FR", { hour: "2-digit", minute: "2-digit" });
-const plural = (n: number, word: string) => `${n} ${word}${n > 1 ? "s" : ""}`;
+// Changement d'étape : l'étape suivante arrive par la droite, la précédente par la gauche.
+const slide = {
+  enter: (dir: number) => ({ opacity: 0, x: dir * 24 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: dir * -24 }),
+};
 
 interface Draft {
   step: number;
@@ -78,6 +70,14 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
   const loaded = useRef(false);
 
   const [step, setStep] = useState(0);
+  // Sens du dernier changement d'étape, déduit pendant le rendu.
+  const [shownStep, setShownStep] = useState(0);
+  const [dir, setDir] = useState(1);
+  if (shownStep !== step) {
+    setDir(step > shownStep ? 1 : -1);
+    setShownStep(step);
+  }
+  const [forging, setForging] = useState(0);
   const [name, setName] = useState("");
   const [date, setDate] = useState(todayLocal());
   const [time, setTime] = useState("09:00");
@@ -261,17 +261,6 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
     }
   };
 
-  const addEntry = () => {
-    const { added, duplicates, overflow } = parseTeams(entry, teams);
-    if (added.length) setTeams([...teams, ...added]);
-    setEntry("");
-    const msgs = [];
-    if (added.length > 1) msgs.push(`${added.length} équipes ajoutées`);
-    if (duplicates.length) msgs.push(`${plural(duplicates.length, "doublon")} ignoré${duplicates.length > 1 ? "s" : ""} (${duplicates.slice(0, 3).join(", ")}${duplicates.length > 3 ? "…" : ""})`);
-    if (overflow) msgs.push(`${overflow} en trop (maximum ${MAX_TEAMS})`);
-    setNotice(msgs.length ? msgs.join(" · ") : null);
-  };
-
   const removeTeams = (next: string[], text: string) => {
     const before = teams;
     setTeams(next);
@@ -304,19 +293,29 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
     }
   };
 
-  const submit = () =>
+  const submit = () => {
+    if (!input) return;
+    const hold = prefersReducedMotion() ? 0 : FORGE_MS;
+    // Hors de la transition : sinon React n'afficherait le moment de génération qu'une fois la création finie.
+    setError(null);
+    setForging(hold || 1);
     start(async () => {
-      if (!input) return;
-      const r = await createTournamentAction(input);
-      if (r.error) setError(r.error);
-      else {
+      const [r] = await Promise.all([createTournamentAction(input), new Promise((ok) => setTimeout(ok, hold))]);
+      const { fx } = await import("@/lib/client/fx");
+      if (r.error) {
+        setForging(0);
+        setError(r.error);
+        fx.error();
+      } else {
         try {
           localStorage.removeItem(DRAFT_KEY);
         } catch {}
+        fx.success();
         toast(`« ${effectiveName} » est créé. Voici votre tableau de bord.`);
         router.push(`/t/${r.slug}/admin`);
       }
     });
+  };
 
   const next = () => {
     if (blocker) return;
@@ -326,8 +325,15 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
 
   // ---------------------------------------------------------------- Rendu
   return (
-    <div className="space-y-8 pb-40">
+    <div data-sport={sportKey(sport?.name)} className="space-y-8 pb-40">
       {dialog}
+      {/* Charge la police du panneau LED dès la dernière étape : le moment de génération s'affiche sans police de secours. */}
+      {step === 3 && (
+        <span aria-hidden className="led pointer-events-none fixed opacity-0">
+          0
+        </span>
+      )}
+      {forging > 0 && preview && <Forging name={effectiveName} matches={preview.matches} courts={courts} courtsLabel={courtsLabel} hold={forging} />}
       {restored && (
         <div className="rise flex items-center justify-between gap-3 rounded-[10px] bg-accent-soft px-4 py-3 text-sm">
           <span>Nous avons repris votre brouillon là où vous l&apos;aviez laissé.</span>
@@ -349,7 +355,13 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
                 aria-current={i === step ? "step" : undefined}
                 className={`group text-left ${can ? "cursor-pointer" : "cursor-default"}`}
               >
-                <span className={`block h-1 rounded-full transition-colors ${i <= step ? "bg-ink" : "bg-line"} ${can ? "group-hover:opacity-70" : ""}`} />
+                {/* Trait de craie qui se trace jusqu'à l'étape en cours (et s'efface au retour). */}
+                <span className="relative block h-1 overflow-hidden rounded-full bg-line">
+                  <span
+                    className={`absolute inset-0 origin-left rounded-full bg-ink transition-[scale,opacity] duration-(--dur-4) ease-(--ease-out-expo) motion-reduce:transition-none ${i <= step ? "scale-x-100" : "scale-x-0"} ${can ? "group-hover:opacity-70" : ""}`}
+                    style={{ transitionDelay: `${i <= step ? Math.max(0, i - 1) * 60 : 0}ms` }}
+                  />
+                </span>
                 <span className={`mt-1.5 block truncate text-xs ${i === step ? "font-semibold text-ink" : "text-ink-3"} ${can ? "group-hover:text-ink" : ""}`}>{s}</span>
               </button>
             );
@@ -361,373 +373,102 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
         </div>
       </div>
 
-      {step === 0 && (
-        <div className="rise space-y-7">
-          <div>
-            <span className="label">Sport</span>
-            <div className="flex flex-wrap gap-1.5">
-              {sports.map((s) => (
-                <button
-                  key={s.id}
-                  type="button"
-                  onClick={() => pickSport(s.id)}
-                  className={`inline-flex h-10 items-center gap-1.5 rounded-full px-4 text-sm font-medium transition ${
-                    s.id === sportId ? "bg-ink text-canvas" : "border border-line bg-surface text-ink-2 hover:border-line-strong hover:text-ink"
-                  }`}
-                >
-                  {s.id === sportId && <IconCheck className="size-3.5" />}
-                  {s.name}
-                </button>
-              ))}
-            </div>
-            <p className="mt-2 text-xs text-ink-3">Fixe le comptage des points et la durée conseillée des matchs. Les règles restent modifiables pour ce tournoi.</p>
-          </div>
-          <label className="block">
-            <span className="label">Nom du tournoi</span>
-            <input
-              className="w-full border-b border-line bg-transparent pb-3 text-2xl font-medium tracking-tight outline-none placeholder:text-ink-3 focus:border-ink"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              onKeyDown={(e) => e.key === "Enter" && next()}
-              placeholder={suggestName(sport)}
-            />
-            {!name.trim() && <span className="mt-1.5 block text-xs text-ink-3">Facultatif : laissé vide, il s&apos;appellera « {suggestName(sport)} ».</span>}
-          </label>
-          <div className="grid grid-cols-2 gap-3">
-            <Field label="Date">
-              <input type="date" className="input" value={date} min={todayLocal()} onChange={(e) => setDate(e.target.value || todayLocal())} />
-            </Field>
-            <Field label="Premier match à">
-              <input type="time" className="input" value={time} onChange={(e) => setTime(e.target.value)} />
-            </Field>
-          </div>
-        </div>
-      )}
-
-      {step === 1 && (
-        <div className="rise space-y-5">
-          <div className="card overflow-hidden focus-within:border-ink">
-            <textarea
-              className="block min-h-24 w-full resize-none bg-transparent px-4 pt-4 text-base outline-none placeholder:text-ink-3"
-              value={entry}
-              onChange={(e) => setEntry(e.target.value)}
-              onPaste={(e) => {
-                // Un collage de plusieurs lignes est ajouté directement.
-                const text = e.clipboardData.getData("text");
-                if (/[\r\n]/.test(text.trim()) && !entry.trim()) {
-                  e.preventDefault();
-                  const { added, duplicates, overflow } = parseTeams(text, teams);
-                  setTeams([...teams, ...added]);
-                  setNotice(
-                    [
-                      `${plural(added.length, "équipe")} ajoutée${added.length > 1 ? "s" : ""}`,
-                      duplicates.length ? `${plural(duplicates.length, "doublon")} ignoré${duplicates.length > 1 ? "s" : ""}` : "",
-                      overflow ? `${overflow} en trop (maximum ${MAX_TEAMS})` : "",
-                    ]
-                      .filter(Boolean)
-                      .join(" · "),
-                  );
-                }
-              }}
-              onKeyDown={(e) => {
-                if (e.key === "Enter" && !e.shiftKey) {
-                  e.preventDefault();
-                  if (entry.trim()) addEntry();
-                  else if (n >= MIN_TEAMS) next();
-                }
-              }}
-              placeholder={n ? "Équipe suivante…" : "Nom d'une équipe, puis Entrée\nou collez une liste entière (Excel, e-mail…)"}
-              aria-label="Ajouter des équipes"
-              autoFocus
-            />
-            <div className="flex items-center justify-between gap-3 px-4 pb-3">
-              <span className="text-xs text-ink-3">Entrée pour ajouter{n >= MIN_TEAMS ? " · Entrée sur une ligne vide pour continuer" : ""}</span>
-              <button className="btn-primary h-9 px-4 text-sm" disabled={!entry.trim() || n >= MAX_TEAMS} onClick={addEntry}>
-                <IconPlus className="size-4" /> Ajouter
-              </button>
-            </div>
-          </div>
-          {notice && <p className="rise text-sm text-ink-2">{notice}</p>}
-
-          {n === 0 && (
-            <div className="flex flex-wrap items-center gap-2 rounded-[10px] border border-dashed border-line-strong p-4">
-              <span className="mr-auto text-sm text-ink-2">Pas encore les noms ?</span>
-              <div className="w-36">
-                <Stepper value={placeholderCount} min={MIN_TEAMS} max={MAX_TEAMS} onChange={setPlaceholderCount} />
-              </div>
-              <button className="btn-outline h-11 text-sm" onClick={() => setTeams(placeholderTeams(placeholderCount, []))}>
-                <IconSparkle className="size-4" /> Créer {placeholderCount} équipes
-              </button>
-            </div>
-          )}
-
-          {n > 0 && (
-            <>
-              <div className="flex items-baseline justify-between">
-                <span className="text-sm">
-                  <span className="font-semibold tabular-nums">{n}</span> équipe{n > 1 ? "s" : ""}
-                  <span className="text-ink-3">{n < MIN_TEAMS ? ` · encore ${MIN_TEAMS - n} minimum` : ` · jusqu'à ${MAX_TEAMS}`}</span>
-                </span>
-                <button className="text-sm text-ink-3 hover:text-danger" onClick={() => removeTeams([], "Liste vidée.")}>
-                  Tout effacer
-                </button>
-              </div>
-              <ol className="card divide-y divide-line overflow-hidden">
-                {teams.map((t, i) => {
-                  const dup = t.trim() && teams.findIndex((x) => x.trim().toLowerCase() === t.trim().toLowerCase()) !== i;
-                  const bad = !t.trim() || dup;
-                  return (
-                    <li key={i} className={`group flex items-center gap-2 py-1 pr-1.5 pl-4 ${bad ? "bg-danger-soft" : ""}`}>
-                      <span className="w-6 text-sm font-medium text-ink-3 tabular-nums">{i + 1}</span>
-                      <input
-                        className="h-9 min-w-0 flex-1 bg-transparent outline-none"
-                        value={t}
-                        aria-label={`Équipe ${i + 1}`}
-                        aria-invalid={bad || undefined}
-                        onChange={(e) => setTeams(teams.map((x, k) => (k === i ? e.target.value : x)))}
-                      />
-                      {bad && <span className="text-xs font-medium text-danger">{dup ? "Déjà dans la liste" : "Nom vide"}</span>}
-                      <button className="btn-icon size-8" disabled={i === 0} onClick={() => setTeams(swap(teams, i, i - 1))} aria-label="Monter">
-                        <IconUp className="size-4" />
-                      </button>
-                      <button className="btn-icon size-8" disabled={i === n - 1} onClick={() => setTeams(swap(teams, i, i + 1))} aria-label="Descendre">
-                        <IconDown className="size-4" />
-                      </button>
-                      <button
-                        className="btn-icon size-8 hover:bg-danger-soft hover:text-danger"
-                        onClick={() => removeTeams(
-                          teams.filter((_, k) => k !== i),
-                          `« ${t || "Équipe sans nom"} » retirée.`,
-                        )}
-                        aria-label="Supprimer"
-                      >
-                        <IconX className="size-4" />
-                      </button>
-                    </li>
-                  );
-                })}
-              </ol>
-              <p className="text-xs text-ink-3">Vous voulez des têtes de série ? Placez les équipes les plus fortes en haut de la liste. Sinon, l&apos;ordre n&apos;a pas d&apos;importance.</p>
-            </>
-          )}
-        </div>
-      )}
-
-      {step === 2 && (
-        <div className="rise space-y-5">
-          <div className="grid gap-2 sm:grid-cols-3">
-            {FORMATS.map((f) => {
-              const on = format === f;
-              const p = previews[f];
-              return (
-                <button
-                  key={f}
-                  onClick={() => setFormatChoice(f)}
-                  className={`relative flex flex-col rounded-[10px] border p-4 text-left transition ${on ? "border-ink bg-surface ring-1 ring-ink" : "border-line bg-surface hover:border-line-strong"}`}
-                >
-                  <span className={`absolute top-4 right-4 grid size-5 place-items-center rounded-full ${on ? "bg-accent text-on-accent" : "border border-line-strong"}`}>
-                    {on && <IconCheck className="size-3" />}
-                  </span>
-                  {f === recommendFormat(n) && <span className="chip mb-2 self-start bg-accent-soft text-ink">Conseillé pour {n} équipes</span>}
-                  <div className="pr-6 font-semibold tracking-tight">{FORMAT_LABEL[f]}</div>
-                  <div className="mt-1 flex-1 text-[13px] text-ink-3">{FORMAT_HINT[f]}</div>
-                  <div className="mt-3 border-t border-line pt-3 text-sm">
-                    {p ? (
-                      <>
-                        <span className="font-semibold tabular-nums">{p.matches}</span> matchs · fin vers <span className="font-semibold tabular-nums">{hhmm(p.end)}</span>
-                        <span className="block text-xs text-ink-3">{fmtDuration((p.end.getTime() - startDate.getTime()) / 60000)} de jeu</span>
-                      </>
-                    ) : (
-                      <span className="text-ink-3">–</span>
-                    )}
-                  </div>
-                </button>
-              );
-            })}
-          </div>
-
-          {format !== "knockout" && (
-            <div className="card space-y-5 p-5">
-              {counts.length > 1 && (
-                <div>
-                  <span className="label">Nombre de poules</span>
-                  <div className="flex flex-wrap gap-1.5">
-                    {counts.map((k) => {
-                      const s = [...new Set(poolSizes(n, k))].sort().reverse();
-                      const on = k === poolCount;
-                      return (
-                        <button
-                          key={k}
-                          onClick={() => setPoolChoice(k)}
-                          className={`rounded-md px-3.5 py-2 text-left transition ${on ? "bg-ink text-canvas" : "border border-line bg-surface hover:border-line-strong"}`}
-                        >
-                          <span className="block text-sm font-semibold">{plural(k, "poule")}</span>
-                          <span className={`block text-xs ${on ? "opacity-60" : "text-ink-3"}`}>de {s.join(" ou ")} équipes</span>
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-              <div>
-                <div className="mb-3 flex flex-wrap items-center justify-between gap-2">
-                  <span className="label mb-0">{pools.length > 1 ? "Composition des poules" : "La poule"}</span>
-                  {pools.length > 1 && (
-                    <div className="flex items-center gap-1.5">
-                      <Choice
-                        options={[
-                          { value: "random", label: "Au hasard" },
-                          { value: "seeded", label: "Par niveau" },
-                          ...(distMode === "manual" ? [{ value: "manual" as const, label: "À la main" }] : []),
-                        ]}
-                        value={distMode}
-                        onChange={(mode) => {
-                          if (mode === "manual") return;
-                          setDistMode(mode);
-                          setPools(mode === "seeded" ? distributeSeeded(teams.map((_, i) => i), poolCount) : distributeRandom(n, poolCount));
-                        }}
-                      />
-                      <button
-                        className="btn-icon"
-                        title="Nouveau tirage au sort"
-                        aria-label="Nouveau tirage au sort"
-                        onClick={() => {
-                          setDistMode("random");
-                          setPools(distributeRandom(n, poolCount));
-                        }}
-                      >
-                        <IconDice />
-                      </button>
-                    </div>
-                  )}
-                </div>
-                <PoolBoard
-                  pools={pools}
-                  teams={teams}
-                  onChange={(p) => {
-                    setPools(p);
-                    setDistMode("manual");
-                  }}
+      <MotionIsland>
+        {/* Marge négative + rognage horizontal : le glissement ne crée jamais de défilement latéral. */}
+        <div className="relative -mx-3 overflow-x-clip px-3 py-1">
+          <AnimatePresence mode="popLayout" initial={false} custom={dir}>
+            <m.div key={step} custom={dir} variants={slide} initial="enter" animate="center" exit="exit" transition={{ duration: dur[3], ease: ease.outExpo }}>
+              {step === 0 && (
+                <WizardStepTournament
+                  sports={sports}
+                  sport={sport}
+                  sportId={sportId}
+                  pickSport={pickSport}
+                  name={name}
+                  setName={setName}
+                  date={date}
+                  setDate={setDate}
+                  time={time}
+                  setTime={setTime}
+                  next={next}
                 />
-                {pools.length > 1 && (
-                  <p className="mt-2 text-xs text-ink-3">
-                    {distMode === "seeded"
-                      ? "Les premières équipes de votre liste sont réparties dans des poules différentes. "
-                      : ""}
-                    Glissez une équipe vers une autre poule pour ajuster.
-                  </p>
-                )}
-              </div>
-            </div>
-          )}
+              )}
 
-          {format === "pools_knockout" && (
-            <div className="card space-y-4 p-5">
-              <span className="label mb-0">Qui passe en phase finale ?</span>
-              <div className="grid gap-1.5">
-                {qualOptions.map((o) => {
-                  const on = qual === o;
-                  return (
-                    <button
-                      key={`${o.qualifiers}-${o.bestExtra}`}
-                      onClick={() => setQualChoice({ q: o.qualifiers, extra: o.bestExtra })}
-                      className={`flex items-center gap-3 rounded-md border px-4 py-3 text-left transition ${on ? "border-ink ring-1 ring-ink" : "border-line hover:border-line-strong"}`}
-                    >
-                      <span className={`grid size-5 shrink-0 place-items-center rounded-full ${on ? "bg-accent text-on-accent" : "border border-line-strong"}`}>{on && <IconCheck className="size-3" />}</span>
-                      <span className="min-w-0 flex-1">
-                        <span className="block text-sm font-medium">{o.title}</span>
-                        <span className="block text-xs text-ink-3">{o.detail}</span>
-                      </span>
-                    </button>
-                  );
-                })}
-              </div>
-              <Switch label="Petite finale" hint="Un match pour la 3e place" checked={thirdPlace} onChange={setThirdPlace} />
-            </div>
-          )}
+              {step === 1 && (
+                <WizardStepTeams
+                  teams={teams}
+                  setTeams={setTeams}
+                  entry={entry}
+                  setEntry={setEntry}
+                  notice={notice}
+                  setNotice={setNotice}
+                  placeholderCount={placeholderCount}
+                  setPlaceholderCount={setPlaceholderCount}
+                  removeTeams={removeTeams}
+                  next={next}
+                />
+              )}
 
-          {format === "knockout" && (
-            <div className="card space-y-4 p-5">
-              <div className="flex flex-wrap items-center justify-between gap-2">
-                <span className="text-sm font-medium">Placement dans le tableau</span>
-                <div className="flex gap-1">
-                  <button className="btn-ghost h-9 px-3.5 text-sm" onClick={() => setKoOrder(teams.map((_, i) => i))}>
-                    Par niveau (ordre de la liste)
-                  </button>
-                  <button className="btn-ghost h-9 px-3.5 text-sm" onClick={() => setKoOrder(shuffle(teams.map((_, i) => i)))}>
-                    <IconDice className="size-4" /> Tirage
-                  </button>
-                </div>
-              </div>
-              <ol className="grid grid-cols-2 gap-1.5 text-sm sm:grid-cols-3">
-                {order.map((i, k) => (
-                  <li key={i} className="flex items-center gap-2 truncate rounded-md bg-surface-2 px-2.5 py-1.5">
-                    <span className="w-5 text-xs font-medium text-ink-3 tabular-nums">{k + 1}</span>
-                    <span className="truncate">{teams[i]}</span>
-                  </li>
-                ))}
-              </ol>
-              <Switch label="Petite finale" hint="Un match pour la 3e place" checked={thirdPlace} onChange={setThirdPlace} />
-            </div>
-          )}
+              {step === 2 && (
+                <WizardStepFormat
+                  teams={teams}
+                  format={format}
+                  setFormatChoice={setFormatChoice}
+                  previews={previews}
+                  startDate={startDate}
+                  counts={counts}
+                  poolCount={poolCount}
+                  setPoolChoice={setPoolChoice}
+                  pools={pools}
+                  setPools={setPools}
+                  distMode={distMode}
+                  setDistMode={setDistMode}
+                  qualOptions={qualOptions}
+                  qual={qual}
+                  setQualChoice={setQualChoice}
+                  thirdPlace={thirdPlace}
+                  setThirdPlace={setThirdPlace}
+                  order={order}
+                  setKoOrder={setKoOrder}
+                />
+              )}
+
+              {step === 3 && input && (
+                <WizardStepReview
+                  input={input}
+                  sport={sport}
+                  preview={preview}
+                  startDate={startDate}
+                  time={time}
+                  courts={courts}
+                  setCourts={setCourts}
+                  courtsLabel={courtsLabel}
+                  courtLabel={courtLabel}
+                  matchDuration={matchDuration}
+                  setMatchDuration={setMatchDuration}
+                  breakDuration={breakDuration}
+                  setBreakDuration={setBreakDuration}
+                  minRest={minRest}
+                  setMinRest={setMinRest}
+                  deadline={deadline}
+                  setDeadline={setDeadline}
+                  fitMsg={fitMsg}
+                  setFitMsg={setFitMsg}
+                  fit={fit}
+                  effectiveName={effectiveName}
+                  teams={teams}
+                  format={format}
+                  pools={pools}
+                  qual={qual}
+                  thirdPlace={thirdPlace}
+                  setStep={setStep}
+                  error={error}
+                />
+              )}
+            </m.div>
+          </AnimatePresence>
         </div>
-      )}
-
-      {step === 3 && input && (
-        <div className="rise space-y-5">
-          <Summary preview={preview} start={startDate} courts={courts} courtsLabel={courtsLabel} />
-
-          <div className="grid grid-cols-2 gap-3">
-            <Field label={cap(courtsLabel)} hint="Matchs joués en même temps">
-              <Stepper value={courts} min={1} max={40} onChange={setCourts} />
-            </Field>
-            <Field label="Durée d'un match" hint={`Conseillé en ${sport?.name.toLowerCase()} : ${sport?.rules.defaults.matchDuration} min`}>
-              <Stepper value={matchDuration} min={1} max={240} onChange={setMatchDuration} suffix="min" />
-            </Field>
-            <Field label="Pause entre deux matchs" hint={`Changement d'équipes sur un ${courtLabel}`}>
-              <Stepper value={breakDuration} min={0} max={120} onChange={setBreakDuration} suffix="min" />
-            </Field>
-            <Field label="Repos minimum" hint="Entre deux matchs d'une même équipe">
-              <Stepper value={minRest} min={0} max={240} onChange={setMinRest} suffix="min" />
-            </Field>
-          </div>
-
-          <div className="card space-y-3 p-4">
-            <div className="flex flex-wrap items-center gap-2">
-              <IconClock className="size-4 text-ink-3" />
-              <span className="mr-auto text-sm font-medium">Vous devez avoir fini à une heure précise ?</span>
-              <input type="time" className="input h-10 w-32" value={deadline} onChange={(e) => (setDeadline(e.target.value), setFitMsg(null))} aria-label="Heure de fin souhaitée" />
-              <button className="btn-outline h-10 text-sm" disabled={!deadline} onClick={fit}>
-                Ajuster les matchs
-              </button>
-            </div>
-            {fitMsg && <p className="text-sm text-ink-2">{fitMsg}</p>}
-          </div>
-
-          <div className="card divide-y divide-line text-sm">
-            <RecapRow label="Tournoi" onEdit={() => setStep(0)}>
-              <span className="font-medium">{effectiveName}</span>
-              <span className="block text-ink-3 first-letter:uppercase">
-                {sport?.name} · {startDate.toLocaleDateString("fr-FR", { dateStyle: "full" })} à {time}
-              </span>
-            </RecapRow>
-            <RecapRow label="Équipes" onEdit={() => setStep(1)}>
-              <span className="font-medium">{plural(n, "équipe")}</span>
-              <span className="block truncate text-ink-3">{teams.join(", ")}</span>
-            </RecapRow>
-            <RecapRow label="Format" onEdit={() => setStep(2)}>
-              <span className="font-medium">{FORMAT_LABEL[format]}</span>
-              <span className="block text-ink-3">
-                {format !== "knockout" && plural(pools.length, "poule")}
-                {format === "pools_knockout" && qual && ` · ${qual.detail}`}
-                {format !== "pools" && thirdPlace && " · petite finale"}
-              </span>
-            </RecapRow>
-          </div>
-          <p className="text-xs text-ink-3">Après la création, vous pourrez encore renommer les équipes, déplacer des matchs dans le planning et modifier les règles.</p>
-          <ErrorText>{error}</ErrorText>
-        </div>
-      )}
+      </MotionIsland>
 
       <div className="fixed inset-x-0 bottom-0 z-20 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
         <div className="mx-auto max-w-3xl space-y-2">
@@ -752,12 +493,12 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
             preview && (
               <p className="text-center text-xs text-ink-2">
                 <span className="rounded-full bg-surface/90 px-3 py-1.5 backdrop-blur">
-                  {plural(n, "équipe")} · {preview.matches} matchs · fin vers <span className="font-semibold text-ink">{hhmm(preview.end)}</span>
+                  {plural(n, "équipe")} · <AnimatedNumber value={preview.matches} /> matchs · fin vers <span className="font-semibold text-ink">{hhmm(preview.end)}</span>
                 </span>
               </p>
             )
           )}
-          <div className="flex gap-2 rounded-full border border-line bg-surface/90 p-1.5 shadow-[0_8px_30px_rgb(0_0_0/0.1)] backdrop-blur-xl">
+          <div className="glass flex gap-2 rounded-full border border-line p-1.5 shadow-elev-2">
             {step > 0 && (
               <button className="btn-quiet" onClick={() => setStep(step - 1)}>
                 <IconArrowLeft className="size-4" /> Retour
@@ -777,108 +518,4 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
       </div>
     </div>
   );
-}
-
-function RecapRow({ label, onEdit, children }: { label: string; onEdit: () => void; children: React.ReactNode }) {
-  return (
-    <div className="flex items-start gap-4 p-4">
-      <span className="eyebrow w-16 shrink-0 pt-0.5">{label}</span>
-      <div className="min-w-0 flex-1">{children}</div>
-      <button className="shrink-0 text-sm font-medium text-ink-2 underline-offset-4 hover:text-ink hover:underline" onClick={onEdit}>
-        Modifier
-      </button>
-    </div>
-  );
-}
-
-function Summary({ preview, start, courts, courtsLabel }: { preview: ReturnType<typeof previewEnd>; start: Date; courts: number; courtsLabel: string }) {
-  if (!preview) return null;
-  const minutes = (preview.end.getTime() - start.getTime()) / 60000;
-  const nextDay = preview.end.toDateString() !== start.toDateString();
-  return (
-    <div className="space-y-2">
-      <div className="grid grid-cols-3 gap-4 rounded-[10px] bg-ink p-5 text-canvas">
-        <Stat label="Matchs" value={`${preview.matches}`} />
-        <Stat label="Durée" value={fmtDuration(minutes)} sub={`sur ${courts} ${courtsLabel}`} />
-        <Stat label="Fin estimée" value={hhmm(preview.end)} accent />
-      </div>
-      {nextDay && <p className="rounded-md bg-warn-soft px-4 py-2.5 text-sm font-medium text-warn">Le tournoi finirait le lendemain : ajoutez des {courtsLabel}, raccourcissez les matchs ou fixez une heure de fin ci-dessous.</p>}
-    </div>
-  );
-}
-
-function Stat({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
-  return (
-    <div>
-      <div className="text-[11px] font-medium tracking-[0.08em] uppercase opacity-50">{label}</div>
-      <div className={`mt-0.5 text-2xl font-semibold tracking-tight tabular-nums ${accent ? "text-accent" : ""}`}>{value}</div>
-      {sub && <div className="text-xs opacity-50">{sub}</div>}
-    </div>
-  );
-}
-
-// ------------------------------------------------------------------ Glisser-déposer des poules
-
-function PoolBoard({ pools, teams, onChange }: { pools: number[][]; teams: string[]; onChange: (p: number[][]) => void }) {
-  const sensors = useSensors(useSensor(PointerSensor, { activationConstraint: { distance: 6 } }), useSensor(TouchSensor, { activationConstraint: { delay: 150, tolerance: 6 } }));
-  const onDragEnd = (e: DragEndEvent) => {
-    if (!e.over) return;
-    const team = Number(e.active.id);
-    const target = Number(String(e.over.id).replace("pool-", ""));
-    const from = pools.findIndex((p) => p.includes(team));
-    if (from === target || from < 0) return;
-    onChange(pools.map((p, i) => (i === from ? p.filter((x) => x !== team) : i === target ? [...p, team] : p)));
-  };
-  return (
-    <DndContext sensors={sensors} onDragEnd={onDragEnd}>
-      <div className="grid gap-2 sm:grid-cols-2 lg:grid-cols-3">
-        {pools.map((p, i) => (
-          <PoolDrop key={i} index={i} size={p.length} single={pools.length === 1}>
-            {p.map((t) => (
-              <TeamChip key={t} id={t} name={teams[t]} />
-            ))}
-          </PoolDrop>
-        ))}
-      </div>
-    </DndContext>
-  );
-}
-
-function PoolDrop({ index, size, single, children }: { index: number; size: number; single: boolean; children: React.ReactNode }) {
-  const { setNodeRef, isOver } = useDroppable({ id: `pool-${index}` });
-  const bad = !single && (size < POOL_MIN || size > POOL_MAX);
-  return (
-    <div ref={setNodeRef} className={`min-h-24 rounded-md p-2.5 transition ${isOver ? "bg-accent-soft ring-2 ring-accent" : "bg-surface-2"}`}>
-      <div className="mb-2 flex items-center justify-between px-1">
-        <span className="text-sm font-semibold">Poule {poolName(index)}</span>
-        <span className={`text-xs ${bad ? "font-medium text-warn" : "text-ink-3"}`}>{size} équipes</span>
-      </div>
-      <div className="flex flex-wrap gap-1.5">{children}</div>
-    </div>
-  );
-}
-
-function TeamChip({ id, name }: { id: number; name: string }) {
-  const { attributes, listeners, setNodeRef, transform, isDragging } = useDraggable({ id: String(id) });
-  return (
-    <div
-      ref={setNodeRef}
-      {...listeners}
-      {...attributes}
-      style={transform ? { transform: `translate(${transform.x}px, ${transform.y}px)` } : undefined}
-      className={`cursor-grab touch-none rounded-md border border-line bg-surface px-2.5 py-1.5 text-sm font-medium select-none ${
-        isDragging ? "relative z-50 cursor-grabbing border-ink shadow-xl" : "hover:border-line-strong"
-      }`}
-    >
-      {name}
-    </div>
-  );
-}
-
-const cap = (s: string) => s.charAt(0).toUpperCase() + s.slice(1);
-
-function swap<T>(arr: T[], i: number, j: number): T[] {
-  const a = [...arr];
-  [a[i], a[j]] = [a[j], a[i]];
-  return a;
 }

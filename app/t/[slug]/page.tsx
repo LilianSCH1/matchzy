@@ -91,7 +91,7 @@ function Hero({ v, org, now }: { v: View; org: boolean; now: number }) {
       </div>
       <div className="mx-auto max-w-5xl px-3 pt-2 pb-6 sm:px-5 sm:pb-8">
         <div className="flex h-12 items-center gap-1">
-          <Link href="/" className="btn-icon -ml-1" aria-label="Tous les tournois">
+          <Link href="/" data-vt className="btn-icon -ml-1" aria-label="Tous les tournois">
             <IconBack />
           </Link>
           <Link href="/" className="mr-auto hidden opacity-80 transition hover:opacity-100 sm:block" aria-label="Matchzy, accueil">
@@ -117,9 +117,9 @@ function Hero({ v, org, now }: { v: View; org: boolean; now: number }) {
         </div>
         <div className="rise mt-5 space-y-4 px-1">
           <div className="flex flex-wrap items-center gap-2">
-            <SportBadge name={t.sport_name} className="bg-black/40!" />
+            <SportBadge name={t.sport_name} vt={`sport-${t.slug}`} className="bg-black/40!" />
             {f.live > 0 ? (
-              <span className="chip bg-live text-white">
+              <span className="chip bg-live-solid text-white">
                 <span className="live-dot size-1.5 rounded-full bg-white" /> {f.live} match{f.live > 1 ? "s" : ""} en direct
               </span>
             ) : champ ? (
@@ -128,7 +128,9 @@ function Hero({ v, org, now }: { v: View; org: boolean; now: number }) {
               <span className="chip bg-accent text-on-accent">Coup d&apos;envoi à {fmtTime(t.start_at, t.timezone)}</span>
             ) : null}
           </div>
-          <h1 className="display max-w-3xl text-[clamp(3rem,9vw,6rem)] [text-shadow:0_4px_30px_rgb(0_0_0/0.5)]">{t.name}</h1>
+          <h1 className="display max-w-3xl text-[clamp(3rem,9vw,6rem)] [text-shadow:0_4px_30px_rgb(0_0_0/0.5)]" style={{ viewTransitionName: `name-${t.slug}` }}>
+            {t.name}
+          </h1>
           <p className="font-cond text-[15px] font-semibold tracking-[0.08em] text-ink-2 uppercase">
             {fmtDate(t.date)} · {v.b.teams.length} équipes · {v.b.courts.length} {v.b.courts.length > 1 ? t.rules.labels.courtPlural : t.rules.labels.court}
           </p>

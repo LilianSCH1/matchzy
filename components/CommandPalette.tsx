@@ -180,7 +180,7 @@ function PaletteDialog({ groups, onClose }: { groups: CommandGroup[]; onClose: (
         onClose();
       }}
       onClick={(e) => e.target === ref.current && onClose()}
-      className="pop mx-auto mt-[10vh] w-[calc(100%-1.5rem)] max-w-xl overflow-hidden rounded-[10px] border border-line bg-surface p-0 text-ink shadow-pop backdrop:bg-black/40 backdrop:backdrop-blur-sm"
+      className="dialog-in glass mx-auto mt-[10vh] w-[calc(100%-1.5rem)] max-w-xl overflow-hidden rounded-[10px] border border-line p-0 text-ink shadow-pop backdrop:bg-black/40 backdrop:backdrop-blur-sm"
       aria-label="Palette de commandes"
     >
       <div className="h-1 bg-accent" aria-hidden />

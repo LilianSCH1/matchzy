@@ -36,16 +36,18 @@ export function TournamentCard({
   const finished = total > 0 && done === total;
   const key = sportKey(sport);
   return (
+    // Pas d'overflow-hidden sur la carte : l'ombre d'élévation (lift) déborde ; le bandeau arrondit lui-même ses coins.
     <article
       data-sport={key}
-      className={`card group relative flex flex-col overflow-hidden transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-float ${live ? "border-live/40" : ""}`}
+      data-tilt
+      className={`card lift tilt group flex min-w-0 flex-col hover:border-line-strong ${live ? "border-live/40" : ""}`}
     >
-      <div className={`turf relative isolate overflow-hidden ${featured ? "h-32" : "h-24"} ${muted && !live ? "grayscale-[0.5]" : ""}`}>
+      <div className={`turf relative isolate overflow-hidden rounded-t-[9px] ${featured ? "h-32" : "h-24"} ${muted && !live ? "grayscale-[0.5]" : ""}`}>
         <CourtLines sport={key} className="absolute inset-0 -z-10 h-full w-full scale-110 p-2 text-white/35" />
         <div className="flex items-start justify-between gap-2 p-3">
-          <SportBadge name={sport} className="bg-black/45! text-white! backdrop-blur" />
+          <SportBadge name={sport} vt={`sport-${slug}`} className="bg-black/45! text-white! backdrop-blur" />
           {live ? (
-            <span className="chip bg-live text-white">
+            <span className="chip bg-live-solid text-white">
               <span className="live-dot size-1.5 rounded-full bg-white" /> {live} en cours
             </span>
           ) : finished ? (
@@ -61,9 +63,11 @@ export function TournamentCard({
       </div>
       <div className={`flex flex-1 flex-col gap-3 ${featured ? "p-5" : "p-4"}`}>
         <div className="min-w-0 flex-1">
-          <Link href={`/t/${slug}`} className="after:absolute after:inset-0">
+          <Link href={`/t/${slug}`} data-vt className="after:absolute after:inset-0">
             <h3 className={`display flex items-center gap-2 ${featured ? "text-[34px]" : "text-[26px]"} ${muted ? "text-ink-2" : ""}`}>
-              <span className="min-w-0 truncate leading-[0.95]">{name}</span>
+              <span className="min-w-0 truncate leading-[0.95]" style={{ viewTransitionName: `name-${slug}` }}>
+                {name}
+              </span>
               <IconArrowRight className="size-5 shrink-0 text-ink-3 transition group-hover:translate-x-1 group-hover:text-accent" />
             </h3>
           </Link>

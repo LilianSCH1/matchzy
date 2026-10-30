@@ -120,7 +120,7 @@ export function JoinForm({ tournament = "", autoFocus = false }: { tournament?: 
         />
       </div>
       <ErrorText>{state.error}</ErrorText>
-      <button className="btn-accent h-12 w-full" disabled={pending}>
+      <button data-magnet className="btn-accent h-12 w-full" disabled={pending}>
         {pending ? <Spinner /> : <IconTicket className="size-5" />}
         {pending ? "Vérification…" : "Entrer dans le stade"}
       </button>

@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SearchButton } from "./CommandPalette";
 import { IconBack } from "./Icons";
 import { CourtLines } from "./Stadium";
+import { SoundToggle } from "./SoundToggle";
 import { ThemeToggle } from "./ThemeToggle";
 
 /** Marque : un mini tableau d'affichage, lignes de terrain à la craie et ballon ambre au rond central. */
@@ -47,15 +48,15 @@ export function TopBar({
   back?: string;
   right?: React.ReactNode;
   brand?: boolean;
-  /** Recherche (⌘K) et thème à droite. */
+  /** Recherche (⌘K), son et thème à droite. */
   tools?: boolean;
   wide?: boolean;
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-xl">
+    <header className="topbar-elev sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-xl">
       <div className={`mx-auto flex h-14 items-center gap-2 px-3 sm:px-5 ${wide ? "max-w-7xl" : "max-w-5xl"}`}>
         {back && (
-          <Link href={back} className="btn-icon -ml-1" aria-label="Retour">
+          <Link href={back} data-vt className="btn-icon -ml-1" aria-label="Retour">
             <IconBack />
           </Link>
         )}
@@ -74,6 +75,8 @@ export function TopBar({
           {tools && (
             <>
               <SearchButton compact />
+              {/* L'accueil ne joue aucun son : sur un petit écran, sa place revient au logo et au bouton d'accès. */}
+              <SoundToggle className={brand ? "max-[399px]:hidden" : ""} />
               <ThemeToggle />
             </>
           )}
@@ -261,11 +264,25 @@ export function Ring({ value, size = 44, stroke = 5, className = "text-accent" }
 }
 
 /** Barre de progression en LED : une rangée de points qui s'allument. */
-export function LedBar({ value, total, cells = 24, tone = "led", className = "" }: { value: number; total: number; cells?: number; tone?: "led" | "ok"; className?: string }) {
+export function LedBar({
+  value,
+  total,
+  cells = 24,
+  tone = "led",
+  className = "",
+  label = "Matchs joués",
+}: {
+  value: number;
+  total: number;
+  cells?: number;
+  tone?: "led" | "ok";
+  className?: string;
+  label?: string;
+}) {
   const lit = total ? Math.round((cells * value) / total) : 0;
   const on = tone === "ok" ? "bg-ok shadow-[0_0_6px_var(--ok)]" : "bg-led shadow-[0_0_6px_rgb(255_176_0/0.7)]";
   return (
-    <div className={`flex gap-[3px] ${className}`} role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={value}>
+    <div className={`flex gap-[3px] ${className}`} role="progressbar" aria-label={label} aria-valuetext={`${value} sur ${total}`} aria-valuemin={0} aria-valuemax={total} aria-valuenow={value}>
       {Array.from({ length: cells }, (_, i) => (
         <span key={i} className={`h-2 flex-1 rounded-[2px] ${i < lit ? on : "bg-current opacity-15"}`} />
       ))}

@@ -88,10 +88,10 @@ export function SportGlyph({ sport, className }: { sport: SportKey } & P) {
 }
 
 /** Pastille du sport : pictogramme et nom, dans la couleur du sport. */
-export function SportBadge({ name, className = "" }: { name: string; className?: string }) {
+export function SportBadge({ name, className = "", vt }: { name: string; className?: string; /** Nom de transition de page (view-transition-name). */ vt?: string }) {
   const s = sportKey(name);
   return (
-    <span data-sport={s} className={`chip border border-sport/45 bg-sport/12 text-ink ${className}`}>
+    <span data-sport={s} className={`chip border border-sport/45 bg-sport/12 text-ink ${className}`} style={vt ? { viewTransitionName: vt } : undefined}>
       <SportGlyph sport={s} className="size-3.5 text-sport" />
       {name}
     </span>
@@ -191,21 +191,44 @@ export function CourtLines({ sport, className = "" }: { sport: SportKey } & P) {
   );
 }
 
+const ROLL = [" ", "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"];
+
 /**
  * Chiffres du tableau d'affichage. Les segments éteints (« 8 » fantômes) restent visibles derrière,
  * comme sur un vrai panneau. `digits` fixe la largeur pour aligner les scores.
+ * Chaque chiffre est une colonne « vide, 0 à 9 » qui roule jusqu'à sa valeur : quand le score change
+ * (saisie, ou rafraîchissement du direct), seul le chiffre modifié défile, en CSS, sans JavaScript.
  */
 export function Led({ value, digits = 2, className = "", color }: { value: string | number | null; digits?: number; className?: string; color?: string }) {
   const text = value === null || value === undefined ? "" : String(value);
   const width = Math.max(digits, text.length);
+  const padded = text.padStart(width, " ");
   return (
     <span className={`relative inline-block leading-none ${className}`} style={color ? ({ "--led": color } as React.CSSProperties) : undefined}>
       <span aria-hidden className="led whitespace-pre text-[color:var(--led-ghost)] [text-shadow:none]">
         {"8".repeat(width)}
       </span>
-      <span key={text} className="led led-flip absolute inset-0 whitespace-pre">
-        {text.padStart(width, " ")}
+      <span aria-hidden className="led absolute inset-0 flex whitespace-pre">
+        {padded.split("").map((c, i) => {
+          const d = ROLL.indexOf(c);
+          return d < 0 ? (
+            <span key={i}>{c}</span>
+          ) : (
+            <span key={i} className="led-cell">
+              <span className="led-roll" style={{ "--d": d } as React.CSSProperties}>
+                {ROLL.map((g) => (
+                  <span key={g}>{g}</span>
+                ))}
+              </span>
+            </span>
+          );
+        })}
       </span>
+      {/* Halo incandescent rejoué à chaque nouvelle valeur. */}
+      <span key={text} aria-hidden className="led led-flash absolute inset-0 whitespace-pre">
+        {padded}
+      </span>
+      <span className="sr-only">{text}</span>
     </span>
   );
 }
@@ -213,7 +236,7 @@ export function Led({ value, digits = 2, className = "", color }: { value: strin
 /** Bandeau défilant (résultats) façon panneau LED de bord de terrain. */
 export function Ticker({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`board flex h-9 items-center overflow-hidden ${className}`}>
+    <div className={`board ticker-pause flex h-9 items-center overflow-hidden ${className}`}>
       <span className="z-10 flex h-full shrink-0 items-center gap-2 bg-accent px-3 font-cond text-[13px] font-extrabold tracking-[0.14em] text-on-accent uppercase">
         <span className="live-dot size-1.5 rounded-full bg-current" />
         {label}

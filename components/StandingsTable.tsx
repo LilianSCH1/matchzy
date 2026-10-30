@@ -1,5 +1,15 @@
 import type { StandingRow } from "@/lib/standings";
 import type { SportRules } from "@/lib/types";
+import { RankCell } from "./RankCell";
+
+/** Ligne prête à afficher : le rang à part (il porte la flèche de l'écran géant), le reste déjà rendu. */
+export interface StandingsItem {
+  id: string;
+  rank: number;
+  qualified: boolean;
+  className: string;
+  cells: React.ReactNode;
+}
 
 export function StandingsTable({
   title,
@@ -7,12 +17,15 @@ export function StandingsTable({
   rules,
   qualified = 0,
   big = false,
+  body,
 }: {
   title: string;
   rows: StandingRow[];
   rules: SportRules;
   qualified?: number;
   big?: boolean;
+  /** Corps du tableau sur mesure (l'écran géant y anime les changements de place). Composants serveur uniquement. */
+  body?: (items: StandingsItem[]) => React.ReactNode;
 }) {
   const sets = rules.scoreType === "sets";
   const th = `px-1.5 py-2 text-center font-bold ${big ? "w-14" : "w-10"}`;
@@ -20,6 +33,40 @@ export function StandingsTable({
   const hide = big ? "hidden" : "hidden sm:table-cell";
   // En sets, la colonne +/− cède aussi sa place sur mobile.
   const diffCls = sets && !big ? "hidden sm:table-cell" : "";
+  const items: StandingsItem[] = rows.map((r) => {
+    const q = r.rank <= qualified && !r.withdrawn;
+    return {
+      id: r.teamId,
+      rank: r.rank,
+      qualified: q,
+      // Dernier qualifié : la ligne de qualification est tracée sous lui.
+      className: `relative ${r.withdrawn ? "text-ink-3" : ""} ${q ? "bg-ok-soft/40" : ""} ${q && r.rank === qualified && rows.length > qualified ? "qual-cut" : ""}`,
+      cells: (
+        <>
+          <td className="max-w-0 truncate pr-2 font-semibold">
+            <span className={r.withdrawn ? "line-through" : ""}>{r.name}</span>
+            {r.byLot && r.played > 0 && (
+              <span className="ml-1 text-ink-3" title="Départagé par tirage au sort">
+                🎲
+              </span>
+            )}
+            {r.withdrawn && <span className="ml-1.5 text-xs font-normal">abandon</span>}
+          </td>
+          <td className="px-1.5 text-center text-ink-2 tabular-nums">{r.played}</td>
+          <td className={`px-1.5 text-center text-ink-2 tabular-nums ${hide}`}>{r.won}</td>
+          {rules.allowDraw && <td className={`px-1.5 text-center text-ink-2 tabular-nums ${hide}`}>{r.drawn}</td>}
+          <td className={`px-1.5 text-center text-ink-2 tabular-nums ${hide}`}>{r.lost}</td>
+          {sets && (
+            <td className="px-1.5 text-center text-ink-2 tabular-nums">
+              {r.setsWon}-{r.setsLost}
+            </td>
+          )}
+          <td className={`px-1.5 text-center text-ink-2 tabular-nums ${diffCls}`}>{r.diff > 0 ? `+${r.diff}` : r.diff}</td>
+          <td className={`px-1.5 pr-4 text-center font-cond font-extrabold tabular-nums ${big ? "text-2xl" : "text-lg"}`}>{r.points}</td>
+        </>
+      ),
+    };
+  });
   return (
     <div className="card overflow-hidden">
       <div className="board flex items-center justify-between px-4 py-2.5">
@@ -62,45 +109,18 @@ export function StandingsTable({
             </th>
           </tr>
         </thead>
-        <tbody className="divide-y divide-line">
-          {rows.map((r) => {
-            const q = r.rank <= qualified && !r.withdrawn;
-            return (
-              <tr key={r.teamId} className={`relative ${r.withdrawn ? "text-ink-3" : ""} ${q ? "bg-ok-soft/40" : ""}`}>
-                <td className={`relative pl-4 ${big ? "py-2.5" : "py-2"}`}>
-                  {q && <span className="absolute inset-y-1 left-0 w-1 rounded-r-full bg-ok" aria-hidden />}
-                  <span
-                    className={`inline-flex items-center justify-center rounded-[4px] font-cond font-extrabold tabular-nums ${big ? "size-8 text-lg" : "size-6 text-sm"} ${
-                      q ? "bg-ok text-on-ok" : "text-ink-3"
-                    }`}
-                  >
-                    {r.rank}
-                  </span>
-                </td>
-                <td className="max-w-0 truncate pr-2 font-semibold">
-                  <span className={r.withdrawn ? "line-through" : ""}>{r.name}</span>
-                  {r.byLot && r.played > 0 && (
-                    <span className="ml-1 text-ink-3" title="Départagé par tirage au sort">
-                      🎲
-                    </span>
-                  )}
-                  {r.withdrawn && <span className="ml-1.5 text-xs font-normal">abandon</span>}
-                </td>
-                <td className="px-1.5 text-center text-ink-2 tabular-nums">{r.played}</td>
-                <td className={`px-1.5 text-center text-ink-2 tabular-nums ${hide}`}>{r.won}</td>
-                {rules.allowDraw && <td className={`px-1.5 text-center text-ink-2 tabular-nums ${hide}`}>{r.drawn}</td>}
-                <td className={`px-1.5 text-center text-ink-2 tabular-nums ${hide}`}>{r.lost}</td>
-                {sets && (
-                  <td className="px-1.5 text-center text-ink-2 tabular-nums">
-                    {r.setsWon}-{r.setsLost}
-                  </td>
-                )}
-                <td className={`px-1.5 text-center text-ink-2 tabular-nums ${diffCls}`}>{r.diff > 0 ? `+${r.diff}` : r.diff}</td>
-                <td className={`px-1.5 pr-4 text-center font-cond font-extrabold tabular-nums ${big ? "text-2xl" : "text-lg"}`}>{r.points}</td>
+        {body ? (
+          body(items)
+        ) : (
+          <tbody className="divide-y divide-line">
+            {items.map((r) => (
+              <tr key={r.id} className={r.className}>
+                <RankCell rank={r.rank} qualified={r.qualified} big={false} />
+                {r.cells}
               </tr>
-            );
-          })}
-        </tbody>
+            ))}
+          </tbody>
+        )}
       </table>
     </div>
   );

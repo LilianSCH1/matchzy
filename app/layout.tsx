@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Barlow, Barlow_Condensed, Big_Shoulders, Doto, Permanent_Marker } from "next/font/google";
 import { CommandPalette } from "@/components/CommandPalette";
 import { Toaster } from "@/components/feedback";
+import { ViewTransitions } from "@/components/stage/ViewTransitions";
 import { THEME_SCRIPT } from "@/components/ThemeToggle";
 import { WebVitals } from "@/components/WebVitals";
 import "./globals.css";
@@ -10,9 +11,11 @@ import "./globals.css";
 // Doto (matrice de points) pour le tableau d'affichage, Permanent Marker pour les annotations au feutre.
 const sans = Barlow({ subsets: ["latin"], weight: ["400", "500", "600", "700"], variable: "--font-barlow", display: "swap" });
 const cond = Barlow_Condensed({ subsets: ["latin"], weight: ["500", "600", "700", "800"], variable: "--font-barlow-cond", display: "swap" });
-const shoulders = Big_Shoulders({ subsets: ["latin"], weight: ["700", "800", "900"], variable: "--font-shoulders", display: "swap" });
-const doto = Doto({ subsets: ["latin"], weight: ["700", "800", "900"], variable: "--font-doto", display: "swap" });
-const hand = Permanent_Marker({ subsets: ["latin"], weight: "400", variable: "--font-pm", display: "swap" });
+// Seules les graisses réellement utilisées sont chargées (affiches en 900, LED en 800).
+// Doto et Permanent Marker ne sont pas préchargées : elles ne portent pas le texte principal du premier écran.
+const shoulders = Big_Shoulders({ subsets: ["latin"], weight: "900", variable: "--font-shoulders", display: "swap" });
+const doto = Doto({ subsets: ["latin"], weight: "800", variable: "--font-doto", display: "swap", preload: false });
+const hand = Permanent_Marker({ subsets: ["latin"], weight: "400", variable: "--font-pm", display: "swap", preload: false });
 
 export const metadata: Metadata = {
   title: "Matchzy — tournoi en direct",
@@ -58,6 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <CommandPalette />
         <Toaster />
+        <ViewTransitions />
         {process.env.NODE_ENV === "development" && <WebVitals />}
       </body>
     </html>

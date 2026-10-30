@@ -136,7 +136,7 @@ function ConfirmDialog({ title, body, confirmLabel = "Confirmer", tone = "defaul
         if (!pending) onClose(false);
       }}
       onClick={(e) => e.target === ref.current && !pending && onClose(false)}
-      className="pop m-auto w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-[10px] border border-line bg-surface p-0 text-ink shadow-pop backdrop:bg-black/60 backdrop:backdrop-blur-sm"
+      className="dialog-in m-auto w-[calc(100%-2rem)] max-w-md overflow-hidden rounded-[10px] border border-line bg-surface p-0 text-ink shadow-pop backdrop:bg-black/60 backdrop:backdrop-blur-sm"
     >
       <form
         method="dialog"
