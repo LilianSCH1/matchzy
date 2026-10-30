@@ -498,7 +498,7 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
               </p>
             )
           )}
-          <div className="flex gap-2 rounded-full border border-line bg-surface/90 p-1.5 shadow-[0_8px_30px_rgb(0_0_0/0.1)] backdrop-blur-xl">
+          <div className="glass flex gap-2 rounded-full border border-line p-1.5 shadow-elev-2">
             {step > 0 && (
               <button className="btn-quiet" onClick={() => setStep(step - 1)}>
                 <IconArrowLeft className="size-4" /> Retour

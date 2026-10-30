@@ -88,10 +88,10 @@ export function SportGlyph({ sport, className }: { sport: SportKey } & P) {
 }
 
 /** Pastille du sport : pictogramme et nom, dans la couleur du sport. */
-export function SportBadge({ name, className = "" }: { name: string; className?: string }) {
+export function SportBadge({ name, className = "", vt }: { name: string; className?: string; /** Nom de transition de page (view-transition-name). */ vt?: string }) {
   const s = sportKey(name);
   return (
-    <span data-sport={s} className={`chip border border-sport/45 bg-sport/12 text-ink ${className}`}>
+    <span data-sport={s} className={`chip border border-sport/45 bg-sport/12 text-ink ${className}`} style={vt ? { viewTransitionName: vt } : undefined}>
       <SportGlyph sport={s} className="size-3.5 text-sport" />
       {name}
     </span>

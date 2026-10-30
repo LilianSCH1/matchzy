@@ -19,6 +19,10 @@ import { LiveBadge } from "./MatchRow";
 import { Led } from "./Stadium";
 import { ErrorText } from "./ui";
 
+type Haptic = "tick" | "success" | "error";
+/** Retour haptique (et son, s'il est activé) : le module n'est chargé qu'au premier appui. */
+const haptic = (kind: Haptic) => import("@/lib/client/fx").then(({ fx }) => fx[kind]());
+
 interface Props {
   match: Match;
   rules: SportRules;
@@ -51,7 +55,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
     shootout: m.phase === "knockout" && home === away && !isSets ? shootout : null,
   });
 
-  const run = (fn: () => Promise<ActionResult>, after?: () => void, success?: string) =>
+  const run = (fn: () => Promise<ActionResult>, after?: () => void, success?: string, feel?: Haptic) =>
     start(async () => {
       let r: ActionResult;
       try {
@@ -60,9 +64,12 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
         // Réseau coupé : l'action n'a pas abouti, l'utilisateur peut réessayer sans rien perdre.
         r = { ok: false, error: "Connexion impossible : vérifiez le réseau puis réessayez." };
       }
-      if (!r.ok) setError(r.error);
-      else {
+      if (!r.ok) {
+        setError(r.error);
+        haptic("error");
+      } else {
         setError(null);
+        if (feel) haptic(feel);
         if (success) toast(success);
         after?.();
         router.refresh();
@@ -79,7 +86,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
       confirmLabel: "Déclarer le forfait",
       tone: "danger",
     });
-    if (ok) run(() => forfeitAction(m.id, side), () => setShowForfeit(false), "Forfait enregistré.");
+    if (ok) run(() => forfeitAction(m.id, side), () => setShowForfeit(false), "Forfait enregistré.", "error");
   };
 
   // Synchronisation du score en direct (match en cours uniquement)
@@ -204,6 +211,8 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
   const canDropSet = sets.length > 1 && active === sets.length - 1;
 
   const bump = (side: Side, delta: number) => {
+    // Un point marqué se sent ; un set qui se gagne sur ce point, davantage.
+    if (delta > 0) haptic(isSets && !setDone && setWinner({ ...cur, [side]: cur[side] + delta }, active, rules) ? "success" : "tick");
     if (isSets) {
       setSets((prev) => prev.map((s, i) => (i === active ? { ...s, [side]: Math.max(0, s[side] + delta) } : s)));
     } else if (side === "home") setHome((x) => Math.max(0, x + delta));
@@ -360,7 +369,7 @@ export function ScoreScreen({ match: m, rules, homeName, awayName, isOrganizer, 
               m.status === "finished"
                 ? { title: "Enregistrer la correction ?", body: `Nouveau score : ${homeName} ${scoreLine()} ${awayName}. Les classements seront recalculés.`, confirmLabel: "Enregistrer" }
                 : { title: "Terminer le match ?", body: `Score final : ${homeName} ${scoreLine()} ${awayName}.`, confirmLabel: "Terminer le match" },
-            )) && run(() => finishMatchAction(m.id, payload()), () => setEditing(false), m.status === "finished" ? "Correction enregistrée." : "Match terminé, résultat enregistré.")
+            )) && run(() => finishMatchAction(m.id, payload()), () => setEditing(false), m.status === "finished" ? "Correction enregistrée." : "Match terminé, résultat enregistré.", "success")
           }
         >
           {m.status === "finished" ? (

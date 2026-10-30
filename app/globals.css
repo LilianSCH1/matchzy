@@ -951,6 +951,70 @@ body::after {
   cursor: none !important;
 }
 
+/* Boîtes de dialogue et palette : entrée en CSS (@starting-style), fond assombri en fondu. */
+.dialog-in {
+  transition:
+    opacity var(--dur-2) var(--ease-out-expo),
+    translate var(--dur-3) var(--ease-out-expo),
+    scale var(--dur-3) var(--ease-out-expo),
+    overlay var(--dur-2) allow-discrete,
+    display var(--dur-2) allow-discrete;
+}
+.dialog-in::backdrop {
+  transition:
+    opacity var(--dur-3) var(--ease-out-expo),
+    overlay var(--dur-3) allow-discrete,
+    display var(--dur-3) allow-discrete;
+}
+@starting-style {
+  .dialog-in[open] {
+    opacity: 0;
+    translate: 0 10px;
+    scale: 0.98;
+  }
+  .dialog-in[open]::backdrop {
+    opacity: 0;
+  }
+}
+
+/* Barre du haut : en verre et surélevée dès que la page défile (animation liée au défilement, sans JavaScript). */
+@keyframes topbar-elev {
+  to {
+    background-color: color-mix(in oklab, var(--surface) var(--glass-alpha), transparent);
+    box-shadow: var(--elev-2);
+  }
+}
+@supports (animation-timeline: scroll()) {
+  .topbar-elev {
+    animation: topbar-elev linear both;
+    animation-timeline: scroll(root block);
+    animation-range: 0 80px;
+  }
+}
+
+/* Transitions de page (View Transitions) : fondu court ; le nom du tournoi et la pastille du sport se déplacent. */
+::view-transition-group(*) {
+  animation-duration: var(--dur-3);
+  animation-timing-function: var(--ease-out-expo);
+}
+::view-transition-old(root) {
+  animation: vt-out var(--dur-2) ease-out both;
+}
+::view-transition-new(root) {
+  animation: vt-in var(--dur-3) var(--ease-out-expo) both;
+}
+@keyframes vt-out {
+  to {
+    opacity: 0;
+  }
+}
+@keyframes vt-in {
+  from {
+    opacity: 0;
+    translate: 0 6px;
+  }
+}
+
 /* Carton brandi (notifications). */
 @keyframes card-show {
   0% {
@@ -1001,6 +1065,15 @@ body::after {
   .drag-lift {
     rotate: none;
     scale: none;
+  }
+  .dialog-in,
+  .dialog-in::backdrop {
+    transition: none;
+  }
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation: none !important;
   }
   .led-roll {
     transition: none;

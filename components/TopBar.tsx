@@ -53,10 +53,10 @@ export function TopBar({
   wide?: boolean;
 }) {
   return (
-    <header className="sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-xl">
+    <header className="topbar-elev sticky top-0 z-30 border-b border-line bg-canvas/85 backdrop-blur-xl">
       <div className={`mx-auto flex h-14 items-center gap-2 px-3 sm:px-5 ${wide ? "max-w-7xl" : "max-w-5xl"}`}>
         {back && (
-          <Link href={back} className="btn-icon -ml-1" aria-label="Retour">
+          <Link href={back} data-vt className="btn-icon -ml-1" aria-label="Retour">
             <IconBack />
           </Link>
         )}

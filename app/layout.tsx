@@ -2,6 +2,7 @@ import type { Metadata, Viewport } from "next";
 import { Barlow, Barlow_Condensed, Big_Shoulders, Doto, Permanent_Marker } from "next/font/google";
 import { CommandPalette } from "@/components/CommandPalette";
 import { Toaster } from "@/components/feedback";
+import { ViewTransitions } from "@/components/stage/ViewTransitions";
 import { THEME_SCRIPT } from "@/components/ThemeToggle";
 import { WebVitals } from "@/components/WebVitals";
 import "./globals.css";
@@ -60,6 +61,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <CommandPalette />
         <Toaster />
+        <ViewTransitions />
         {process.env.NODE_ENV === "development" && <WebVitals />}
       </body>
     </html>
