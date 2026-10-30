@@ -2,6 +2,7 @@ import Link from "next/link";
 import { SearchButton } from "./CommandPalette";
 import { IconBack } from "./Icons";
 import { CourtLines } from "./Stadium";
+import { SoundToggle } from "./SoundToggle";
 import { ThemeToggle } from "./ThemeToggle";
 
 /** Marque : un mini tableau d'affichage, lignes de terrain à la craie et ballon ambre au rond central. */
@@ -47,7 +48,7 @@ export function TopBar({
   back?: string;
   right?: React.ReactNode;
   brand?: boolean;
-  /** Recherche (⌘K) et thème à droite. */
+  /** Recherche (⌘K), son et thème à droite. */
   tools?: boolean;
   wide?: boolean;
 }) {
@@ -74,6 +75,7 @@ export function TopBar({
           {tools && (
             <>
               <SearchButton compact />
+              <SoundToggle />
               <ThemeToggle />
             </>
           )}
