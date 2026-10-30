@@ -14,6 +14,9 @@ const nextConfig: NextConfig = {
   // Serveur autonome (server.js + dépendances utiles) : compilé hors du VPS, qui n'a pas la mémoire pour un build.
   output: "standalone",
   poweredByHeader: false,
+  // Chaque déploiement ajoute « ?dpl=<commit> » aux fichiers de /_next/static : une réponse mise en cache
+  // par Cloudflare pour une version (une 502 pendant un redémarrage, par exemple) ne sert plus à la suivante.
+  deploymentId: process.env.GITHUB_SHA?.slice(0, 12),
   async headers() {
     return [{ source: "/:path*", headers: securityHeaders }];
   },
