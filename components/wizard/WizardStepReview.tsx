@@ -1,11 +1,15 @@
+import type { TournamentInput } from "@/lib/build";
 import type { Format, Sport } from "@/lib/types";
 import { fmtDuration, FORMAT_LABEL } from "@/lib/view";
 import type { previewEnd, QualifierOption } from "@/lib/wizard";
 import { IconClock } from "../Icons";
 import { ErrorText, Field, Stepper } from "../ui";
+import { AnimatedNumber } from "./AnimatedNumber";
+import { ScheduleFrieze } from "./ScheduleFrieze";
 import { cap, hhmm, plural } from "./shared";
 
 interface Props {
+  input: TournamentInput;
   sport: Sport | undefined;
   preview: ReturnType<typeof previewEnd>;
   startDate: Date;
@@ -37,12 +41,13 @@ interface Props {
 
 /** Étape 4 : rythme des matchs, heure de fin visée et récapitulatif avant la création. */
 export function WizardStepReview(props: Props) {
-  const { sport, preview, startDate, time, courts, setCourts, courtsLabel, courtLabel, matchDuration, setMatchDuration, breakDuration, setBreakDuration } = props;
+  const { input, sport, preview, startDate, time, courts, setCourts, courtsLabel, courtLabel, matchDuration, setMatchDuration, breakDuration, setBreakDuration } = props;
   const { minRest, setMinRest, deadline, setDeadline, fitMsg, setFitMsg, fit, effectiveName, teams, format, pools, qual, thirdPlace, setStep, error } = props;
   const n = teams.length;
   return (
-    <div className="rise space-y-5">
+    <div className="space-y-5">
       <Summary preview={preview} start={startDate} courts={courts} courtsLabel={courtsLabel} />
+      <ScheduleFrieze input={input} courtsLabel={courtsLabel} />
 
       <div className="grid grid-cols-2 gap-3">
         <Field label={cap(courtsLabel)} hint="Matchs joués en même temps">
@@ -116,7 +121,7 @@ function Summary({ preview, start, courts, courtsLabel }: { preview: ReturnType<
   return (
     <div className="space-y-2">
       <div className="grid grid-cols-3 gap-4 rounded-[10px] bg-ink p-5 text-canvas">
-        <Stat label="Matchs" value={`${preview.matches}`} />
+        <Stat label="Matchs" value={<AnimatedNumber value={preview.matches} />} />
         <Stat label="Durée" value={fmtDuration(minutes)} sub={`sur ${courts} ${courtsLabel}`} />
         <Stat label="Fin estimée" value={hhmm(preview.end)} accent />
       </div>
@@ -125,7 +130,7 @@ function Summary({ preview, start, courts, courtsLabel }: { preview: ReturnType<
   );
 }
 
-function Stat({ label, value, sub, accent }: { label: string; value: string; sub?: string; accent?: boolean }) {
+function Stat({ label, value, sub, accent }: { label: string; value: React.ReactNode; sub?: string; accent?: boolean }) {
   return (
     <div>
       <div className="text-[11px] font-medium tracking-[0.08em] uppercase opacity-50">{label}</div>

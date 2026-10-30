@@ -4,6 +4,7 @@ import { fmtDuration, FORMAT_LABEL } from "@/lib/view";
 import { recommendFormat, type previewEnd, type QualifierOption } from "@/lib/wizard";
 import { IconCheck, IconDice } from "../Icons";
 import { Choice, Switch } from "../ui";
+import { AnimatedNumber } from "./AnimatedNumber";
 import { PoolBoard } from "./PoolBoard";
 import { FORMAT_HINT, FORMATS, hhmm, plural } from "./shared";
 
@@ -37,7 +38,7 @@ export function WizardStepFormat(props: Props) {
   const { qualOptions, qual, setQualChoice, thirdPlace, setThirdPlace, order, setKoOrder } = props;
   const n = teams.length;
   return (
-    <div className="rise space-y-5">
+    <div className="space-y-5">
       <div className="grid gap-2 sm:grid-cols-3">
         {FORMATS.map((f) => {
           const on = format === f;
@@ -57,7 +58,9 @@ export function WizardStepFormat(props: Props) {
               <div className="mt-3 border-t border-line pt-3 text-sm">
                 {p ? (
                   <>
-                    <span className="font-semibold tabular-nums">{p.matches}</span> matchs · fin vers <span className="font-semibold tabular-nums">{hhmm(p.end)}</span>
+                    <span className="font-semibold tabular-nums">
+                          <AnimatedNumber value={p.matches} />
+                        </span> matchs · fin vers <span className="font-semibold tabular-nums">{hhmm(p.end)}</span>
                     <span className="block text-xs text-ink-3">{fmtDuration((p.end.getTime() - startDate.getTime()) / 60000)} de jeu</span>
                   </>
                 ) : (

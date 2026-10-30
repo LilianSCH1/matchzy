@@ -20,7 +20,7 @@ interface Props {
 /** Étape 1 : sport, nom, date et heure du premier match. */
 export function WizardStepTournament({ sports, sport, sportId, pickSport, name, setName, date, setDate, time, setTime, next }: Props) {
   return (
-    <div className="rise space-y-7">
+    <div className="space-y-7">
       <div>
         <span className="label">Sport</span>
         <div className="flex flex-wrap gap-1.5">

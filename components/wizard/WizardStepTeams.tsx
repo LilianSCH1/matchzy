@@ -32,7 +32,7 @@ export function WizardStepTeams({ teams, setTeams, entry, setEntry, notice, setN
   };
 
   return (
-    <div className="rise space-y-5">
+    <div className="space-y-5">
       <div className="card overflow-hidden focus-within:border-ink">
         <textarea
           className="block min-h-24 w-full resize-none bg-transparent px-4 pt-4 text-base outline-none placeholder:text-ink-3"

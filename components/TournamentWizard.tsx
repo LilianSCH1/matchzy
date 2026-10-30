@@ -1,14 +1,21 @@
 "use client";
 
+import { AnimatePresence } from "motion/react";
+import * as m from "motion/react-m";
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo, useRef, useState, useTransition } from "react";
 import { createTournamentAction } from "@/app/actions";
 import { validateInput, type TournamentInput } from "@/lib/build";
+import { dur, ease, prefersReducedMotion } from "@/lib/motion";
 import { distributeRandom, distributeSeeded, suggestPoolCount, validPoolCounts } from "@/lib/pools";
 import type { Format, Sport } from "@/lib/types";
 import { defaultQualifierOption, fitMatchDuration, MIN_TEAMS, previewEnd, qualifierOptions, recommendFormat, type QualifierOption } from "@/lib/wizard";
 import { IconArrowLeft, IconArrowRight } from "./Icons";
 import { toast, useConfirm } from "./feedback";
+import { MotionIsland } from "./motion/MotionIsland";
+import { sportKey } from "./Stadium";
+import { AnimatedNumber } from "./wizard/AnimatedNumber";
+import { Forging } from "./wizard/Forging";
 import { FORMATS, hhmm, plural, suggestName, todayLocal } from "./wizard/shared";
 import { WizardStepFormat } from "./wizard/WizardStepFormat";
 import { WizardStepReview } from "./wizard/WizardStepReview";
@@ -24,6 +31,15 @@ const STEP_HINTS = [
   "Réglez le rythme et vérifiez l'heure de fin, puis créez le tournoi.",
 ];
 const DRAFT_KEY = "matchzy:nouveau-tournoi";
+/** Durée minimale du moment de génération : le temps que les chiffres roulent, jamais plus que la création elle-même au-delà. */
+const FORGE_MS = 1200;
+
+// Changement d'étape : l'étape suivante arrive par la droite, la précédente par la gauche.
+const slide = {
+  enter: (dir: number) => ({ opacity: 0, x: dir * 24 }),
+  center: { opacity: 1, x: 0 },
+  exit: (dir: number) => ({ opacity: 0, x: dir * -24 }),
+};
 
 interface Draft {
   step: number;
@@ -54,6 +70,14 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
   const loaded = useRef(false);
 
   const [step, setStep] = useState(0);
+  // Sens du dernier changement d'étape, déduit pendant le rendu.
+  const [shownStep, setShownStep] = useState(0);
+  const [dir, setDir] = useState(1);
+  if (shownStep !== step) {
+    setDir(step > shownStep ? 1 : -1);
+    setShownStep(step);
+  }
+  const [forging, setForging] = useState(0);
   const [name, setName] = useState("");
   const [date, setDate] = useState(todayLocal());
   const [time, setTime] = useState("09:00");
@@ -269,19 +293,29 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
     }
   };
 
-  const submit = () =>
+  const submit = () => {
+    if (!input) return;
+    const hold = prefersReducedMotion() ? 0 : FORGE_MS;
+    // Hors de la transition : sinon React n'afficherait le moment de génération qu'une fois la création finie.
+    setError(null);
+    setForging(hold || 1);
     start(async () => {
-      if (!input) return;
-      const r = await createTournamentAction(input);
-      if (r.error) setError(r.error);
-      else {
+      const [r] = await Promise.all([createTournamentAction(input), new Promise((ok) => setTimeout(ok, hold))]);
+      const { fx } = await import("@/lib/client/fx");
+      if (r.error) {
+        setForging(0);
+        setError(r.error);
+        fx.error();
+      } else {
         try {
           localStorage.removeItem(DRAFT_KEY);
         } catch {}
+        fx.success();
         toast(`« ${effectiveName} » est créé. Voici votre tableau de bord.`);
         router.push(`/t/${r.slug}/admin`);
       }
     });
+  };
 
   const next = () => {
     if (blocker) return;
@@ -291,8 +325,15 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
 
   // ---------------------------------------------------------------- Rendu
   return (
-    <div className="space-y-8 pb-40">
+    <div data-sport={sportKey(sport?.name)} className="space-y-8 pb-40">
       {dialog}
+      {/* Charge la police du panneau LED dès la dernière étape : le moment de génération s'affiche sans police de secours. */}
+      {step === 3 && (
+        <span aria-hidden className="led pointer-events-none fixed opacity-0">
+          0
+        </span>
+      )}
+      {forging > 0 && preview && <Forging name={effectiveName} matches={preview.matches} courts={courts} courtsLabel={courtsLabel} hold={forging} />}
       {restored && (
         <div className="rise flex items-center justify-between gap-3 rounded-[10px] bg-accent-soft px-4 py-3 text-sm">
           <span>Nous avons repris votre brouillon là où vous l&apos;aviez laissé.</span>
@@ -314,7 +355,13 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
                 aria-current={i === step ? "step" : undefined}
                 className={`group text-left ${can ? "cursor-pointer" : "cursor-default"}`}
               >
-                <span className={`block h-1 rounded-full transition-colors ${i <= step ? "bg-ink" : "bg-line"} ${can ? "group-hover:opacity-70" : ""}`} />
+                {/* Trait de craie qui se trace jusqu'à l'étape en cours (et s'efface au retour). */}
+                <span className="relative block h-1 overflow-hidden rounded-full bg-line">
+                  <span
+                    className={`absolute inset-0 origin-left rounded-full bg-ink transition-[scale,opacity] duration-(--dur-4) ease-(--ease-out-expo) motion-reduce:transition-none ${i <= step ? "scale-x-100" : "scale-x-0"} ${can ? "group-hover:opacity-70" : ""}`}
+                    style={{ transitionDelay: `${i <= step ? Math.max(0, i - 1) * 60 : 0}ms` }}
+                  />
+                </span>
                 <span className={`mt-1.5 block truncate text-xs ${i === step ? "font-semibold text-ink" : "text-ink-3"} ${can ? "group-hover:text-ink" : ""}`}>{s}</span>
               </button>
             );
@@ -326,92 +373,102 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
         </div>
       </div>
 
-      {step === 0 && (
-        <WizardStepTournament
-          sports={sports}
-          sport={sport}
-          sportId={sportId}
-          pickSport={pickSport}
-          name={name}
-          setName={setName}
-          date={date}
-          setDate={setDate}
-          time={time}
-          setTime={setTime}
-          next={next}
-        />
-      )}
+      <MotionIsland>
+        {/* Marge négative + rognage horizontal : le glissement ne crée jamais de défilement latéral. */}
+        <div className="relative -mx-3 overflow-x-clip px-3 py-1">
+          <AnimatePresence mode="popLayout" initial={false} custom={dir}>
+            <m.div key={step} custom={dir} variants={slide} initial="enter" animate="center" exit="exit" transition={{ duration: dur[3], ease: ease.outExpo }}>
+              {step === 0 && (
+                <WizardStepTournament
+                  sports={sports}
+                  sport={sport}
+                  sportId={sportId}
+                  pickSport={pickSport}
+                  name={name}
+                  setName={setName}
+                  date={date}
+                  setDate={setDate}
+                  time={time}
+                  setTime={setTime}
+                  next={next}
+                />
+              )}
 
-      {step === 1 && (
-        <WizardStepTeams
-          teams={teams}
-          setTeams={setTeams}
-          entry={entry}
-          setEntry={setEntry}
-          notice={notice}
-          setNotice={setNotice}
-          placeholderCount={placeholderCount}
-          setPlaceholderCount={setPlaceholderCount}
-          removeTeams={removeTeams}
-          next={next}
-        />
-      )}
+              {step === 1 && (
+                <WizardStepTeams
+                  teams={teams}
+                  setTeams={setTeams}
+                  entry={entry}
+                  setEntry={setEntry}
+                  notice={notice}
+                  setNotice={setNotice}
+                  placeholderCount={placeholderCount}
+                  setPlaceholderCount={setPlaceholderCount}
+                  removeTeams={removeTeams}
+                  next={next}
+                />
+              )}
 
-      {step === 2 && (
-        <WizardStepFormat
-          teams={teams}
-          format={format}
-          setFormatChoice={setFormatChoice}
-          previews={previews}
-          startDate={startDate}
-          counts={counts}
-          poolCount={poolCount}
-          setPoolChoice={setPoolChoice}
-          pools={pools}
-          setPools={setPools}
-          distMode={distMode}
-          setDistMode={setDistMode}
-          qualOptions={qualOptions}
-          qual={qual}
-          setQualChoice={setQualChoice}
-          thirdPlace={thirdPlace}
-          setThirdPlace={setThirdPlace}
-          order={order}
-          setKoOrder={setKoOrder}
-        />
-      )}
+              {step === 2 && (
+                <WizardStepFormat
+                  teams={teams}
+                  format={format}
+                  setFormatChoice={setFormatChoice}
+                  previews={previews}
+                  startDate={startDate}
+                  counts={counts}
+                  poolCount={poolCount}
+                  setPoolChoice={setPoolChoice}
+                  pools={pools}
+                  setPools={setPools}
+                  distMode={distMode}
+                  setDistMode={setDistMode}
+                  qualOptions={qualOptions}
+                  qual={qual}
+                  setQualChoice={setQualChoice}
+                  thirdPlace={thirdPlace}
+                  setThirdPlace={setThirdPlace}
+                  order={order}
+                  setKoOrder={setKoOrder}
+                />
+              )}
 
-      {step === 3 && input && (
-        <WizardStepReview
-          sport={sport}
-          preview={preview}
-          startDate={startDate}
-          time={time}
-          courts={courts}
-          setCourts={setCourts}
-          courtsLabel={courtsLabel}
-          courtLabel={courtLabel}
-          matchDuration={matchDuration}
-          setMatchDuration={setMatchDuration}
-          breakDuration={breakDuration}
-          setBreakDuration={setBreakDuration}
-          minRest={minRest}
-          setMinRest={setMinRest}
-          deadline={deadline}
-          setDeadline={setDeadline}
-          fitMsg={fitMsg}
-          setFitMsg={setFitMsg}
-          fit={fit}
-          effectiveName={effectiveName}
-          teams={teams}
-          format={format}
-          pools={pools}
-          qual={qual}
-          thirdPlace={thirdPlace}
-          setStep={setStep}
-          error={error}
-        />
-      )}
+              {step === 3 && input && (
+                <WizardStepReview
+                  input={input}
+                  sport={sport}
+                  preview={preview}
+                  startDate={startDate}
+                  time={time}
+                  courts={courts}
+                  setCourts={setCourts}
+                  courtsLabel={courtsLabel}
+                  courtLabel={courtLabel}
+                  matchDuration={matchDuration}
+                  setMatchDuration={setMatchDuration}
+                  breakDuration={breakDuration}
+                  setBreakDuration={setBreakDuration}
+                  minRest={minRest}
+                  setMinRest={setMinRest}
+                  deadline={deadline}
+                  setDeadline={setDeadline}
+                  fitMsg={fitMsg}
+                  setFitMsg={setFitMsg}
+                  fit={fit}
+                  effectiveName={effectiveName}
+                  teams={teams}
+                  format={format}
+                  pools={pools}
+                  qual={qual}
+                  thirdPlace={thirdPlace}
+                  setStep={setStep}
+                  error={error}
+                />
+              )}
+            </m.div>
+          </AnimatePresence>
+        </div>
+      </MotionIsland>
 
       <div className="fixed inset-x-0 bottom-0 z-20 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
         <div className="mx-auto max-w-3xl space-y-2">
@@ -436,7 +493,7 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
             preview && (
               <p className="text-center text-xs text-ink-2">
                 <span className="rounded-full bg-surface/90 px-3 py-1.5 backdrop-blur">
-                  {plural(n, "équipe")} · {preview.matches} matchs · fin vers <span className="font-semibold text-ink">{hhmm(preview.end)}</span>
+                  {plural(n, "équipe")} · <AnimatedNumber value={preview.matches} /> matchs · fin vers <span className="font-semibold text-ink">{hhmm(preview.end)}</span>
                 </span>
               </p>
             )

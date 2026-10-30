@@ -555,6 +555,23 @@ body::after {
   animation: pop 0.18s cubic-bezier(0.2, 0.7, 0.2, 1) both;
 }
 
+/* Glisser-déposer des poules : l'équipe se soulève en penchant, puis atterrit avec un léger ressort. */
+.drag-lift {
+  rotate: 2deg;
+  scale: 1.04;
+}
+@keyframes chip-land {
+  from {
+    scale: 1.12;
+  }
+  to {
+    scale: 1;
+  }
+}
+.chip-land {
+  animation: chip-land var(--dur-3) var(--ease-snap) both;
+}
+
 @keyframes ticker {
   from {
     transform: translateX(0);
@@ -973,12 +990,17 @@ body::after {
   .celebrate[data-fx] [data-score],
   .letter,
   .stroke-sweep,
+  .chip-land,
   .pill-fill:hover svg * {
     animation: none;
   }
   .pill-fill::before,
   .tilt {
     transition: none;
+  }
+  .drag-lift {
+    rotate: none;
+    scale: none;
   }
   .led-roll {
     transition: none;
