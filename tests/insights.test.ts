@@ -39,10 +39,23 @@ describe("assistant : terrains", () => {
     const b = fresh();
     const court = b.courts[1];
     const [first] = firstOnCourt(b, court.id);
+    // Le tournoi a commencé ailleurs : le retard de ce terrain est signalé à part.
+    const [other] = firstOnCourt(b, b.courts[0].id);
+    Object.assign(other, { status: "live", started_at: other.scheduled_at });
     const now = at(first.scheduled_at!, 12);
     const late = tournamentInsights(b, now).find((i) => i.id === `late-${court.id}`);
     expect(late?.shift).toMatchObject({ matchId: first.id, courtId: court.id, minutes: 15 });
     expect(late?.tone).toBe("warn");
+  });
+
+  it("tournoi pas encore commencé : une seule alerte qui décale tous les terrains", () => {
+    const b = fresh();
+    const [first] = firstOnCourt(b, b.courts[0].id);
+    const ins = tournamentInsights(b, at(first.scheduled_at!, 12));
+    expect(ins.filter((i) => i.id.startsWith("late-"))).toHaveLength(0);
+    const start = ins.find((i) => i.id === "not-started");
+    expect(start?.shiftAll).toHaveLength(b.courts.length);
+    expect(start?.shiftAll?.every((s) => s.minutes === 15)).toBe(true);
   });
 
   it("signale un match en cours depuis trop longtemps (score oublié)", () => {

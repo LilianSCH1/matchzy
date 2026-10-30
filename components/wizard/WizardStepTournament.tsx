@@ -17,6 +17,13 @@ interface Props {
   next: () => void;
 }
 
+/** Prochain quart d'heure, au moins 10 minutes après maintenant (format HH:MM). */
+function nextQuarter(): string {
+  const d = new Date(Date.now() + 10 * 60000);
+  d.setMinutes(Math.ceil(d.getMinutes() / 15) * 15, 0, 0);
+  return `${String(d.getHours()).padStart(2, "0")}:${String(d.getMinutes()).padStart(2, "0")}`;
+}
+
 /** Étape 1 : sport, nom, date et heure du premier match. */
 export function WizardStepTournament({ sports, sport, sportId, pickSport, name, setName, date, setDate, time, setTime, next }: Props) {
   return (
@@ -43,7 +50,7 @@ export function WizardStepTournament({ sports, sport, sportId, pickSport, name, 
       <label className="block">
         <span className="label">Nom du tournoi</span>
         <input
-          className="w-full border-b border-line bg-transparent pb-3 text-2xl font-medium tracking-tight outline-none placeholder:text-ink-3 focus:border-ink"
+          className="input h-12 text-lg"
           value={name}
           onChange={(e) => setName(e.target.value)}
           onKeyDown={(e) => e.key === "Enter" && next()}
@@ -59,6 +66,14 @@ export function WizardStepTournament({ sports, sport, sportId, pickSport, name, 
           <input type="time" className="input" value={time} onChange={(e) => setTime(e.target.value)} />
         </Field>
       </div>
+      {date === todayLocal() && time && new Date(`${date}T${time}`).getTime() < Date.now() && (
+        <div className="flex flex-wrap items-center justify-between gap-2 rounded-lg bg-warn-soft px-3.5 py-2.5 text-sm text-warn">
+          <span>Cette heure est déjà passée : le tournoi démarrerait en retard.</span>
+          <button type="button" className="font-semibold underline underline-offset-4" onClick={() => setTime(nextQuarter())}>
+            Commencer à {nextQuarter()}
+          </button>
+        </div>
+      )}
     </div>
   );
 }

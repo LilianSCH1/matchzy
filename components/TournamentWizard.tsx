@@ -327,12 +327,6 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
   return (
     <div data-sport={sportKey(sport?.name)} className="space-y-8 pb-40">
       {dialog}
-      {/* Charge la police du panneau LED dès la dernière étape : le moment de génération s'affiche sans police de secours. */}
-      {step === 3 && (
-        <span aria-hidden className="led pointer-events-none fixed opacity-0">
-          0
-        </span>
-      )}
       {forging > 0 && preview && <Forging name={effectiveName} matches={preview.matches} courts={courts} courtsLabel={courtsLabel} hold={forging} />}
       {restored && (
         <div className="rise flex items-center justify-between gap-3 rounded-[10px] bg-accent-soft px-4 py-3 text-sm">
@@ -470,37 +464,38 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
         </div>
       </MotionIsland>
 
-      <div className="fixed inset-x-0 bottom-0 z-20 px-4 pb-[max(1rem,env(safe-area-inset-bottom))] sm:px-5">
+      {undo && (
+        <div className="fixed inset-x-0 bottom-24 z-20 px-4">
+          <div className="mx-auto flex w-fit items-center gap-3 rounded-full bg-ink py-2 pr-2 pl-4 text-sm text-canvas shadow-lg">
+            {undo.text}
+            <button
+              className="rounded-full bg-canvas/15 px-3 py-1 font-medium hover:bg-canvas/25"
+              onClick={() => {
+                undo.restore();
+                setUndo(null);
+              }}
+            >
+              Annuler
+            </button>
+          </div>
+        </div>
+      )}
+      {/* Barre d'actions fixée en bas, opaque : le contenu ne passe jamais dessous sans être masqué. */}
+      <div className="fixed inset-x-0 bottom-0 z-20 border-t border-line bg-canvas px-4 pt-2.5 pb-[max(0.75rem,env(safe-area-inset-bottom))] sm:px-5">
         <div className="mx-auto max-w-3xl space-y-2">
-          {undo && (
-            <div className="rise mx-auto flex w-fit items-center gap-3 rounded-full bg-ink py-2 pr-2 pl-4 text-sm text-canvas shadow-lg">
-              {undo.text}
-              <button
-                className="rounded-full bg-canvas/15 px-3 py-1 font-medium hover:bg-canvas/25"
-                onClick={() => {
-                  undo.restore();
-                  setUndo(null);
-                }}
-              >
-                Annuler
-              </button>
-            </div>
-          )}
           {blocker && step > 0 && (n > 0 || step > 1) ? (
-            <p className="rounded-full bg-danger-soft px-4 py-2 text-center text-xs font-medium text-danger">{blocker}</p>
+            <p className="text-center text-[13px] font-medium text-danger">{blocker}</p>
           ) : (
             step > 0 &&
             preview && (
-              <p className="text-center text-xs text-ink-2">
-                <span className="rounded-full bg-surface/90 px-3 py-1.5 backdrop-blur">
-                  {plural(n, "équipe")} · <AnimatedNumber value={preview.matches} /> matchs · fin vers <span className="font-semibold text-ink">{hhmm(preview.end)}</span>
-                </span>
+              <p className="text-center text-[13px] text-ink-2">
+                {plural(n, "équipe")} · <AnimatedNumber value={preview.matches} /> matchs · fin vers <span className="font-semibold text-ink">{hhmm(preview.end)}</span>
               </p>
             )
           )}
-          <div className="glass flex gap-2 rounded-full border border-line p-1.5 shadow-elev-2">
+          <div className="flex gap-2">
             {step > 0 && (
-              <button className="btn-quiet" onClick={() => setStep(step - 1)}>
+              <button className="btn-outline" onClick={() => setStep(step - 1)}>
                 <IconArrowLeft className="size-4" /> Retour
               </button>
             )}
@@ -509,7 +504,7 @@ export function TournamentWizard({ sports }: { sports: Sport[] }) {
                 Continuer <IconArrowRight className="size-4" />
               </button>
             ) : (
-              <button className="btn-accent flex-1 font-semibold" disabled={pending || !!invalid} onClick={submit}>
+              <button className="btn-accent flex-1" disabled={pending || !!invalid} onClick={submit}>
                 {pending ? "Création…" : "Créer le tournoi"}
               </button>
             )}

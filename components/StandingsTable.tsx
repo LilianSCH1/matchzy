@@ -62,7 +62,7 @@ export function StandingsTable({
             </td>
           )}
           <td className={`px-1.5 text-center text-ink-2 tabular-nums ${diffCls}`}>{r.diff > 0 ? `+${r.diff}` : r.diff}</td>
-          <td className={`px-1.5 pr-4 text-center font-cond font-extrabold tabular-nums ${big ? "text-2xl" : "text-lg"}`}>{r.points}</td>
+          <td className={`px-1.5 pr-4 text-center font-bold tabular-nums ${big ? "text-2xl" : "text-lg"}`}>{r.points}</td>
         </>
       ),
     };
@@ -70,15 +70,15 @@ export function StandingsTable({
   return (
     <div className="card overflow-hidden">
       <div className="board flex items-center justify-between px-4 py-2.5">
-        <h3 className={`display text-[#f3efe4] ${big ? "text-[30px]" : "text-[22px]"}`}>{title}</h3>
+        <h3 className={`display text-ink ${big ? "text-[30px]" : "text-[22px]"}`}>{title}</h3>
         {qualified > 0 && (
-          <span className="flex items-center gap-1.5 font-cond text-[11px] font-bold tracking-[0.12em] text-[#b4afa3] uppercase">
-            <span className="h-3 w-1 rounded-full bg-[#3ddc84]" /> qualifié{qualified > 1 ? "s" : ""}
+          <span className="flex items-center gap-1.5 text-[11px] font-bold text-ink-2">
+            <span className="h-3 w-1 rounded-full bg-ok" /> qualifié{qualified > 1 ? "s" : ""}
           </span>
         )}
       </div>
       <table className={`w-full ${big ? "text-lg" : "text-sm"}`}>
-        <thead className={`border-b border-line bg-surface-2/60 font-cond font-bold tracking-[0.1em] text-ink-3 uppercase ${big ? "text-sm" : "text-[12px]"}`}>
+        <thead className={`border-b border-line bg-surface-2/60 font-bold text-ink-3 ${big ? "text-sm" : "text-[12px]"}`}>
           <tr>
             <th className={`${big ? "w-16" : "w-11"} py-2 pl-4 text-left font-medium`}>#</th>
             <th className="py-2 text-left font-medium">Équipe</th>

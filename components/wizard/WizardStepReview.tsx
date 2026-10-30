@@ -79,7 +79,7 @@ export function WizardStepReview(props: Props) {
       <div className="card divide-y divide-line text-sm">
         <RecapRow label="Tournoi" onEdit={() => setStep(0)}>
           <span className="font-medium">{effectiveName}</span>
-          <span className="block text-ink-3 first-letter:uppercase">
+          <span className="block text-ink-3 first-letter:">
             {sport?.name} · {startDate.toLocaleDateString("fr-FR", { dateStyle: "full" })} à {time}
           </span>
         </RecapRow>
@@ -133,7 +133,7 @@ function Summary({ preview, start, courts, courtsLabel }: { preview: ReturnType<
 function Stat({ label, value, sub, accent }: { label: string; value: React.ReactNode; sub?: string; accent?: boolean }) {
   return (
     <div>
-      <div className="text-[11px] font-medium tracking-[0.08em] uppercase opacity-50">{label}</div>
+      <div className="text-[11px] font-medium opacity-50">{label}</div>
       <div className={`mt-0.5 text-2xl font-semibold tracking-tight tabular-nums ${accent ? "text-accent" : ""}`}>{value}</div>
       {sub && <div className="text-xs opacity-50">{sub}</div>}
     </div>

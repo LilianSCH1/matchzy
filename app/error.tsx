@@ -16,7 +16,7 @@ export default function ErrorPage({ error, reset }: { error: Error & { digest?: 
       <Page narrow>
         <div className="rise mx-auto max-w-sm space-y-6 pt-10 text-center">
           <div className="board mx-auto inline-flex items-center gap-3 rounded-[10px] px-4 py-3">
-            <IconAlert className="size-6 text-[#ffd23f]" />
+            <IconAlert className="size-6 text-warn" />
             <span className="led text-[34px] leading-none">T.MORT</span>
           </div>
           <div className="space-y-2">

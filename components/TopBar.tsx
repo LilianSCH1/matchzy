@@ -1,8 +1,5 @@
 import Link from "next/link";
-import { SearchButton } from "./CommandPalette";
 import { IconBack } from "./Icons";
-import { CourtLines } from "./Stadium";
-import { SoundToggle } from "./SoundToggle";
 import { ThemeToggle } from "./ThemeToggle";
 
 /** Marque : un mini tableau d'affichage, lignes de terrain à la craie et ballon ambre au rond central. */
@@ -26,7 +23,7 @@ export function Logo({ className = "", mark = false }: { className?: string; mar
     <span className={`inline-flex items-center gap-2 ${className}`}>
       <LogoMark />
       {!mark && (
-        <span className="display text-[24px] leading-none tracking-[0.02em]">
+        <span className="display text-[20px] leading-none">
           Match<span className="text-accent">zy</span>
         </span>
       )}
@@ -48,7 +45,7 @@ export function TopBar({
   back?: string;
   right?: React.ReactNode;
   brand?: boolean;
-  /** Recherche (⌘K), son et thème à droite. */
+  /** Bouton de thème à droite. */
   tools?: boolean;
   wide?: boolean;
 }) {
@@ -66,20 +63,13 @@ export function TopBar({
           </Link>
         ) : (
           <div className="min-w-0 flex-1">
-            <h1 className="display truncate text-[22px] leading-none">{title}</h1>
-            {subtitle && <p className="mt-0.5 truncate font-cond text-[12px] font-semibold tracking-[0.08em] text-ink-3 uppercase">{subtitle}</p>}
+            <h1 className="display truncate text-[18px] leading-tight">{title}</h1>
+            {subtitle && <p className="truncate text-[13px] text-ink-3">{subtitle}</p>}
           </div>
         )}
         <div className="flex shrink-0 items-center gap-1">
           {right}
-          {tools && (
-            <>
-              <SearchButton compact />
-              {/* L'accueil ne joue aucun son : sur un petit écran, sa place revient au logo et au bouton d'accès. */}
-              <SoundToggle className={brand ? "max-[399px]:hidden" : ""} />
-              <ThemeToggle />
-            </>
-          )}
+          {tools && <ThemeToggle />}
         </div>
       </div>
     </header>
@@ -119,7 +109,7 @@ export function TabBar({ items, active, dock = false }: { items: { href: string;
               href={i.href}
               scroll={false}
               aria-current={on ? "page" : undefined}
-              className={`relative font-cond font-bold tracking-[0.08em] uppercase transition ${
+              className={`relative font-bold transition ${
                 dock
                   ? "flex flex-1 flex-col items-center gap-0.5 rounded-md py-1.5 text-[11px] sm:h-12 sm:flex-none sm:flex-row sm:gap-2 sm:px-3.5 sm:text-[14px]"
                   : "inline-flex h-12 shrink-0 items-center gap-2 px-3.5 text-[14px]"
@@ -158,11 +148,11 @@ export function Section({
     <section className="space-y-3">
       <div className="flex items-end justify-between gap-3">
         <div className="min-w-0">
-          <h2 className="display flex items-center gap-2.5 text-[26px]">
+          <h2 className="display flex items-center gap-2.5 text-[20px]">
             {icon && <span className="text-accent">{icon}</span>}
             {title}
             {count !== undefined && (
-              <span className="board inline-flex h-6 min-w-7 items-center justify-center rounded-[4px] px-1.5 font-led text-[15px] leading-none font-extrabold text-led tabular-nums">
+              <span className="inline-flex h-6 min-w-6 items-center justify-center rounded-full bg-surface-2 px-2 text-[13px] leading-none font-semibold text-ink-2 tabular-nums">
                 {count}
               </span>
             )}
@@ -176,12 +166,11 @@ export function Section({
   );
 }
 
-/** État vide : un terrain désert, tracé à la craie. */
+/** État vide : message centré, cadre en pointillés. */
 export function Empty({ children, icon }: { children: React.ReactNode; icon?: React.ReactNode }) {
   return (
-    <div className="relative isolate flex flex-col items-center gap-2 overflow-hidden rounded-[10px] border border-dashed border-line-strong px-4 py-9 text-center text-[15px] text-ink-3">
-      <CourtLines sport="custom" className="absolute inset-0 -z-10 h-full w-full p-3 text-ink opacity-[0.06]" />
-      {icon && <span className="grid size-11 place-items-center rounded-full border-2 border-dashed border-line-strong text-ink-3">{icon}</span>}
+    <div className="flex flex-col items-center gap-2 rounded-xl border border-dashed border-line-strong px-4 py-9 text-center text-[15px] text-ink-3">
+      {icon && <span className="grid size-11 place-items-center rounded-full bg-surface-2 text-ink-3">{icon}</span>}
       <div>{children}</div>
     </div>
   );
@@ -194,19 +183,15 @@ export function Page({ children, narrow, wide, className = "", id }: { children:
 /** Pied de page signé : preuve d'authenticité et signature du créateur. */
 export function Footer({ wide = false }: { wide?: boolean }) {
   return (
-    <footer className="mt-auto border-t border-line bg-surface/40">
-      <div className={`mx-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-3 px-4 py-5 font-cond text-[12px] font-bold tracking-[0.14em] text-ink-3 uppercase sm:px-5 ${wide ? "max-w-7xl" : "max-w-5xl"}`}>
+    <footer className="mt-auto border-t border-line">
+      <div className={`mx-auto flex flex-wrap items-center justify-between gap-x-6 gap-y-2 px-4 py-5 text-[13px] text-ink-3 sm:px-5 ${wide ? "max-w-7xl" : "max-w-5xl"}`}>
         <div className="flex items-center gap-2">
           <LogoMark className="size-4" />
-          <span>MATCHZY &copy; 2026</span>
+          <span>Matchzy © 2026</span>
         </div>
-        <div className="inline-flex flex-wrap items-center justify-center gap-2 rounded-xl sm:rounded-full border border-line bg-surface/80 px-3.5 py-1.5 shadow-sm">
-          <span className="text-[12px] font-semibold tracking-wider text-ink-2 uppercase">Conçu & développé par</span>
-          <span className="hand inline-block -rotate-2 text-[22px] leading-none text-accent [text-shadow:0_0_12px_var(--glow)]">
-            Lilian SCHMITT
-          </span>
-        </div>
-        <span>Fin du match</span>
+        <span>
+          Conçu et développé par <span className="font-semibold text-ink-2">Lilian SCHMITT</span>
+        </span>
       </div>
     </footer>
   );
@@ -233,7 +218,7 @@ export function PageHeader({ eyebrow, title, description, actions }: { eyebrow?:
             {eyebrow}
           </div>
         )}
-        <h1 className="display text-[40px] sm:text-[52px]">{title}</h1>
+        <h1 className="display text-[28px] sm:text-[32px]">{title}</h1>
         {description && <p className="max-w-2xl text-[15px] leading-relaxed text-ink-2">{description}</p>}
       </div>
       {actions && <div className="flex flex-wrap items-center gap-2">{actions}</div>}

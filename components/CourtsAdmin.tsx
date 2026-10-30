@@ -36,8 +36,8 @@ export function CourtsAdmin({ courts, refereeUrl }: { courts: { id: string; name
               }}
             />
             <div className="rounded-md bg-surface-2 px-3 py-1.5 text-right">
-              <div className="text-[10px] font-medium tracking-wide text-ink-3 uppercase">Code</div>
-              <div className="font-mono text-xl font-semibold tracking-[0.2em]">{c.code}</div>
+              <div className="text-[10px] font-medium text-ink-3">Code</div>
+              <div className="font-mono text-xl font-semibold">{c.code}</div>
             </div>
           </div>
         ))}

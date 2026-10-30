@@ -99,7 +99,7 @@ export function JoinForm({ tournament = "", autoFocus = false }: { tournament?: 
           autoCorrect="off"
           spellCheck={false}
           placeholder="tournoi-volley-nancy"
-          className="input font-cond text-[17px] font-semibold tracking-[0.02em]"
+          className="input text-[17px] font-semibold"
         />
       </div>
       <div>
@@ -116,16 +116,15 @@ export function JoinForm({ tournament = "", autoFocus = false }: { tournament?: 
           spellCheck={false}
           maxLength={ACCESS_CODE_LENGTH + 2}
           placeholder="A7K2QX"
-          className="board h-16 w-full rounded-md border-0 text-center font-led text-[34px] font-extrabold tracking-[0.3em] text-led uppercase caret-[#ff6b1a] outline-none placeholder:text-[rgb(255_176_0/0.14)] focus:ring-4 focus:ring-accent/40"
+          className="input h-14 text-center font-mono text-[26px] font-semibold tracking-[0.2em] uppercase placeholder:tracking-[0.2em]"
         />
       </div>
       <ErrorText>{state.error}</ErrorText>
-      <button data-magnet className="btn-accent h-12 w-full" disabled={pending}>
+      <button className="btn-accent h-12 w-full" disabled={pending}>
         {pending ? <Spinner /> : <IconTicket className="size-5" />}
-        {pending ? "Vérification…" : "Entrer dans le stade"}
+        {pending ? "Vérification…" : "Rejoindre le tournoi"}
       </button>
-      <p className="text-center text-[13px] text-ink-3">Le nom et le code sont communiqués par l&apos;organisateur. Lecture seule : les scores sont saisis par les arbitres.</p>
-    </form>
+          </form>
   );
 }
 
@@ -162,8 +161,8 @@ export function MyTournaments() {
   if (!saved.length)
     return (
       <Empty icon={<IconTicket className="size-5" />}>
-        <p className="display text-2xl text-ink">Aucun billet</p>
-        <p className="mt-1">Rejoignez un tournoi avec le nom et le code donnés par l&apos;organisateur : il restera enregistré sur cet appareil.</p>
+        <p className="text-lg font-semibold text-ink">Aucun tournoi rejoint</p>
+        <p className="mt-1">Une fois rejoint, un tournoi reste enregistré ici sur cet appareil.</p>
       </Empty>
     );
 
@@ -188,7 +187,7 @@ export function MyTournaments() {
           if (s && !s.found)
             return (
               <div key={t.slug} className="card flex flex-col gap-3 border-dashed p-4">
-                <div className="display text-[24px] text-ink-3 line-through">{t.name}</div>
+                <div className="display text-[19px] text-ink-3 line-through">{t.name}</div>
                 <p className="text-sm text-ink-3">Ce tournoi a été supprimé ou son code a changé.</p>
                 <button className="btn-ghost h-9 self-start text-[13px]" onClick={() => remove(t)}>
                   <IconTrash className="size-4" /> Retirer
@@ -207,8 +206,8 @@ export function MyTournaments() {
               total={s?.total}
               footer={
                 <>
-                  <span className="px-2 font-cond text-[12px] font-bold tracking-[0.1em] text-ink-3 uppercase">
-                    Code <span className="font-led text-[14px] text-ink-2">{t.code}</span>
+                  <span className="px-2 text-[12px] font-bold text-ink-3">
+                    Code <span className="text-[14px] text-ink-2">{t.code}</span>
                   </span>
                   <button
                     className="btn-icon relative z-10 ml-auto hover:bg-danger-soft hover:text-danger"
@@ -261,14 +260,13 @@ export function JoinGate({ slug }: { slug: string }) {
 
   if (saved === null || auto === "trying")
     return (
-      <div className="flex items-center justify-center gap-3 py-16 font-cond text-[15px] font-bold tracking-[0.1em] text-ink-3 uppercase">
-        <Spinner /> Contrôle du billet…
+      <div className="flex items-center justify-center gap-3 py-16 text-[15px] font-bold text-ink-3">
+        <Spinner /> Vérification de l&apos;accès…
       </div>
     );
 
   return (
-    <div className="card mx-auto max-w-sm overflow-hidden p-5 pt-0">
-      <div className="-mx-5 mb-5 h-1.5 bg-accent" aria-hidden />
+    <div className="card mx-auto max-w-sm p-5">
       {auto === "failed" && <p className="mb-3 text-sm text-ink-2">Le code enregistré sur cet appareil n&apos;est plus valable. Demandez le nouveau code à l&apos;organisateur.</p>}
       <JoinForm tournament={slug} autoFocus />
     </div>

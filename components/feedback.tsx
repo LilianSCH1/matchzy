@@ -44,19 +44,12 @@ export function Toaster() {
   return (
     <div className="pointer-events-none fixed inset-x-0 top-3 z-[60] flex flex-col items-center gap-2 px-4" aria-live="polite" role="status">
       {list.map((t) => {
-        // Chaque notification est un carton brandi par l'arbitre : vert validé, rouge erreur, blanc information.
-        const card = t.tone === "error" ? "bg-danger" : t.tone === "ok" ? "bg-ok" : "bg-[#f3efe4]";
-        const tag = t.tone === "error" ? "Carton rouge" : t.tone === "ok" ? "Validé" : "Info";
+        const dot = t.tone === "error" ? "bg-danger" : t.tone === "ok" ? "bg-ok" : "bg-accent";
         return (
-          <div key={t.id} className="card-show board pointer-events-auto flex max-w-md items-center gap-3 rounded-md py-2 pr-2 pl-2.5 shadow-[0_12px_40px_rgb(0_0_0/0.35)]">
-            <span aria-hidden className={`h-8 w-6 shrink-0 -rotate-6 rounded-[3px] ${card} shadow-[inset_0_-3px_0_rgb(0_0_0/0.2)]`} />
-            <span className="min-w-0">
-              <span className={`block font-cond text-[11px] font-extrabold tracking-[0.16em] uppercase ${t.tone === "error" ? "text-[#ff6a63]" : t.tone === "ok" ? "text-[#3ddc84]" : "text-led"}`}>
-                {tag}
-              </span>
-              <span className="block text-[14px] leading-snug font-medium text-[#f3efe4]">{t.message}</span>
-            </span>
-            <button className="grid size-7 shrink-0 place-items-center rounded-md text-[#f3efe4] opacity-60 hover:opacity-100" onClick={() => dismiss(t.id)} aria-label="Fermer">
+          <div key={t.id} className="card-show pointer-events-auto flex max-w-md items-center gap-3 rounded-lg border border-line bg-surface py-2.5 pr-2 pl-3.5 shadow-pop">
+            <span aria-hidden className={`size-2.5 shrink-0 rounded-full ${dot}`} />
+            <span className={`min-w-0 text-[15px] leading-snug font-medium ${t.tone === "error" ? "text-danger" : "text-ink"}`}>{t.message}</span>
+            <button className="grid size-8 shrink-0 place-items-center rounded-md text-ink-3 hover:bg-surface-2 hover:text-ink" onClick={() => dismiss(t.id)} aria-label="Fermer">
               <IconX className="size-3.5" />
             </button>
           </div>
@@ -148,7 +141,7 @@ function ConfirmDialog({ title, body, confirmLabel = "Confirmer", tone = "defaul
       >
         <div className={`-mx-6 -mt-5 mb-5 h-1.5 ${tone === "danger" ? "hazard" : "bg-accent"}`} aria-hidden />
         {tone === "danger" && (
-          <span className="flex items-center gap-2 font-cond text-[12px] font-extrabold tracking-[0.16em] text-danger uppercase">
+          <span className="flex items-center gap-2 text-[12px] font-bold text-danger">
             <IconAlert className="size-4" /> Attention
           </span>
         )}

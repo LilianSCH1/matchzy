@@ -1,54 +1,50 @@
 @import "tailwindcss";
 
-/* ------------------------------------------------------------------ Charte graphique : « Tableau d'affichage »
-   Un stade, le soir du tournoi. Le tableau d'affichage noir à LED ambre, les lignes de terrain tracées à la craie,
-   l'orange des plots d'entraînement pour l'action. Les cartons d'arbitre codent les états : vert acquis
-   (qualifié, vainqueur, validé), rouge le direct et les erreurs, jaune ce qui demande l'attention (retards, conflits).
-   Thème clair « diurne » : la feuille de match, papier crème et encre noire. Thème sombre « nocturne » : le stade éclairé. */
+/* ------------------------------------------------------------------ Charte graphique
+   Sobre et lisible : fond neutre, texte en casse normale, une seule couleur d'action (orange).
+   Les couleurs codent les états : vert acquis (qualifié, vainqueur, validé), rouge le direct et les erreurs,
+   jaune ce qui demande l'attention (retards, conflits).
+   Thème clair : neutre et lisible. Thème sombre : le même, de nuit. */
 
 :root {
-  --canvas: #ece6d6;
-  --surface: #faf7ee;
-  --surface-2: #e6dfcc;
-  --surface-3: #d9d0b9;
-  --line: #d3c9b1;
-  --line-strong: #b3a689;
-  --ink: #15130e;
-  --ink-2: #4a4436;
-  --ink-3: #6f6754;
+  --canvas: #f4f4f2;
+  --surface: #ffffff;
+  --surface-2: #efefec;
+  --surface-3: #e3e3df;
+  --line: #e1e1dc;
+  --line-strong: #c7c7c0;
+  --ink: #16181b;
+  --ink-2: #44474c;
+  --ink-3: #686c72;
   --accent: #c94700;
   --accent-hover: #b03d00;
-  --accent-soft: #f7dcc5;
+  --accent-soft: #fbe3d3;
   --accent-ink: #a33a00;
   --on-accent: #ffffff;
   --ok: #17763a;
-  --ok-soft: #d5ebd7;
+  --ok-soft: #dcefe1;
   --on-ok: #ffffff;
   --live: #d0241a;
-  --live-soft: #f7d8d2;
+  --live-soft: #f9dcd8;
   /* Fond plein des pastilles « en cours » : texte blanc lisible (contraste ≥ 4,5:1) dans les deux thèmes. */
   --live-solid: #c4201a;
   --warn: #7f5a00;
-  --warn-soft: #f5e09a;
+  --warn-soft: #f8e7a8;
   --danger: #c3161c;
-  --danger-soft: #f6d6d2;
+  --danger-soft: #f8dcd9;
   --chalk: #1c5e33;
   --glow: transparent;
-  /* Projecteurs : lumière de jour sur le papier (le nocturne les allume vraiment). */
   --floodlight: oklch(0.99 0.02 90);
   --floodlight-cool: oklch(0.96 0.02 250);
-  /* Biseau usiné : arête éclairée en haut des surfaces. */
-  --bevel: inset 0 1px 0 rgb(255 255 255 / 0.6);
-  /* Élévation : ombres d'encre chaude sur papier crème. */
+  --bevel: 0 0 #0000;
   --elev-0: 0 0 #0000;
-  --elev-1: var(--bevel), 0 1px 0 rgb(60 45 15 / 0.08);
-  --elev-2: var(--bevel), 0 1px 0 rgb(60 45 15 / 0.08), 0 10px 24px -12px rgb(60 45 15 / 0.35);
-  --elev-3: var(--bevel), 0 1px 0 rgb(60 45 15 / 0.08), 0 30px 60px -20px rgb(40 30 10 / 0.45);
+  --elev-1: 0 1px 2px rgb(16 24 32 / 0.06);
+  --elev-2: 0 1px 2px rgb(16 24 32 / 0.06), 0 8px 20px -10px rgb(16 24 32 / 0.18);
+  --elev-3: 0 1px 2px rgb(16 24 32 / 0.08), 0 24px 48px -18px rgb(16 24 32 / 0.3);
   --shadow-sm: var(--elev-1);
   --shadow-md: var(--elev-2);
   --shadow-lg: var(--elev-3);
-  --grain-opacity: 0.05;
-  /* Verre de régie : opaque de jour (aucun flou, aucun coût GPU). */
+  --grain-opacity: 0;
   --glass-alpha: 100%;
   --glass-filter: none;
   color-scheme: light;
@@ -82,7 +78,7 @@
     --danger: #ff5049;
     --danger-soft: #3a1311;
     --chalk: #f3efe4;
-    --glow: rgb(255 107 26 / 0.35);
+    --glow: transparent;
     --floodlight: oklch(0.968 0.04 88);
     --floodlight-cool: oklch(0.905 0.05 255);
     --bevel: inset 0 1px 0 rgb(255 255 255 / 0.06);
@@ -90,11 +86,11 @@
     --elev-0: 0 0 #0000;
     --elev-1: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55);
     --elev-2: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55), 0 14px 30px -14px rgb(2 8 16 / 0.85);
-    --elev-3: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55), 0 30px 70px -20px rgb(2 8 16 / 0.9), 0 0 48px -16px var(--glow);
+    --elev-3: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55), 0 30px 70px -20px rgb(2 8 16 / 0.9);
     --shadow-sm: var(--elev-1);
     --shadow-md: var(--elev-2);
     --shadow-lg: var(--elev-3);
-    --grain-opacity: 0.035;
+    --grain-opacity: 0;
     --glass-alpha: 72%;
     --glass-filter: blur(14px) saturate(140%);
     color-scheme: dark;
@@ -129,7 +125,7 @@
   --danger: #ff5049;
   --danger-soft: #3a1311;
   --chalk: #f3efe4;
-  --glow: rgb(255 107 26 / 0.35);
+  --glow: transparent;
   --floodlight: oklch(0.968 0.04 88);
   --floodlight-cool: oklch(0.905 0.05 255);
   --bevel: inset 0 1px 0 rgb(255 255 255 / 0.06);
@@ -137,17 +133,18 @@
   --elev-0: 0 0 #0000;
   --elev-1: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55);
   --elev-2: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55), 0 14px 30px -14px rgb(2 8 16 / 0.85);
-  --elev-3: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55), 0 30px 70px -20px rgb(2 8 16 / 0.9), 0 0 48px -16px var(--glow);
+  --elev-3: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55), 0 30px 70px -20px rgb(2 8 16 / 0.9);
   --shadow-sm: var(--elev-1);
   --shadow-md: var(--elev-2);
   --shadow-lg: var(--elev-3);
-  --grain-opacity: 0.035;
+  --grain-opacity: 0;
   --glass-alpha: 72%;
   --glass-filter: blur(14px) saturate(140%);
   color-scheme: dark;
 }
 
 .theme-dark {
+  --led: #ffb000;
   background: var(--canvas);
   color: var(--ink);
 }
@@ -156,7 +153,7 @@
 /* Les panneaux LED restent noirs dans les deux thèmes : ces teintes ne dépendent pas du thème. */
 :root {
   --sport: var(--ink-3);
-  --led: #ffb000;
+  --led: var(--ink);
   --led-hot: oklch(0.93 0.1 88);
   --led-bloom: oklch(0.74 0.18 60 / 0.35);
   --led-off: oklch(0.8 0.17 75 / 0.07);
@@ -264,42 +261,8 @@ html {
 body {
   color: var(--ink);
   -webkit-tap-highlight-color: transparent;
-  /* Projecteurs du stade (nocturne) ou grain de papier (diurne). */
-  background:
-    radial-gradient(60vw 50vh at 12% -10%, var(--glow-l, transparent), transparent 70%),
-    radial-gradient(60vw 50vh at 88% -10%, var(--glow-r, transparent), transparent 70%),
-    var(--canvas);
-  background-attachment: fixed;
+  background: var(--canvas);
 }
-:root[data-theme="dark"] body {
-  --glow-l: rgb(255 244 214 / 0.07);
-  --glow-r: rgb(255 244 214 / 0.07);
-}
-@media (prefers-color-scheme: dark) {
-  :root:not([data-theme="light"]) body {
-    --glow-l: rgb(255 244 214 / 0.07);
-    --glow-r: rgb(255 244 214 / 0.07);
-  }
-}
-
-/* Grain : une seule couche fixe, jamais animée. Pas de mix-blend-mode : sur une couche fixe plein écran,
-   il obligerait à recomposer toute la page à chaque image du défilement. Un bruit neutre très léger suffit. */
-body::after {
-  content: "";
-  position: fixed;
-  inset: 0;
-  z-index: 70;
-  pointer-events: none;
-  opacity: var(--grain-opacity);
-  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
-  background-size: 160px;
-}
-@media print {
-  body::after {
-    display: none;
-  }
-}
-
 ::selection {
   background: var(--accent);
   color: var(--on-accent);
@@ -320,51 +283,49 @@ body::after {
 /* ------------------------------------------------------------------ Briques */
 
 @utility card {
-  @apply rounded-[10px] border border-line bg-surface shadow-card;
+  @apply rounded-xl border border-line bg-surface shadow-card;
 }
 @utility card-quiet {
-  @apply rounded-[10px] border border-line bg-surface;
+  @apply rounded-xl border border-line bg-surface;
 }
-/* À l'appui, le bouton s'enfonce (0,97) puis revient avec un léger rebond. */
 @utility btn {
-  @apply inline-flex h-11 items-center justify-center gap-2 rounded-md px-4 font-cond text-[15px] font-bold tracking-[0.06em] whitespace-nowrap uppercase transition-[background-color,border-color,color,opacity,transform,box-shadow] duration-(--dur-2) ease-(--ease-snap) select-none active:scale-[0.97] active:duration-75 disabled:pointer-events-none disabled:opacity-40;
+  @apply inline-flex h-11 items-center justify-center gap-2 rounded-lg px-4 text-[15px] font-semibold whitespace-nowrap transition-[background-color,border-color,color,opacity] duration-(--dur-1) select-none active:opacity-80 disabled:pointer-events-none disabled:opacity-40;
 }
-/* Boutons « poussoirs » de table de marque : un liseré sombre en bas qui s'écrase à l'appui. */
 @utility btn-primary {
-  @apply btn bg-ink text-canvas shadow-[inset_0_-3px_0_rgb(0_0_0/0.35)] hover:opacity-90 active:shadow-[inset_0_-1px_0_rgb(0_0_0/0.35)];
+  @apply btn bg-ink text-canvas hover:opacity-90;
 }
 @utility btn-accent {
-  @apply btn bg-accent text-on-accent shadow-[inset_0_-3px_0_rgb(0_0_0/0.28),0_0_24px_-6px_var(--glow)] hover:bg-accent-hover active:shadow-[inset_0_-1px_0_rgb(0_0_0/0.28)];
+  @apply btn bg-accent text-on-accent hover:bg-accent-hover;
 }
 @utility btn-ok {
-  @apply btn bg-ok text-on-ok shadow-[inset_0_-3px_0_rgb(0_0_0/0.25)] hover:opacity-90;
+  @apply btn bg-ok text-on-ok hover:opacity-90;
 }
 @utility btn-ghost {
   @apply btn bg-surface-2 text-ink hover:bg-surface-3;
 }
 @utility btn-outline {
-  @apply btn border border-line-strong bg-surface text-ink shadow-card hover:border-ink-3 hover:bg-surface-2;
+  @apply btn border border-line-strong bg-surface text-ink hover:bg-surface-2;
 }
 @utility btn-quiet {
   @apply btn text-ink-2 hover:bg-surface-2 hover:text-ink;
 }
 @utility btn-danger {
-  @apply btn bg-danger text-white shadow-[inset_0_-3px_0_rgb(0_0_0/0.3)] hover:opacity-90;
+  @apply btn bg-danger text-white hover:opacity-90;
 }
 @utility btn-icon {
-  @apply inline-flex size-9 shrink-0 items-center justify-center rounded-md text-ink-2 transition hover:bg-surface-2 hover:text-ink active:scale-95 disabled:pointer-events-none disabled:opacity-30;
+  @apply inline-flex size-10 shrink-0 items-center justify-center rounded-lg text-ink-2 transition hover:bg-surface-2 hover:text-ink disabled:pointer-events-none disabled:opacity-30;
 }
 @utility input {
-  @apply h-11 w-full rounded-md border border-line-strong bg-surface px-3.5 text-base text-ink transition outline-none placeholder:text-ink-3 focus:border-accent focus:ring-4 focus:ring-accent/15;
+  @apply h-11 w-full rounded-lg border border-line-strong bg-surface px-3.5 text-base text-ink transition outline-none placeholder:text-ink-3 focus:border-accent focus:ring-4 focus:ring-accent/15;
 }
 @utility label {
-  @apply mb-1.5 block font-cond text-[13px] font-bold tracking-[0.08em] text-ink-2 uppercase;
+  @apply mb-1.5 block text-[14px] font-semibold text-ink-2;
 }
 @utility chip {
-  @apply inline-flex h-6 items-center gap-1.5 rounded-[4px] px-2 font-cond text-[12px] font-bold tracking-[0.08em] whitespace-nowrap uppercase;
+  @apply inline-flex h-6 items-center gap-1.5 rounded-full px-2.5 text-[12px] font-semibold whitespace-nowrap;
 }
 @utility eyebrow {
-  @apply font-cond text-[12px] font-bold tracking-[0.16em] text-ink-3 uppercase;
+  @apply text-[13px] font-semibold text-ink-3;
 }
 @utility kbd {
   @apply inline-flex h-5 min-w-5 items-center justify-center rounded-[4px] border border-b-2 border-line-strong bg-surface-2 px-1 font-mono text-[11px] font-medium text-ink-3;
@@ -373,10 +334,10 @@ body::after {
   @apply inline-flex gap-1 rounded-lg border border-line bg-surface-2 p-1;
 }
 @utility seg-item {
-  @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-4 font-cond text-[14px] font-bold tracking-[0.06em] whitespace-nowrap text-ink-2 uppercase transition hover:text-ink;
+  @apply inline-flex h-9 items-center justify-center gap-1.5 rounded-md px-4 text-[14px] font-semibold whitespace-nowrap text-ink-2 transition hover:text-ink;
 }
 @utility seg-on {
-  @apply bg-ink text-canvas shadow-[inset_0_-2px_0_rgb(0_0_0/0.35)] hover:text-canvas;
+  @apply bg-surface text-ink shadow-card hover:text-ink;
 }
 @utility no-scrollbar {
   scrollbar-width: none;
@@ -388,19 +349,16 @@ body::after {
   padding-bottom: max(env(safe-area-inset-bottom), 0.5rem);
 }
 
-/* Titres d'affiche : lettrage condensé de signalétique de stade. */
+/* Titres : graisse franche, casse normale. */
 @utility display {
-  @apply font-display leading-[0.86] font-black tracking-[-0.005em] uppercase;
+  @apply font-sans leading-[1.1] font-bold tracking-[-0.015em];
 }
-/* Chiffres et textes du tableau d'affichage : matrice de LED ambre. */
+/* Chiffres du tableau des scores : nets et alignés. */
 @utility led {
-  font-family: var(--font-led);
-  font-weight: 800;
+  font-family: var(--font-sans);
+  font-weight: 700;
   color: var(--led);
   font-variant-numeric: tabular-nums;
-  text-shadow:
-    0 0 6px rgb(255 176 0 / 0.55),
-    0 0 18px rgb(255 140 0 / 0.25);
 }
 @utility hand {
   font-family: var(--font-pm), "Comic Sans MS", cursive;
@@ -411,14 +369,9 @@ body::after {
 
 /* Panneau du tableau d'affichage : toujours noir, grille de LED éteintes, cadre biseauté. */
 @utility board {
-  color: #f3efe4;
-  background-color: #060707;
-  background-image: radial-gradient(rgb(255 255 255 / 0.055) 1px, transparent 1.4px);
-  background-size: 6px 6px;
-  box-shadow:
-    inset 0 0 0 1px rgb(255 255 255 / 0.06),
-    inset 0 2px 0 rgb(255 255 255 / 0.05),
-    inset 0 -18px 40px rgb(0 0 0 / 0.6);
+  color: var(--ink);
+  background-color: var(--surface-2);
+  box-shadow: inset 0 0 0 1px var(--line);
 }
 
 /* Verre de régie : réservé aux éléments flottants (barre, palette, toasts, bandeaux), jamais aux listes. */
@@ -436,42 +389,17 @@ body::after {
   }
 }
 
-/* Élévation au survol : l'ombre du niveau 3 est préparée sur un pseudo-élément dont seule l'opacité varie.
-   L'élément ne doit pas couper ses débordements (overflow-hidden masquerait l'ombre). */
+/* Survol d'une carte cliquable : bordure plus marquée, sans mouvement. */
 @utility lift {
-  position: relative;
-  isolation: isolate;
-  transition: transform var(--dur-2) var(--ease-out-expo);
-  &::before {
-    content: "";
-    position: absolute;
-    inset: 0;
-    z-index: -1;
-    border-radius: inherit;
-    box-shadow: var(--elev-3);
-    opacity: 0;
-    pointer-events: none;
-    transition: opacity var(--dur-2) var(--ease-out-expo);
-  }
+  transition: border-color var(--dur-1);
   @media (hover: hover) {
     &:hover {
-      transform: translateY(-2px);
-    }
-    &:hover::before {
-      opacity: 1;
+      border-color: var(--line-strong);
     }
   }
 }
 
 /* Apparition au défilement, pilotée par le défilement lui-même (aucun JS). Sans prise en charge, l'élément est simplement visible. */
-@utility reveal {
-  @supports (animation-timeline: view()) {
-    animation: rise linear both;
-    animation-timeline: view();
-    animation-range: entry 0% entry 45%;
-  }
-}
-
 /* Rubalise noire et jaune (zone dangereuse). */
 @utility hazard {
   background-image: repeating-linear-gradient(-45deg, #ffd23f 0 12px, #15130e 12px 24px);
@@ -494,13 +422,9 @@ body::after {
   background-position: right top;
 }
 
-/* Gazon tondu en bandes (fond des bandeaux de tournoi). */
+/* Bandeau d'un tournoi : couleur du sport, unie. */
 @utility turf {
-  background-color: color-mix(in oklab, var(--sport) 44%, #060707);
-  background-image:
-    radial-gradient(120% 90% at 50% 0%, rgb(255 255 255 / 0.06), transparent 60%),
-    linear-gradient(180deg, rgb(0 0 0 / 0.05), rgb(0 0 0 / 0.5)),
-    repeating-linear-gradient(90deg, rgb(255 255 255 / 0.04) 0 64px, transparent 64px 128px);
+  background-color: color-mix(in oklab, var(--sport) 55%, #0b0d0f);
 }
 
 /* ------------------------------------------------------------------ Animations */

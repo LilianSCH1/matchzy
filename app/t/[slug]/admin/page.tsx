@@ -1,10 +1,9 @@
 import Link from "next/link";
 import { CourtBoard } from "@/components/CourtBoard";
-import { IconBracket, IconClock, IconPulse, IconScreen, IconTarget, IconWhistle } from "@/components/Icons";
+import { IconScreen, IconWhistle } from "@/components/Icons";
 import { InsightsPanel } from "@/components/InsightsPanel";
 import { MatchRow } from "@/components/MatchRow";
-import { Led } from "@/components/Stadium";
-import { Empty, LedBar, Page, PageHeader, Section } from "@/components/TopBar";
+import { Empty, Page, PageHeader, Section } from "@/components/TopBar";
 import { courtStatuses, forecast, tournamentInsights } from "@/lib/insights";
 import { resolveTournament } from "@/lib/resolve";
 import { bundleOr404 } from "@/lib/server/page";
@@ -55,19 +54,14 @@ export default async function Dashboard({ params }: { params: Promise<{ slug: st
   return (
     <Page wide>
       <PageHeader
-        eyebrow="Tableau de bord"
-        title="Pilotage en direct"
-        description={
-          <span className="first-letter:uppercase">
-            {fmtDate(t.date)} · {t.sport_name} · {b.teams.length} équipes · {b.courts.length} {b.courts.length > 1 ? L.courtPlural : L.court}
-          </span>
-        }
+        title="Tableau de bord"
+        description={`${fmtDate(t.date)} · ${t.sport_name} · ${b.teams.length} équipes · ${b.courts.length} ${b.courts.length > 1 ? L.courtPlural : L.court}`}
         actions={
           <>
-            <Link href={`${pub}/ecran`} target="_blank" className="btn-outline h-10 text-sm">
+            <Link href={`${pub}/ecran`} target="_blank" className="btn-outline">
               <IconScreen className="size-4" /> Écran géant
             </Link>
-            <Link href={`${pub}/arbitre`} className="btn-accent h-10 text-sm">
+            <Link href={`${pub}/arbitre`} className="btn-accent">
               <IconWhistle className="size-4" /> Saisir les scores
             </Link>
           </>
@@ -76,42 +70,27 @@ export default async function Dashboard({ params }: { params: Promise<{ slug: st
 
       {/* Indicateurs */}
       <div className="grid grid-cols-2 gap-3 lg:grid-cols-4">
-        <Kpi label="Progression" icon={<IconTarget className="size-4" />}>
-          <div className="flex items-baseline gap-1">
-            <Led value={pct} digits={3} className="text-[40px]" />
-            <span className="led text-[22px]">%</span>
-          </div>
-          <LedBar value={f.done} total={f.total} cells={20} className="text-white" />
-          <div className="text-xs text-[#858074] tabular-nums">
-            {f.done} / {f.total} matchs
-          </div>
-        </Kpi>
-        <Kpi label="En cours" icon={<IconPulse className="size-4" />} tone={f.live ? "live" : undefined}>
-          <Led value={f.live} digits={2} className="text-[40px]" color={f.live ? "#ff4436" : undefined} />
-          <div className="text-xs text-[#858074]">
-            sur {b.courts.length} {b.courts.length > 1 ? L.courtPlural : L.court}
-          </div>
-        </Kpi>
-        <Kpi label="Retard" icon={<IconClock className="size-4" />} tone={f.maxDelay >= 5 ? "warn" : undefined}>
-          <div className="flex items-baseline gap-1.5">
-            <Led value={f.maxDelay} digits={2} className="text-[40px]" color={f.maxDelay >= 5 ? "#ffd23f" : undefined} />
-            <span className="font-cond text-sm font-bold text-[#858074] uppercase">min</span>
-          </div>
-          <div className="text-xs text-[#858074]">{lateCourts ? `${lateCourts} ${lateCourts > 1 ? `${L.courtPlural} en retard` : `${L.court} en retard`}` : "Planning tenu"}</div>
-        </Kpi>
-        <Kpi label="Fin projetée" icon={<IconBracket className="size-4" />}>
-          <Led value={f.projectedEnd ? fmtTime(f.projectedEnd.toISOString(), t.timezone) : "--:--"} digits={5} className="text-[40px]" />
-          <div className={`text-xs ${slip > 0 ? "text-[#ffd23f]" : "text-[#858074]"}`}>
-            {slip > 0 ? `+${slip} min sur le planning` : f.plannedEnd ? `Prévue à ${fmtTime(f.plannedEnd.toISOString(), t.timezone)}` : ""}
-          </div>
-        </Kpi>
+        <Kpi label="Matchs joués" value={`${f.done} / ${f.total}`} hint={`${pct} % du tournoi`} />
+        <Kpi label="En cours" value={f.live} hint={`sur ${b.courts.length} ${b.courts.length > 1 ? L.courtPlural : L.court}`} tone={f.live ? "live" : undefined} />
+        <Kpi
+          label="Retard"
+          value={f.maxDelay ? `${f.maxDelay} min` : "Aucun"}
+          hint={lateCourts ? `${lateCourts} ${lateCourts > 1 ? `${L.courtPlural} en retard` : `${L.court} en retard`}` : "Planning tenu"}
+          tone={f.maxDelay >= 5 ? "warn" : undefined}
+        />
+        <Kpi
+          label="Fin prévue"
+          value={f.projectedEnd ? fmtTime(f.projectedEnd.toISOString(), t.timezone) : "–"}
+          hint={slip > 0 ? `${slip} min plus tard que prévu` : "À l'heure"}
+          tone={slip > 0 ? "warn" : undefined}
+        />
       </div>
 
       <div className="grid items-start gap-8 xl:grid-cols-[minmax(0,1fr)_360px]">
         <div className="min-w-0 space-y-8">
           <Section
             title={`${L.courtPlural[0].toUpperCase()}${L.courtPlural.slice(1)} en direct`}
-            hint={`Touchez un match pour saisir le score. « +5 min » repousse le prochain match et tous les suivants du ${L.court}.`}
+            hint={`Touchez un match pour saisir son score. « +5 min » retarde le prochain match du ${L.court} et tous les suivants.`}
           >
             <CourtBoard courts={courts} v={v} base={pub} now={now} />
           </Section>
@@ -123,8 +102,10 @@ export default async function Dashboard({ params }: { params: Promise<{ slug: st
                   const done = p.done === p.total;
                   return (
                     <div key={p.key} className="flex items-center gap-4 px-4 py-2.5 text-sm">
-                      <span className="w-28 shrink-0 truncate font-cond text-[15px] font-bold tracking-[0.04em] uppercase">{p.label}</span>
-                      <LedBar value={p.done} total={p.total} cells={24} tone={done ? "ok" : "led"} className="flex-1 text-ink" />
+                      <span className="w-28 shrink-0 truncate text-[15px] font-semibold">{p.label}</span>
+                      <div className="h-1.5 flex-1 overflow-hidden rounded-full bg-surface-3">
+                        <div className={`h-full rounded-full ${done ? "bg-ok" : "bg-accent"}`} style={{ width: `${(100 * p.done) / p.total}%` }} />
+                      </div>
                       <span className={`w-14 text-right text-xs tabular-nums ${done ? "font-medium text-ok" : "text-ink-3"}`}>
                         {p.done}/{p.total}
                       </span>
@@ -157,14 +138,15 @@ export default async function Dashboard({ params }: { params: Promise<{ slug: st
   );
 }
 
-function Kpi({ label, icon, tone, children }: { label: string; icon: React.ReactNode; tone?: "live" | "warn"; children: React.ReactNode }) {
+function Kpi({ label, value, hint, tone }: { label: string; value: React.ReactNode; hint?: string; tone?: "live" | "warn" }) {
   return (
-    <div className={`board space-y-2 rounded-[10px] p-4 ${tone === "live" ? "ring-2 ring-[#ff4436]/50" : tone === "warn" ? "ring-2 ring-[#ffd23f]/50" : ""}`}>
-      <div className={`flex items-center gap-1.5 font-cond text-[12px] font-bold tracking-[0.14em] uppercase ${tone === "live" ? "text-[#ff4436]" : tone === "warn" ? "text-[#ffd23f]" : "text-[#b4afa3]"}`}>
-        {tone === "live" ? <span className="live-dot size-2 rounded-full bg-[#ff4436]" /> : icon}
+    <div className={`card space-y-1 p-4 ${tone === "live" ? "border-live/40" : tone === "warn" ? "border-warn/40" : ""}`}>
+      <div className={`flex items-center gap-1.5 text-[13px] font-semibold ${tone === "live" ? "text-live" : tone === "warn" ? "text-warn" : "text-ink-3"}`}>
+        {tone === "live" && <span className="live-dot size-2 rounded-full bg-live" />}
         {label}
       </div>
-      {children}
+      <div className="text-[26px] leading-tight font-bold tabular-nums">{value}</div>
+      {hint && <div className="text-[13px] text-ink-3">{hint}</div>}
     </div>
   );
 }

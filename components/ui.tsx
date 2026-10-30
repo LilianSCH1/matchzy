@@ -38,7 +38,7 @@ export function Stepper({ value, min, max, onChange, suffix }: { value: number; 
           type="number"
           inputMode="numeric"
           style={{ width: `${Math.max(1, String(value).length) + 0.6}ch` }}
-          className="min-w-0 bg-transparent text-center font-cond text-lg font-bold tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
+          className="min-w-0 bg-transparent text-center text-lg font-bold tabular-nums outline-none [appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none"
           value={value}
           min={min}
           max={max}

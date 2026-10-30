@@ -51,11 +51,11 @@ function CourtCard({ c, v, base, now }: { c: CourtStatus; v: View; base: string;
 
   return (
     <article className={`card flex flex-col overflow-hidden ${c.state === "late" ? "border-warn/40" : c.live ? "border-live/30" : ""}`}>
-      <header className="board flex items-center gap-2 px-4 py-2.5">
-        <h3 className="display text-[22px] text-[#f3efe4]">{c.name}</h3>
+      <header className="flex items-center gap-2 px-4 py-3">
+        <h3 className="display text-[17px]">{c.name}</h3>
         <StatePill c={c} now={now} tz={t.timezone} />
-        <span className="ml-auto font-cond text-sm font-bold text-[#858074] tabular-nums" title="Matchs joués sur ce terrain">
-          <span className="led text-[17px]">{c.played}</span>/{c.total}
+        <span className="ml-auto text-[13px] text-ink-3 tabular-nums" title="Matchs joués sur ce terrain">
+          {c.played}/{c.total} joués
         </span>
       </header>
       <div className="h-1 bg-surface-2">
@@ -75,13 +75,13 @@ function CourtCard({ c, v, base, now }: { c: CourtStatus; v: View; base: string;
             [focus.away_team_id, v.away(focus), focus.away_score],
           ].map(([id, name, score], i) => (
             <div key={i} className="flex items-center gap-3">
-              <span className={`min-w-0 flex-1 truncate font-cond text-[19px] leading-snug font-bold tracking-[0.02em] uppercase ${!id ? "font-medium text-ink-3 normal-case italic" : ""}`}>{name}</span>
-              <span className={`font-cond text-[28px] leading-tight font-extrabold tabular-nums ${c.live ? "" : "text-line-strong"}`}>{c.live ? score : "–"}</span>
+              <span className={`min-w-0 flex-1 truncate text-[17px] leading-snug font-semibold ${!id ? "font-normal text-ink-3 italic" : ""}`}>{name}</span>
+              <span className={`text-[24px] leading-tight font-bold tabular-nums ${c.live ? "" : "text-line-strong"}`}>{c.live ? score : "–"}</span>
             </div>
           ))}
-          <div className="mt-2 flex items-center gap-1 font-cond text-[14px] font-bold tracking-[0.06em] text-accent-ink uppercase">
+          <div className="mt-2 flex items-center gap-1 text-[14px] font-semibold text-accent-ink">
             <IconWhistle className="size-3.5" />
-            {c.live ? "Mettre à jour le score" : "Lancer la saisie"}
+            {c.live ? "Saisir le score" : "Démarrer ce match"}
             <IconChevron className="size-3.5 transition group-hover:translate-x-0.5" />
           </div>
         </Link>
@@ -105,8 +105,8 @@ function CourtCard({ c, v, base, now }: { c: CourtStatus; v: View; base: string;
       )}
 
       {c.next?.scheduled_at && (
-        <footer className="mt-auto flex items-center justify-between gap-2 border-t border-dashed border-line-strong px-4 py-2">
-          <span className="text-xs text-ink-3">{c.delay > 0 ? `Le prochain partira vers ${fmtTime(new Date(new Date(c.next.scheduled_at).getTime() + c.delay * 60000).toISOString(), t.timezone)}` : "Dans les temps"}</span>
+        <footer className="mt-auto flex items-center justify-between gap-2 border-t border-line px-4 py-2">
+          <span className="text-xs text-ink-3">{c.delay > 0 ? `Le prochain partira vers ${fmtTime(new Date(new Date(c.next.scheduled_at).getTime() + c.delay * 60000).toISOString(), t.timezone)}` : "À l'heure"}</span>
           <ShiftButton matchId={c.next.id} courtId={c.courtId} scheduledAt={c.next.scheduled_at} minutes={5} />
         </footer>
       )}

@@ -1,12 +1,11 @@
 import Link from "next/link";
 import { fmtDate } from "@/lib/view";
 import { IconArrowRight } from "./Icons";
-import { CourtLines, SportBadge, sportKey } from "./Stadium";
-import { LedBar } from "./TopBar";
+import { SportBadge, sportKey } from "./Stadium";
 
 /**
- * Carte de tournoi : bandeau avec le terrain du sport vu d'en haut, nom en lettrage d'affiche,
- * avancement en LED. Utilisée par la liste de l'organisateur et par « Mes tournois » des participants.
+ * Carte de tournoi : sport, état, nom, date et avancement. Toute la carte mène à `href`
+ * (page du tournoi par défaut). Utilisée par la liste de l'organisateur et par « Mes tournois » des participants.
  */
 export function TournamentCard({
   slug,
@@ -19,6 +18,7 @@ export function TournamentCard({
   total = 0,
   featured,
   muted,
+  href,
   footer,
 }: {
   slug: string;
@@ -31,54 +31,50 @@ export function TournamentCard({
   total?: number;
   featured?: boolean;
   muted?: boolean;
+  href?: string;
   footer?: React.ReactNode;
 }) {
   const finished = total > 0 && done === total;
-  const key = sportKey(sport);
   return (
-    // Pas d'overflow-hidden sur la carte : l'ombre d'élévation (lift) déborde ; le bandeau arrondit lui-même ses coins.
-    <article
-      data-sport={key}
-      data-tilt
-      className={`card lift tilt group flex min-w-0 flex-col hover:border-line-strong ${live ? "border-live/40" : ""}`}
-    >
-      <div className={`turf relative isolate overflow-hidden rounded-t-[9px] ${featured ? "h-32" : "h-24"} ${muted && !live ? "grayscale-[0.5]" : ""}`}>
-        <CourtLines sport={key} className="absolute inset-0 -z-10 h-full w-full scale-110 p-2 text-white/35" />
-        <div className="flex items-start justify-between gap-2 p-3">
-          <SportBadge name={sport} vt={`sport-${slug}`} className="bg-black/45! text-white! backdrop-blur" />
+    <article data-sport={sportKey(sport)} className={`card lift group relative flex min-w-0 flex-col ${live ? "border-live/40" : ""}`}>
+      <div className={`flex flex-1 flex-col gap-3 ${featured ? "p-5" : "p-4"}`}>
+        <div className="flex items-center justify-between gap-2">
+          <SportBadge name={sport} />
           {live ? (
             <span className="chip bg-live-solid text-white">
               <span className="live-dot size-1.5 rounded-full bg-white" /> {live} en cours
             </span>
           ) : finished ? (
-            <span className="chip bg-ok text-on-ok">Terminé</span>
+            <span className="chip bg-ok-soft text-ok">Terminé</span>
           ) : null}
         </div>
-        {total > 0 && (
-          <div className="absolute right-3 bottom-2.5 flex items-baseline gap-1 rounded-[4px] bg-black/60 px-1.5 py-1 backdrop-blur">
-            <span className="led text-[18px] leading-none">{done}</span>
-            <span className="font-cond text-[11px] font-bold text-white/60">/{total}</span>
-          </div>
-        )}
-      </div>
-      <div className={`flex flex-1 flex-col gap-3 ${featured ? "p-5" : "p-4"}`}>
         <div className="min-w-0 flex-1">
-          <Link href={`/t/${slug}`} data-vt className="after:absolute after:inset-0">
-            <h3 className={`display flex items-center gap-2 ${featured ? "text-[34px]" : "text-[26px]"} ${muted ? "text-ink-2" : ""}`}>
-              <span className="min-w-0 truncate leading-[0.95]" style={{ viewTransitionName: `name-${slug}` }}>
-                {name}
-              </span>
-              <IconArrowRight className="size-5 shrink-0 text-ink-3 transition group-hover:translate-x-1 group-hover:text-accent" />
+          <Link href={href ?? `/t/${slug}`} className="after:absolute after:inset-0 after:rounded-xl">
+            <h3 className={`display flex items-center gap-2 ${featured ? "text-[22px]" : "text-[19px]"} ${muted ? "text-ink-2" : ""}`}>
+              <span className="min-w-0 truncate">{name}</span>
+              <IconArrowRight className="size-4 shrink-0 text-ink-3 transition group-hover:text-accent" />
             </h3>
           </Link>
-          <p className="mt-1.5 truncate font-cond text-[13px] font-semibold tracking-[0.06em] text-ink-3 uppercase">
+          <p className="mt-1 truncate text-[14px] text-ink-3">
             {fmtDate(date)}
             {subtitle && ` · ${subtitle}`}
           </p>
         </div>
-        {total > 0 && (done > 0 || featured) && <LedBar value={done} total={total} tone={finished ? "ok" : "led"} className="text-ink" />}
+        {total > 0 && (
+          <div className="space-y-1.5">
+            <div className="flex justify-between text-[13px] text-ink-3">
+              <span>Matchs joués</span>
+              <span className="font-semibold text-ink-2 tabular-nums">
+                {done} / {total}
+              </span>
+            </div>
+            <div className="h-1.5 overflow-hidden rounded-full bg-surface-3" role="progressbar" aria-label="Matchs joués" aria-valuemin={0} aria-valuemax={total} aria-valuenow={done}>
+              <div className={`h-full rounded-full ${finished ? "bg-ok" : "bg-accent"}`} style={{ width: `${(done / total) * 100}%` }} />
+            </div>
+          </div>
+        )}
       </div>
-      {footer && <div className="relative z-10 flex items-center gap-1 border-t border-dashed border-line-strong px-2 py-1.5">{footer}</div>}
+      {footer && <div className="relative z-10 flex items-center gap-1 border-t border-line px-2 py-1.5">{footer}</div>}
     </article>
   );
 }
