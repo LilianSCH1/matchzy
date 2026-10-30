@@ -62,6 +62,33 @@ function BracketMatch({ m, v, big }: { m: Match; v: View; big?: boolean }) {
   );
 }
 
+/**
+ * Liaisons d'un match avec le tour suivant (dans l'espace de 2 rem entre deux colonnes) : une amorce vers la droite,
+ * la moitié du trait vertical qui rejoint son voisin de paire, et une amorce à gauche depuis le tour précédent.
+ * Elles se tracent à l'apparition, tour après tour, et s'allument en LED sur le chemin des vainqueurs.
+ */
+function Links({ m, first, last, pair }: { m: Match; first: boolean; last: boolean; pair: "top" | "bottom" | null }) {
+  const decided = !!m.winner_team_id || undefined;
+  const fed = !!(m.home_team_id || m.away_team_id) || undefined;
+  return (
+    <>
+      {!first && <span aria-hidden data-lit={fed} className="br-line br-x top-1/2 -left-4 w-4 origin-left" />}
+      {!last && (
+        <>
+          <span aria-hidden data-lit={decided} className="br-line br-x top-1/2 -right-4 w-4 origin-left" />
+          {pair && (
+            <span
+              aria-hidden
+              data-lit={decided}
+              className={`br-line br-y right-[calc(-1rem-1px)] h-1/2 ${pair === "top" ? "top-1/2 origin-top" : "top-0 origin-bottom"}`}
+            />
+          )}
+        </>
+      )}
+    </>
+  );
+}
+
 export function Bracket({ v, big = false }: { v: View; big?: boolean }) {
   const ko = v.b.matches.filter((m) => m.phase === "knockout");
   if (!ko.length) return null;
@@ -71,6 +98,7 @@ export function Bracket({ v, big = false }: { v: View; big?: boolean }) {
     ko.filter((m) => m.bracket_round === i + 1 && m !== third).sort((a, b) => (a.bracket_slot ?? 0) - (b.bracket_slot ?? 0)),
   );
   const champion = cols[rounds - 1]?.[0]?.winner_team_id;
+  const width = big ? "w-72" : "w-52";
   return (
     <div className="space-y-4">
       {champion && (
@@ -85,23 +113,33 @@ export function Bracket({ v, big = false }: { v: View; big?: boolean }) {
         </div>
       )}
       <div className="no-scrollbar -mx-4 overflow-x-auto px-4 pb-2 sm:-mx-5 sm:px-5">
-        <div className="flex min-w-max gap-4">
-          {cols.map((list, i) => (
-            <div key={i} className={`flex ${big ? "w-72" : "w-52"} flex-col`}>
-              <div className="display mb-3 border-b-2 border-accent pb-1 text-center text-[20px]">{roundName(i + 1, rounds)}</div>
-              <div className="flex flex-1 flex-col justify-around gap-3">
-                {list.map((m) => (
-                  <BracketMatch key={m.id} m={m} v={v} big={big} />
-                ))}
-                {i === rounds - 1 && third && (
-                  <div className="mt-6">
-                    <div className="display mb-2 text-center text-[18px] text-ink-3">Petite finale</div>
-                    <BracketMatch m={third} v={v} big={big} />
-                  </div>
-                )}
+        <div className="w-max">
+          <div className="flex gap-8">
+            {cols.map((list, i) => (
+              <div key={i} className={`flex ${width} flex-col`}>
+                <div className="display mb-3 border-b-2 border-accent pb-1 text-center text-[20px]">{roundName(i + 1, rounds)}</div>
+                {/* Créneaux de hauteur égale : le centre d'un match tombe au milieu de ses deux matchs d'origine. */}
+                <div className="flex flex-1 flex-col">
+                  {list.map((m, j) => (
+                    <div key={m.id} className="relative flex flex-1 items-center py-1.5" style={{ "--round": i } as React.CSSProperties}>
+                      <Links m={m} first={i === 0} last={i === rounds - 1} pair={j % 2 === 0 ? (list[j + 1] ? "top" : null) : "bottom"} />
+                      <div className="w-full">
+                        <BracketMatch m={m} v={v} big={big} />
+                      </div>
+                    </div>
+                  ))}
+                </div>
+              </div>
+            ))}
+          </div>
+          {third && (
+            <div className="mt-6 flex justify-end">
+              <div className={width}>
+                <div className="display mb-2 text-center text-[18px] text-ink-3">Petite finale</div>
+                <BracketMatch m={third} v={v} big={big} />
               </div>
             </div>
-          ))}
+          )}
         </div>
       </div>
     </div>

@@ -2,6 +2,11 @@ import { Bracket } from "@/components/Bracket";
 import { LiveRefresh } from "@/components/LiveRefresh";
 import { MatchRow, Scoreboard } from "@/components/MatchRow";
 import { Clock, Rotator } from "@/components/Rotator";
+import { BoardFx, CelebrationHost } from "@/components/screen/Celebrations";
+import { LiveRows } from "@/components/screen/LiveRows";
+import { Projection } from "@/components/screen/Projection";
+import { SoundToggle } from "@/components/SoundToggle";
+import { FloodlightsLoader } from "@/components/stage/FloodlightsLoader";
 import { StandingsTable } from "@/components/StandingsTable";
 import { CourtLines, SportBadge, sportKey, Ticker } from "@/components/Stadium";
 import { LedBar, Logo } from "@/components/TopBar";
@@ -11,7 +16,7 @@ import { bundleOr404 } from "@/lib/server/page";
 import { canView } from "@/lib/server/auth";
 import { Gate } from "@/components/Gate";
 import type { Match } from "@/lib/types";
-import { byTime, View } from "@/lib/view";
+import { byTime, fmtTime, View } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
 
@@ -49,7 +54,7 @@ export default async function BigScreen({ params }: { params: Promise<{ slug: st
       node: (
         <div className={`grid gap-4 ${group.length > 1 ? "grid-cols-2" : "grid-cols-1"}`}>
           {group.map((p) => (
-            <StandingsTable key={p.id} title={`Poule ${p.name}`} rows={r.standings.get(p.id) ?? []} rules={t.rules} qualified={q} big />
+            <StandingsTable key={p.id} title={`Poule ${p.name}`} rows={r.standings.get(p.id) ?? []} rules={t.rules} qualified={q} big body={(items) => <LiveRows items={items} />} />
           ))}
         </div>
       ),
@@ -70,11 +75,19 @@ export default async function BigScreen({ params }: { params: Promise<{ slug: st
 
   const pct = f.total ? Math.round((100 * f.done) / f.total) : 0;
   const cols = boards.length > 3 ? "grid-cols-2" : "grid-cols-1";
+  // Annonce à chaque but ou set gagné ; au basket et au rugby on marque sans cesse : flash seulement.
+  const word = t.rules.scoreType === "goals" ? t.rules.labels.score : t.rules.scoreType === "sets" ? t.rules.labels.set : null;
+  const liveScores = boards
+    .filter(({ m }) => m.status === "live")
+    .map(({ c, m }) => ({ id: m.id, live: true, home: m.home_score, away: m.away_score, court: c.name, homeName: v.home(m), awayName: v.away(m) }));
 
   return (
-    <div data-sport={sportKey(t.sport_name)} className="theme-dark relative isolate flex h-dvh flex-col overflow-hidden">
+    <div id="ecran" data-sport={sportKey(t.sport_name)} className="theme-dark relative isolate flex h-dvh flex-col overflow-hidden transition-[translate] duration-[2s]">
+      <FloodlightsLoader intensity={0.5} className="-z-10" />
       <CourtLines sport={sportKey(t.sport_name)} className="absolute inset-0 -z-10 m-auto h-[90%] w-auto text-white/[0.035]" />
       <LiveRefresh seconds={5} />
+      <Projection target="ecran" />
+      <CelebrationHost matches={liveScores} word={word} />
       <header className="board flex items-center gap-6 px-8 py-4">
         <Logo className="opacity-90" />
         <div className="h-10 w-px bg-white/15" />
@@ -86,6 +99,8 @@ export default async function BigScreen({ params }: { params: Promise<{ slug: st
           </span>
         )}
         <div className="ml-auto flex items-center gap-6">
+          {/* Les navigateurs exigent un geste pour jouer du son : un clic suffit pour toute la journée. */}
+          <SoundToggle label="Son de stade" className="h-10 border-white/15 bg-white/5 text-[#f3efe4] hover:bg-white/10" />
           <div className="w-48 space-y-1.5 text-right">
             <div className="font-cond text-base font-bold tracking-[0.08em] text-ink-2 uppercase tabular-nums">
               <span className="led text-xl">{f.done}</span>/{f.total} matchs · {pct} %
@@ -93,7 +108,7 @@ export default async function BigScreen({ params }: { params: Promise<{ slug: st
             <LedBar value={f.done} total={f.total} cells={24} className="text-white" />
           </div>
           <span className="led rounded-md bg-black px-3 py-1 text-[64px] leading-none">
-            <Clock tz={t.timezone} />
+            <Clock tz={t.timezone} initial={fmtTime(new Date(now).toISOString(), t.timezone)} />
           </span>
         </div>
       </header>
@@ -105,7 +120,11 @@ export default async function BigScreen({ params }: { params: Promise<{ slug: st
           </h2>
           <div className={`grid min-h-0 gap-3 overflow-hidden ${cols}`}>
             {boards.length ? (
-              boards.map(({ c, m }) => <Scoreboard key={c.courtId} m={m} v={v} court={c.name} now={now} size={boards.length > 3 ? "md" : "lg"} />)
+              boards.map(({ c, m }) => (
+                <BoardFx key={c.courtId} matchId={m.status === "live" ? m.id : null}>
+                  <Scoreboard m={m} v={v} court={c.name} now={now} size={boards.length > 3 ? "md" : "lg"} />
+                </BoardFx>
+              ))
             ) : (
               <p className="text-xl text-ink-3">Tous les matchs sont joués.</p>
             )}

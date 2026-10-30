@@ -148,7 +148,7 @@ export function Scoreboard({
           {label}
         </span>
         {win && <IconCheck className="size-5 shrink-0 text-[#3ddc84]" />}
-        <span className={`rounded-[4px] bg-black/60 px-1.5 py-1 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)] ${lose ? "opacity-55" : ""}`}>
+        <span data-score={side} className={`rounded-[4px] bg-black/60 px-1.5 py-1 shadow-[inset_0_0_0_1px_rgb(255_255_255/0.06)] ${lose ? "opacity-55" : ""}`}>
           <Led value={m.status === "scheduled" ? null : s} digits={digits} className={score} />
         </span>
       </div>
