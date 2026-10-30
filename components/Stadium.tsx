@@ -236,7 +236,7 @@ export function Led({ value, digits = 2, className = "", color }: { value: strin
 /** Bandeau défilant (résultats) façon panneau LED de bord de terrain. */
 export function Ticker({ label, children, className = "" }: { label: string; children: React.ReactNode; className?: string }) {
   return (
-    <div className={`board flex h-9 items-center overflow-hidden ${className}`}>
+    <div className={`board ticker-pause flex h-9 items-center overflow-hidden ${className}`}>
       <span className="z-10 flex h-full shrink-0 items-center gap-2 bg-accent px-3 font-cond text-[13px] font-extrabold tracking-[0.14em] text-on-accent uppercase">
         <span className="live-dot size-1.5 rounded-full bg-current" />
         {label}

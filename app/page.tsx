@@ -5,15 +5,18 @@ import { SubmitButton } from "@/components/feedback";
 import { IconDown, IconLogout, IconPlus, IconSettings, IconTicket, IconTrophy, IconWhistle } from "@/components/Icons";
 import { JoinForm, MyTournaments } from "@/components/Participant";
 import { TournamentCard } from "@/components/TournamentCard";
-import { CourtLines, Led, SportGlyph, type SportKey } from "@/components/Stadium";
+import { CourtLines, Led, SportGlyph, Ticker, type SportKey } from "@/components/Stadium";
+import { FloodlightsLoader } from "@/components/stage/FloodlightsLoader";
+import { PointerFx } from "@/components/stage/PointerFx";
 import { DeleteAllButton, DeleteTournamentButton, DemoButton } from "@/components/TournamentActions";
 import { Empty, Footer, Page, Section, TopBar } from "@/components/TopBar";
 import { homeCommands } from "@/lib/commands";
 import { isOrganizer } from "@/lib/server/auth";
 import { listTournaments, tournamentStats, type TournamentStats } from "@/lib/server/data";
 import { isConfigured } from "@/lib/server/db";
+import { bundleOr404 } from "@/lib/server/page";
 import type { Tournament } from "@/lib/types";
-import { FORMAT_LABEL } from "@/lib/view";
+import { FORMAT_LABEL, View } from "@/lib/view";
 
 export const dynamic = "force-dynamic";
 
@@ -39,10 +42,12 @@ export default async function Home() {
   const past = tournaments.filter((t) => t.date < localDay(t.timezone));
   const liveTotal = today.reduce((n, t) => n + (stats.get(t.id)?.live ?? 0), 0);
   const doneTotal = today.reduce((n, t) => n + (stats.get(t.id)?.done ?? 0), 0);
+  const results = doneTotal ? await todayResults(today) : [];
 
   return (
     <>
       <Commands groups={homeCommands(tournaments, { org })} />
+      <PointerFx />
       <TopBar
         brand
         right={
@@ -78,17 +83,8 @@ export default async function Home() {
               Tournois multisports, du coup d&apos;envoi à la finale
             </p>
             <h1 className="display text-[clamp(3.6rem,min(13vw,15svh),9rem)]">
-              {org ? (
-                <>
-                  <span className="block">Votre</span>
-                  <span className="block text-transparent [-webkit-text-stroke:2px_var(--accent)]">terrain.</span>
-                </>
-              ) : (
-                <>
-                  <span className="block">Coup</span>
-                  <span className="block text-transparent [-webkit-text-stroke:2px_var(--accent)]">d&apos;envoi.</span>
-                </>
-              )}
+              <Letters text={org ? "Votre" : "Coup"} />
+              <Letters text={org ? "terrain." : "d’envoi."} from={5} className="stroke-sweep text-transparent [-webkit-text-stroke:2px_var(--accent)]" />
             </h1>
             <p className="max-w-md text-[16px] leading-relaxed text-ink-2">
               {org
@@ -97,12 +93,26 @@ export default async function Home() {
             </p>
             <ul className="flex flex-wrap gap-1.5" aria-label="Sports pris en charge">
               {SPORTS.map((s) => (
-                <li key={s.key} data-sport={s.key} className="chip border border-line bg-surface/70 text-ink-2 backdrop-blur">
+                <li key={s.key} data-sport={s.key} data-pointer className="chip pill-fill border border-line bg-surface/70 text-ink-2">
                   <SportGlyph sport={s.key} className="size-3.5 text-sport" />
                   {s.label}
                 </li>
               ))}
             </ul>
+            {results.length > 0 && (
+              <Ticker label="Résultats du jour" className="rounded-md">
+                {results.map((r) => (
+                  <span key={r.id} className="flex items-center gap-2 font-cond text-[15px] font-bold tracking-[0.03em] text-[#f3efe4] uppercase">
+                    {r.home}
+                    <span className="led text-[17px]">{r.score}</span>
+                    {r.away}
+                    <span className="text-accent" aria-hidden>
+                      ◆
+                    </span>
+                  </span>
+                ))}
+              </Ticker>
+            )}
           </div>
 
           <div className="rise space-y-2" style={{ animationDelay: "120ms" }}>
@@ -125,7 +135,7 @@ export default async function Home() {
                 </div>
                 <SearchButton className="h-11 text-[15px]" />
                 <div className="flex gap-2">
-                  <Link href="/nouveau" className="btn-accent flex-1">
+                  <Link href="/nouveau" data-magnet className="btn-accent flex-1">
                     <IconPlus className="size-4" /> Nouveau tournoi
                   </Link>
                   <Link href="/sports" className="btn-outline px-3" title="Sports & règles" aria-label="Sports & règles">
@@ -210,6 +220,32 @@ export default async function Home() {
   );
 }
 
+/** Mot d'affiche révélé lettre par lettre (le rang continue d'un mot à l'autre avec `from`). */
+function Letters({ text, from = 0, className = "" }: { text: string; from?: number; className?: string }) {
+  return (
+    <span className={`block ${className}`}>
+      <span className="sr-only">{text}</span>
+      {Array.from(text).map((c, i) => (
+        <span key={i} aria-hidden className="letter" style={{ "--i": from + i } as React.CSSProperties}>
+          {c}
+        </span>
+      ))}
+    </span>
+  );
+}
+
+/** Derniers résultats des tournois du jour, pour le bandeau LED de l'accueil. */
+async function todayResults(today: Tournament[]) {
+  const bundles = await Promise.all(today.map((t) => bundleOr404(t.slug)));
+  return bundles
+    .flatMap((b) => {
+      const v = new View(b);
+      return b.matches.filter((m) => m.status === "finished" && !m.is_bye).map((m) => ({ id: m.id, at: m.finished_at ?? "", home: v.home(m), away: v.away(m), score: `${m.home_score}-${m.away_score}` }));
+    })
+    .sort((a, b) => b.at.localeCompare(a.at))
+    .slice(0, 12);
+}
+
 function Stat({ label, value, color, digits = 2 }: { label: string; value: number; color?: string; digits?: number }) {
   return (
     <div className="space-y-1.5">
@@ -222,7 +258,7 @@ function Stat({ label, value, color, digits = 2 }: { label: string; value: numbe
 /** Terrain en perspective, lignes à la craie, éclairé par deux projecteurs (décor de l'affiche). */
 function NightPitch() {
   return (
-    <div aria-hidden className="floodlight absolute inset-0 -z-10">
+    <div aria-hidden className="floodlight night-pitch absolute inset-0 -z-10">
       <div className="absolute inset-x-0 bottom-0 h-[78%] [perspective:520px]">
         <div
           className="absolute -inset-x-1/4 bottom-[-35%] h-[150%] origin-bottom [transform:rotateX(62deg)] [mask-image:linear-gradient(to_top,#000_15%,transparent_85%)]"
@@ -233,9 +269,10 @@ function NightPitch() {
           <CourtLines sport="football" className="absolute inset-0 h-full w-full text-chalk opacity-30" />
         </div>
       </div>
-      {/* Faisceaux des projecteurs */}
-      <div className="absolute -top-10 left-[8%] h-[120%] w-56 origin-top -rotate-[24deg] bg-[linear-gradient(180deg,rgb(255_247_222/0.16),transparent_75%)] blur-2xl" />
-      <div className="absolute -top-10 right-[8%] h-[120%] w-56 origin-top rotate-[24deg] bg-[linear-gradient(180deg,rgb(255_247_222/0.16),transparent_75%)] blur-2xl" />
+      {/* Faisceaux des projecteurs : en CSS par défaut (et le jour), remplacés la nuit par les projecteurs WebGL qui suivent le pointeur. */}
+      <FloodlightsLoader nightOnly follow intensity={0.75} />
+      <div className="css-beam absolute -top-10 left-[8%] h-[120%] w-56 origin-top -rotate-[24deg] bg-[linear-gradient(180deg,rgb(255_247_222/0.16),transparent_75%)] blur-2xl" />
+      <div className="css-beam absolute -top-10 right-[8%] h-[120%] w-56 origin-top rotate-[24deg] bg-[linear-gradient(180deg,rgb(255_247_222/0.16),transparent_75%)] blur-2xl" />
       <div className="absolute inset-x-0 bottom-0 h-24 bg-linear-to-t from-canvas to-transparent" />
     </div>
   );

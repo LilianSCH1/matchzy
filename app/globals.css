@@ -815,6 +815,119 @@ body::after {
   animation-delay: calc(var(--round, 0) * 180ms + 90ms);
 }
 
+/* ------------------------------------------------------------------ Accueil */
+
+/* Titre d'affiche lettre par lettre (--i : rang de la lettre). Départ à 0,01 et non 0 : le titre reste
+   l'élément LCP dès la première image (Chrome ignore les éléments d'opacité nulle). */
+@keyframes letter-in {
+  from {
+    opacity: 0.01;
+    transform: translateY(0.3em);
+  }
+}
+.letter {
+  display: inline-block;
+  animation: letter-in 0.55s var(--ease-out-expo) both;
+  animation-delay: calc(var(--i) * 28ms);
+}
+/* Le mot au contour : un trait de lumière orange le parcourt une fois, comme une ligne qu'on trace. */
+@keyframes stroke-sweep {
+  from {
+    background-position: 120% 0;
+  }
+  to {
+    background-position: -20% 0;
+  }
+}
+.stroke-sweep {
+  background-image: linear-gradient(100deg, transparent 40%, var(--accent) 50%, transparent 60%);
+  background-size: 250% 100%;
+  background-position: -20% 0;
+  -webkit-background-clip: text;
+  background-clip: text;
+  animation: stroke-sweep 1.3s var(--ease-in-out-quint) 0.35s both;
+}
+
+/* Pastille de sport : la couleur du sport la remplit depuis le pointeur, le pictogramme se redessine. */
+.pill-fill {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  transition: color var(--dur-2) var(--ease-out-expo);
+}
+.pill-fill::before {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: -1;
+  background: var(--sport);
+  clip-path: circle(0 at var(--mx, 50%) var(--my, 50%));
+  transition: clip-path var(--dur-3) var(--ease-out-expo);
+}
+@keyframes glyph-draw {
+  from {
+    stroke-dashoffset: 80;
+  }
+}
+@media (hover: hover) {
+  .pill-fill:hover {
+    color: #0b0b0b;
+  }
+  .pill-fill:hover::before {
+    clip-path: circle(150% at var(--mx, 50%) var(--my, 50%));
+  }
+  .pill-fill:hover svg {
+    color: #0b0b0b;
+  }
+  .pill-fill:hover svg * {
+    stroke-dasharray: 80;
+    animation: glyph-draw 0.6s var(--ease-out-expo);
+  }
+}
+
+/* Carte inclinable (data-tilt) : reflet spéculaire qui suit le pointeur (--mx, --my, posées par PointerFx). */
+.tilt {
+  transition: transform var(--dur-3) var(--ease-out-expo);
+  will-change: auto;
+}
+.tilt::after {
+  content: "";
+  position: absolute;
+  inset: 0;
+  z-index: 20;
+  border-radius: inherit;
+  background: radial-gradient(420px circle at var(--mx, 50%) var(--my, 0%), rgb(255 255 255 / 0.1), transparent 45%);
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity var(--dur-2) var(--ease-out-expo);
+}
+@media (hover: hover) {
+  .tilt:hover::after {
+    opacity: 1;
+  }
+}
+
+/* Bouton magnétique : PointerFx écrit `translate`, le ressort se fait ici. */
+[data-magnet] {
+  transition:
+    translate var(--dur-3) var(--ease-snap),
+    background-color var(--dur-2),
+    box-shadow var(--dur-2);
+}
+
+/* Bandeau défilant : en pause au survol, pour lire un résultat. */
+.ticker-pause:hover .ticker {
+  animation-play-state: paused;
+}
+
+/* Projecteurs : le décor CSS s'efface quand les projecteurs WebGL sont allumés. */
+.css-beam {
+  transition: opacity 0.7s var(--ease-out-expo);
+}
+.night-pitch:has(canvas[data-on]) .css-beam {
+  opacity: 0;
+}
+
 /* Écran projeté : le curseur disparaît après quelques secondes d'inactivité. */
 .cursor-idle,
 .cursor-idle * {
@@ -857,8 +970,15 @@ body::after {
   .br-x,
   .br-y,
   .celebrate[data-fx]::before,
-  .celebrate[data-fx] [data-score] {
+  .celebrate[data-fx] [data-score],
+  .letter,
+  .stroke-sweep,
+  .pill-fill:hover svg * {
     animation: none;
+  }
+  .pill-fill::before,
+  .tilt {
+    transition: none;
   }
   .led-roll {
     transition: none;

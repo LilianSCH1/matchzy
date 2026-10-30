@@ -144,6 +144,7 @@ export default function Floodlights({ intensity = 1, follow = false, className =
       if (!shown) {
         shown = true;
         canvas.style.opacity = "1";
+        canvas.dataset.on = "";
       }
     };
     const resume = () => {
@@ -160,6 +161,7 @@ export default function Floodlights({ intensity = 1, follow = false, className =
       cancelAnimationFrame(raf);
       raf = 0;
       canvas.style.opacity = "0";
+      delete canvas.dataset.on;
     };
     canvas.addEventListener("webglcontextlost", lost);
     resume();

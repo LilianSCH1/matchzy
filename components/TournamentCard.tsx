@@ -36,11 +36,13 @@ export function TournamentCard({
   const finished = total > 0 && done === total;
   const key = sportKey(sport);
   return (
+    // Pas d'overflow-hidden sur la carte : l'ombre d'élévation (lift) déborde ; le bandeau arrondit lui-même ses coins.
     <article
       data-sport={key}
-      className={`card group relative flex flex-col overflow-hidden transition hover:-translate-y-0.5 hover:border-line-strong hover:shadow-float ${live ? "border-live/40" : ""}`}
+      data-tilt
+      className={`card lift tilt group flex flex-col hover:border-line-strong ${live ? "border-live/40" : ""}`}
     >
-      <div className={`turf relative isolate overflow-hidden ${featured ? "h-32" : "h-24"} ${muted && !live ? "grayscale-[0.5]" : ""}`}>
+      <div className={`turf relative isolate overflow-hidden rounded-t-[9px] ${featured ? "h-32" : "h-24"} ${muted && !live ? "grayscale-[0.5]" : ""}`}>
         <CourtLines sport={key} className="absolute inset-0 -z-10 h-full w-full scale-110 p-2 text-white/35" />
         <div className="flex items-start justify-between gap-2 p-3">
           <SportBadge name={sport} className="bg-black/45! text-white! backdrop-blur" />
