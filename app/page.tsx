@@ -74,7 +74,7 @@ export default async function Home() {
           <div className="rise space-y-5">
             <p className="eyebrow flex flex-wrap items-center gap-2">
               {liveTotal > 0 ? (
-                <span className="chip bg-live text-white">
+                <span className="chip bg-live-solid text-white">
                   <span className="live-dot size-1.5 rounded-full bg-white" /> En direct
                 </span>
               ) : (

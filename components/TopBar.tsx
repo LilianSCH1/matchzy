@@ -75,7 +75,8 @@ export function TopBar({
           {tools && (
             <>
               <SearchButton compact />
-              <SoundToggle />
+              {/* L'accueil ne joue aucun son : sur un petit écran, sa place revient au logo et au bouton d'accès. */}
+              <SoundToggle className={brand ? "max-[399px]:hidden" : ""} />
               <ThemeToggle />
             </>
           )}
@@ -263,11 +264,25 @@ export function Ring({ value, size = 44, stroke = 5, className = "text-accent" }
 }
 
 /** Barre de progression en LED : une rangée de points qui s'allument. */
-export function LedBar({ value, total, cells = 24, tone = "led", className = "" }: { value: number; total: number; cells?: number; tone?: "led" | "ok"; className?: string }) {
+export function LedBar({
+  value,
+  total,
+  cells = 24,
+  tone = "led",
+  className = "",
+  label = "Matchs joués",
+}: {
+  value: number;
+  total: number;
+  cells?: number;
+  tone?: "led" | "ok";
+  className?: string;
+  label?: string;
+}) {
   const lit = total ? Math.round((cells * value) / total) : 0;
   const on = tone === "ok" ? "bg-ok shadow-[0_0_6px_var(--ok)]" : "bg-led shadow-[0_0_6px_rgb(255_176_0/0.7)]";
   return (
-    <div className={`flex gap-[3px] ${className}`} role="progressbar" aria-valuemin={0} aria-valuemax={total} aria-valuenow={value}>
+    <div className={`flex gap-[3px] ${className}`} role="progressbar" aria-label={label} aria-valuetext={`${value} sur ${total}`} aria-valuemin={0} aria-valuemax={total} aria-valuenow={value}>
       {Array.from({ length: cells }, (_, i) => (
         <span key={i} className={`h-2 flex-1 rounded-[2px] ${i < lit ? on : "bg-current opacity-15"}`} />
       ))}

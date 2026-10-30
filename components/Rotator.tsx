@@ -44,18 +44,20 @@ export function Rotator({ panels, seconds = 15 }: { panels: { title: string; nod
             <button
               key={p.title}
               onClick={() => go(n)}
-              className={`relative h-2 overflow-hidden rounded-[2px] transition-[width] duration-500 ${n === k ? "w-10 bg-white/15" : "w-2 bg-line-strong"}`}
+              className="grid h-6 min-w-6 place-items-center"
               aria-label={p.title}
               aria-current={n === k}
             >
-              {n === k && panels.length > 1 && (
-                <span
-                  key={view.i}
-                  className="fill-x absolute inset-0 bg-led shadow-[0_0_8px_rgb(255_176_0/0.7)]"
-                  style={{ "--fill-duration": `${seconds}s` } as React.CSSProperties}
-                />
-              )}
-              {n === k && panels.length < 2 && <span className="absolute inset-0 bg-led" />}
+              <span className={`relative block h-2 overflow-hidden rounded-[2px] transition-[width] duration-500 ${n === k ? "w-10 bg-white/15" : "w-2 bg-line-strong"}`}>
+                {n === k && panels.length > 1 && (
+                  <span
+                    key={view.i}
+                    className="fill-x absolute inset-0 bg-led shadow-[0_0_8px_rgb(255_176_0/0.7)]"
+                    style={{ "--fill-duration": `${seconds}s` } as React.CSSProperties}
+                  />
+                )}
+                {n === k && panels.length < 2 && <span className="absolute inset-0 bg-led" />}
+              </span>
             </button>
           ))}
         </div>

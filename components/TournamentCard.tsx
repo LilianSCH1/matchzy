@@ -40,14 +40,14 @@ export function TournamentCard({
     <article
       data-sport={key}
       data-tilt
-      className={`card lift tilt group flex flex-col hover:border-line-strong ${live ? "border-live/40" : ""}`}
+      className={`card lift tilt group flex min-w-0 flex-col hover:border-line-strong ${live ? "border-live/40" : ""}`}
     >
       <div className={`turf relative isolate overflow-hidden rounded-t-[9px] ${featured ? "h-32" : "h-24"} ${muted && !live ? "grayscale-[0.5]" : ""}`}>
         <CourtLines sport={key} className="absolute inset-0 -z-10 h-full w-full scale-110 p-2 text-white/35" />
         <div className="flex items-start justify-between gap-2 p-3">
           <SportBadge name={sport} vt={`sport-${slug}`} className="bg-black/45! text-white! backdrop-blur" />
           {live ? (
-            <span className="chip bg-live text-white">
+            <span className="chip bg-live-solid text-white">
               <span className="live-dot size-1.5 rounded-full bg-white" /> {live} en cours
             </span>
           ) : finished ? (

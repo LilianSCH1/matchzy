@@ -7,7 +7,7 @@ import { Led } from "./Stadium";
 
 export function LiveBadge({ className = "", label = "En cours" }: { className?: string; label?: string }) {
   return (
-    <span className={`chip bg-live text-white ${className}`}>
+    <span className={`chip bg-live-solid text-white ${className}`}>
       <span className="live-dot inline-block size-1.5 rounded-full bg-white" /> {label}
     </span>
   );

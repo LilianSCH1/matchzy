@@ -119,7 +119,7 @@ function Hero({ v, org, now }: { v: View; org: boolean; now: number }) {
           <div className="flex flex-wrap items-center gap-2">
             <SportBadge name={t.sport_name} vt={`sport-${t.slug}`} className="bg-black/40!" />
             {f.live > 0 ? (
-              <span className="chip bg-live text-white">
+              <span className="chip bg-live-solid text-white">
                 <span className="live-dot size-1.5 rounded-full bg-white" /> {f.live} match{f.live > 1 ? "s" : ""} en direct
               </span>
             ) : champ ? (

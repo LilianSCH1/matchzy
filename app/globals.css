@@ -26,6 +26,8 @@
   --on-ok: #ffffff;
   --live: #d0241a;
   --live-soft: #f7d8d2;
+  /* Fond plein des pastilles « en cours » : texte blanc lisible (contraste ≥ 4,5:1) dans les deux thèmes. */
+  --live-solid: #c4201a;
   --warn: #7f5a00;
   --warn-soft: #f5e09a;
   --danger: #c3161c;
@@ -74,6 +76,7 @@
     --on-ok: #03140a;
     --live: #ff4436;
     --live-soft: #391410;
+    --live-solid: #c92a1f;
     --warn: #ffd23f;
     --warn-soft: #2f2608;
     --danger: #ff5049;
@@ -120,6 +123,7 @@
   --on-ok: #03140a;
   --live: #ff4436;
   --live-soft: #391410;
+  --live-solid: #c92a1f;
   --warn: #ffd23f;
   --warn-soft: #2f2608;
   --danger: #ff5049;
@@ -220,6 +224,7 @@
   --color-on-ok: var(--on-ok);
   --color-live: var(--live);
   --color-live-soft: var(--live-soft);
+  --color-live-solid: var(--live-solid);
   --color-warn: var(--warn);
   --color-warn-soft: var(--warn-soft);
   --color-danger: var(--danger);
