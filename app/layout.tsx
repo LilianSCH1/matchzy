@@ -3,6 +3,7 @@ import { Barlow, Barlow_Condensed, Big_Shoulders, Doto, Permanent_Marker } from 
 import { CommandPalette } from "@/components/CommandPalette";
 import { Toaster } from "@/components/feedback";
 import { THEME_SCRIPT } from "@/components/ThemeToggle";
+import { WebVitals } from "@/components/WebVitals";
 import "./globals.css";
 
 // Barlow pour la lecture, Barlow Condensed pour les libellés, Big Shoulders pour les affiches,
@@ -57,6 +58,7 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         {children}
         <CommandPalette />
         <Toaster />
+        {process.env.NODE_ENV === "development" && <WebVitals />}
       </body>
     </html>
   );
