@@ -32,9 +32,23 @@
   --danger-soft: #f6d6d2;
   --chalk: #1c5e33;
   --glow: transparent;
-  --shadow-sm: 0 1px 0 rgb(60 45 15 / 0.08);
-  --shadow-md: 0 1px 0 rgb(60 45 15 / 0.08), 0 10px 24px -12px rgb(60 45 15 / 0.35);
-  --shadow-lg: 0 30px 60px -20px rgb(40 30 10 / 0.45);
+  /* Projecteurs : lumière de jour sur le papier (le nocturne les allume vraiment). */
+  --floodlight: oklch(0.99 0.02 90);
+  --floodlight-cool: oklch(0.96 0.02 250);
+  /* Biseau usiné : arête éclairée en haut des surfaces. */
+  --bevel: inset 0 1px 0 rgb(255 255 255 / 0.6);
+  /* Élévation : ombres d'encre chaude sur papier crème. */
+  --elev-0: 0 0 #0000;
+  --elev-1: var(--bevel), 0 1px 0 rgb(60 45 15 / 0.08);
+  --elev-2: var(--bevel), 0 1px 0 rgb(60 45 15 / 0.08), 0 10px 24px -12px rgb(60 45 15 / 0.35);
+  --elev-3: var(--bevel), 0 1px 0 rgb(60 45 15 / 0.08), 0 30px 60px -20px rgb(40 30 10 / 0.45);
+  --shadow-sm: var(--elev-1);
+  --shadow-md: var(--elev-2);
+  --shadow-lg: var(--elev-3);
+  --grain-opacity: 0.05;
+  /* Verre de régie : opaque de jour (aucun flou, aucun coût GPU). */
+  --glass-alpha: 100%;
+  --glass-filter: none;
   color-scheme: light;
 }
 
@@ -66,9 +80,20 @@
     --danger-soft: #3a1311;
     --chalk: #f3efe4;
     --glow: rgb(255 107 26 / 0.35);
-    --shadow-sm: 0 1px 0 rgb(0 0 0 / 0.5);
-    --shadow-md: 0 1px 0 rgb(0 0 0 / 0.5), 0 14px 30px -14px rgb(0 0 0 / 0.8);
-    --shadow-lg: 0 30px 70px -20px rgb(0 0 0 / 0.9);
+    --floodlight: oklch(0.968 0.04 88);
+    --floodlight-cool: oklch(0.905 0.05 255);
+    --bevel: inset 0 1px 0 rgb(255 255 255 / 0.06);
+    /* Ombres teintées bleu nuit (jamais de noir pur) ; le niveau 3 prend le halo des projecteurs. */
+    --elev-0: 0 0 #0000;
+    --elev-1: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55);
+    --elev-2: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55), 0 14px 30px -14px rgb(2 8 16 / 0.85);
+    --elev-3: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55), 0 30px 70px -20px rgb(2 8 16 / 0.9), 0 0 48px -16px var(--glow);
+    --shadow-sm: var(--elev-1);
+    --shadow-md: var(--elev-2);
+    --shadow-lg: var(--elev-3);
+    --grain-opacity: 0.035;
+    --glass-alpha: 72%;
+    --glass-filter: blur(14px) saturate(140%);
     color-scheme: dark;
   }
 }
@@ -101,9 +126,20 @@
   --danger-soft: #3a1311;
   --chalk: #f3efe4;
   --glow: rgb(255 107 26 / 0.35);
-  --shadow-sm: 0 1px 0 rgb(0 0 0 / 0.5);
-  --shadow-md: 0 1px 0 rgb(0 0 0 / 0.5), 0 14px 30px -14px rgb(0 0 0 / 0.8);
-  --shadow-lg: 0 30px 70px -20px rgb(0 0 0 / 0.9);
+  --floodlight: oklch(0.968 0.04 88);
+  --floodlight-cool: oklch(0.905 0.05 255);
+  --bevel: inset 0 1px 0 rgb(255 255 255 / 0.06);
+  /* Ombres teintées bleu nuit (jamais de noir pur) ; le niveau 3 prend le halo des projecteurs. */
+  --elev-0: 0 0 #0000;
+  --elev-1: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55);
+  --elev-2: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55), 0 14px 30px -14px rgb(2 8 16 / 0.85);
+  --elev-3: var(--bevel), 0 1px 0 rgb(2 6 12 / 0.55), 0 30px 70px -20px rgb(2 8 16 / 0.9), 0 0 48px -16px var(--glow);
+  --shadow-sm: var(--elev-1);
+  --shadow-md: var(--elev-2);
+  --shadow-lg: var(--elev-3);
+  --grain-opacity: 0.035;
+  --glass-alpha: 72%;
+  --glass-filter: blur(14px) saturate(140%);
   color-scheme: dark;
 }
 
@@ -113,10 +149,30 @@
 }
 
 /* Couleur de chaque sport (pastilles, bandeaux, lignes de terrain). */
+/* Les panneaux LED restent noirs dans les deux thèmes : ces teintes ne dépendent pas du thème. */
 :root {
   --sport: var(--ink-3);
   --led: #ffb000;
-  --led-ghost: rgb(255 176 0 / 0.09);
+  --led-hot: oklch(0.93 0.1 88);
+  --led-bloom: oklch(0.74 0.18 60 / 0.35);
+  --led-off: oklch(0.8 0.17 75 / 0.07);
+  --led-ghost: var(--led-off);
+}
+/* Redéclaré avec chaque sport : une variable qui contient var() se résout là où elle est déclarée. */
+:root,
+[data-sport] {
+  --sport-glow: color-mix(in oklab, var(--sport) 40%, transparent);
+}
+
+/* Mouvement : courbes et durées partagées (miroir dans lib/motion.ts). */
+:root {
+  --ease-out-expo: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out-quint: cubic-bezier(0.83, 0, 0.17, 1);
+  --ease-snap: cubic-bezier(0.3, 1.4, 0.5, 1);
+  --dur-1: 120ms;
+  --dur-2: 220ms;
+  --dur-3: 420ms;
+  --dur-4: 800ms;
 }
 [data-sport="football"],
 [data-sport="futsal"] {
@@ -171,9 +227,23 @@
   --color-chalk: var(--chalk);
   --color-sport: var(--sport);
   --color-led: var(--led);
+  --color-led-hot: var(--led-hot);
+  --color-led-off: var(--led-off);
+  --color-floodlight: var(--floodlight);
+  --color-floodlight-cool: var(--floodlight-cool);
+  --color-sport-glow: var(--sport-glow);
   --shadow-card: var(--shadow-sm);
   --shadow-float: var(--shadow-md);
   --shadow-pop: var(--shadow-lg);
+  --shadow-elev-0: var(--elev-0);
+  --shadow-elev-1: var(--elev-1);
+  --shadow-elev-2: var(--elev-2);
+  --shadow-elev-3: var(--elev-3);
+  /* Échelle fluide : affiches et chiffres du tableau (lisibles à 15 m sur l'écran géant). */
+  --text-poster: clamp(3.6rem, min(13vw, 15svh), 9rem);
+  --text-poster--line-height: 0.86;
+  --text-scoreboard: clamp(3rem, 6.5vw, 7.5rem);
+  --text-scoreboard--line-height: 1;
   --font-sans: var(--font-barlow), ui-sans-serif, system-ui, -apple-system, "Segoe UI", sans-serif;
   --font-cond: var(--font-barlow-cond), "Arial Narrow", ui-sans-serif, sans-serif;
   --font-display: var(--font-shoulders), Impact, "Arial Narrow", sans-serif;
@@ -207,6 +277,24 @@ body {
   }
 }
 
+/* Grain : une seule couche fixe, jamais animée. Pas de mix-blend-mode : sur une couche fixe plein écran,
+   il obligerait à recomposer toute la page à chaque image du défilement. Un bruit neutre très léger suffit. */
+body::after {
+  content: "";
+  position: fixed;
+  inset: 0;
+  z-index: 70;
+  pointer-events: none;
+  opacity: var(--grain-opacity);
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='160' height='160'%3E%3Cfilter id='n'%3E%3CfeTurbulence type='fractalNoise' baseFrequency='.85' numOctaves='2' stitchTiles='stitch'/%3E%3CfeColorMatrix type='saturate' values='0'/%3E%3C/filter%3E%3Crect width='100%25' height='100%25' filter='url(%23n)'/%3E%3C/svg%3E");
+  background-size: 160px;
+}
+@media print {
+  body::after {
+    display: none;
+  }
+}
+
 ::selection {
   background: var(--accent);
   color: var(--on-accent);
@@ -232,8 +320,9 @@ body {
 @utility card-quiet {
   @apply rounded-[10px] border border-line bg-surface;
 }
+/* À l'appui, le bouton s'enfonce (0,97) puis revient avec un léger rebond. */
 @utility btn {
-  @apply inline-flex h-11 items-center justify-center gap-2 rounded-md px-4 font-cond text-[15px] font-bold tracking-[0.06em] whitespace-nowrap uppercase transition-[background-color,border-color,color,opacity,transform,box-shadow] duration-150 select-none active:translate-y-px disabled:pointer-events-none disabled:opacity-40;
+  @apply inline-flex h-11 items-center justify-center gap-2 rounded-md px-4 font-cond text-[15px] font-bold tracking-[0.06em] whitespace-nowrap uppercase transition-[background-color,border-color,color,opacity,transform,box-shadow] duration-(--dur-2) ease-(--ease-snap) select-none active:scale-[0.97] active:duration-75 disabled:pointer-events-none disabled:opacity-40;
 }
 /* Boutons « poussoirs » de table de marque : un liseré sombre en bas qui s'écrase à l'appui. */
 @utility btn-primary {
@@ -327,6 +416,57 @@ body {
     inset 0 -18px 40px rgb(0 0 0 / 0.6);
 }
 
+/* Verre de régie : réservé aux éléments flottants (barre, palette, toasts, bandeaux), jamais aux listes. */
+@utility glass {
+  background-color: var(--surface);
+  @supports (backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px)) {
+    background-color: color-mix(in oklab, var(--surface) var(--glass-alpha), transparent);
+    -webkit-backdrop-filter: var(--glass-filter);
+    backdrop-filter: var(--glass-filter);
+  }
+  @media (prefers-reduced-transparency: reduce) {
+    background-color: var(--surface);
+    -webkit-backdrop-filter: none;
+    backdrop-filter: none;
+  }
+}
+
+/* Élévation au survol : l'ombre du niveau 3 est préparée sur un pseudo-élément dont seule l'opacité varie.
+   L'élément ne doit pas couper ses débordements (overflow-hidden masquerait l'ombre). */
+@utility lift {
+  position: relative;
+  isolation: isolate;
+  transition: transform var(--dur-2) var(--ease-out-expo);
+  &::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    z-index: -1;
+    border-radius: inherit;
+    box-shadow: var(--elev-3);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-2) var(--ease-out-expo);
+  }
+  @media (hover: hover) {
+    &:hover {
+      transform: translateY(-2px);
+    }
+    &:hover::before {
+      opacity: 1;
+    }
+  }
+}
+
+/* Apparition au défilement, pilotée par le défilement lui-même (aucun JS). Sans prise en charge, l'élément est simplement visible. */
+@utility reveal {
+  @supports (animation-timeline: view()) {
+    animation: rise linear both;
+    animation-timeline: view();
+    animation-range: entry 0% entry 45%;
+  }
+}
+
 /* Rubalise noire et jaune (zone dangereuse). */
 @utility hazard {
   background-image: repeating-linear-gradient(-45deg, #ffd23f 0 12px, #15130e 12px 24px);
@@ -398,7 +538,7 @@ body {
   }
 }
 .rise {
-  animation: rise 0.35s cubic-bezier(0.2, 0.7, 0.2, 1) both;
+  animation: rise var(--dur-3) var(--ease-out-expo) both;
 }
 
 @keyframes pop {
@@ -494,7 +634,15 @@ body {
   .ticker,
   .floodlight,
   .led-flip,
-  .card-show {
+  .card-show,
+  .reveal {
     animation: none;
+  }
+  .btn,
+  .lift {
+    transition-property: opacity, background-color, border-color, color;
+  }
+  .lift:hover {
+    transform: none;
   }
 }
