@@ -213,12 +213,19 @@ Production : **https://matchzy.neoheberg.fr**, sur le même VPS que Bingezy (Clo
 | Utilisateur Linux / dossier | `matchzy` · `/home/matchzy/app` |
 | Port local | `3009` (Nginx en reverse proxy, HTTPS Let's Encrypt) |
 | Serveur | Next en mode `standalone` dans `/home/matchzy/app/server`, lancé par le service systemd `matchzy` (`deploy/matchzy.service`, redémarrage auto, 300 Mo max) |
-| Secrets | `/home/matchzy/app/.env` (chmod 600), lu par `node --env-file` ; jamais envoyé par GitHub |
+| Secrets | `/home/matchzy/app/.env` (`deploy:matchzy`, chmod 640), lu par `node --env-file` ; jamais envoyé par GitHub |
 | Base | `/home/matchzy/data/matchzy.db` (SQLite, `DATA_DIR` dans le `.env`) |
 
-Le VPS n'a que 512 Mo de mémoire : **le build se fait dans GitHub Actions** (`.github/workflows/deploy.yml`), qui envoie le serveur compilé par `rsync` puis lance `deploy/deploy.sh` (config Nginx, redémarrage du service, vérification de `/health`). Le déploiement part à chaque push sur `master`, ou à la main depuis l'onglet *Actions*.
+Le VPS n'a que 512 Mo de mémoire : **le build se fait dans GitHub Actions** (`.github/workflows/deploy.yml`), qui envoie le serveur compilé par `rsync` puis lance `deploy/deploy.sh` (redémarrage du service, vérification de `/health`). Le déploiement part à chaque push sur `master`, ou à la main depuis l'onglet *Actions*.
 
-Le workflow a besoin, dans les réglages du dépôt, des mêmes valeurs que Bingezy : variables `SSH_HOST` et `SSH_HOST_FINGERPRINT`, secret `SSH_PRIVATE_KEY_B64`.
+Le workflow a besoin, dans les réglages du dépôt, des variables `SSH_HOST` et `SSH_HOST_FINGERPRINT` (mêmes valeurs que Bingezy) et du secret `SSH_PRIVATE_KEY_B64` (clé propre à ce dépôt).
+
+**Déploiement non-root.** GitHub Actions se connecte avec l'utilisateur `deploy` (partagé avec Bingezy), jamais en root :
+- `deploy` possède `/home/matchzy/app` et appartient au groupe `matchzy`. `server/` reste modifiable par l'app, car Next y écrit son cache ; le service a `UMask=0007` pour que `deploy` puisse remplacer ces fichiers ;
+- sudo sans mot de passe pour `systemctl restart matchzy` uniquement (`/etc/sudoers.d/matchzy-deploy`) ;
+- la config Nginx et le service systemd ne sont plus installés au déploiement (ils donneraient root à `deploy`). Quand ils changent, le workflow affiche un avertissement : lancer en root `matchzy-install-config`, qui montre le diff puis installe après confirmation.
+
+Mise en place (une fois, en root) : `bash deploy/setup-deploy-user.sh "<clé publique ssh-ed25519>"`, puis `matchzy-install-config`.
 
 La base SQLite est dans `/home/matchzy/data/matchzy.db`, hors du dossier déployé : un déploiement n'y touche jamais. Le schéma est appliqué par l'application à son démarrage. Sauvegarde à chaud, avec le Node du VPS (pas besoin du client `sqlite3`) :
 

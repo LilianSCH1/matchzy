@@ -23,6 +23,9 @@ SyslogIdentifier=matchzy
 NoNewPrivileges=true
 PrivateTmp=true
 ProtectSystem=full
+# Fichiers créés par l'app (cache de Next dans server/.next) modifiables par son groupe : l'utilisateur
+# deploy, membre du groupe matchzy, peut ainsi les remplacer ou les supprimer au déploiement suivant.
+UMask=0007
 
 [Install]
 WantedBy=multi-user.target
