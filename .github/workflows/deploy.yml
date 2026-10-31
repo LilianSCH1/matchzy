@@ -18,14 +18,16 @@ jobs:
     timeout-minutes: 15
     env:
       SSH_HOST: ${{ vars.SSH_HOST }}
-      SSH_USER: root
+      # Utilisateur non-root dédié au déploiement (deploy/setup-deploy-user.sh) ; variable SSH_USER pour le surcharger.
+      SSH_USER: ${{ vars.SSH_USER || 'deploy' }}
       APP_DIR: /home/matchzy/app
       SITE_URL: https://matchzy.neoheberg.fr
 
     steps:
-      - uses: actions/checkout@v4
+      # Actions épinglées sur un SHA de commit : un tag peut être déplacé, pas un SHA.
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
 
-      - uses: actions/setup-node@v4
+      - uses: actions/setup-node@949feb2413d6458794dcd2491c4babbbce0c15c1 # v7.1.0
         with:
           node-version: 22
           cache: npm
@@ -60,10 +62,13 @@ jobs:
           fi
 
       # --delete ne nettoie que server/ et deploy/ : le .env à la racine de l'app n'est jamais touché.
+      # Fichiers à deploy, groupe matchzy : server/ modifiable par l'app (cache de Next), deploy/ en lecture seule.
       - name: Envoyer les fichiers
         run: |
-          rsync -az --delete -e "ssh -i ~/.ssh/deploy_key" .next/standalone/ "$SSH_USER@$SSH_HOST:$APP_DIR/server/"
-          rsync -az --delete -e "ssh -i ~/.ssh/deploy_key" deploy "$SSH_USER@$SSH_HOST:$APP_DIR/"
+          rsync -rltz --delete --chown=:matchzy --chmod=Dug=rwx,Do=,Fug=rwX,Fo= -e "ssh -i ~/.ssh/deploy_key" \
+            .next/standalone/ "$SSH_USER@$SSH_HOST:$APP_DIR/server/"
+          rsync -rltz --delete --chown=:matchzy --chmod=Du=rwx,Dg=rx,Do=,Fu=rwX,Fg=rX,Fo= -e "ssh -i ~/.ssh/deploy_key" \
+            deploy "$SSH_USER@$SSH_HOST:$APP_DIR/"
 
       - name: Déployer
         run: ssh -i ~/.ssh/deploy_key "$SSH_USER@$SSH_HOST" "bash $APP_DIR/deploy/deploy.sh"
